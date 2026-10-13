@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 - Page Not Found | ERP Core</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+  body{
+    min-height:100vh; background:#f8fafc;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden; position:relative;
+  }
+  /* Animated background blobs */
+ .blob{
+    position:absolute; border-radius:50%; filter:blur(70px); opacity:0.35;
+    animation: floatBlob 12s infinite ease-in-out;
+  }
+ .blob1{width:400px;height:400px;background:#6366f1; top:-100px; left:-100px; animation-delay:0s}
+ .blob2{width:350px;height:350px;background:#06b6d4; bottom:-80px; right:-80px; animation-delay:2s}
+ .blob3{width:300px;height:300px;background:#a855f7; top:50%; left:60%; animation-delay:4s}
+  @keyframes floatBlob{
+    0%,100%{transform:translate(0,0) scale(1)}
+    33%{transform:translate(30px,-30px) scale(1.1)}
+    66%{transform:translate(-20px,20px) scale(0.9)}
+  }
+ .card{
+    position:relative; z-index:2; text-align:center;
+    background:rgba(255,255,255,0.9); backdrop-filter:blur(16px);
+    border:1px solid #e2e8f0; border-radius:24px;
+    padding:48px 40px; max-width:480px; width:92%;
+    box-shadow:0 20px 60px rgba(0,0,0,0.08);
+    animation: cardIn 0.6s ease-out;
+  }
+  @keyframes cardIn{
+    from{opacity:0; transform:translateY(20px) scale(0.97)}
+    to{opacity:1; transform:translateY(0) scale(1)}
+  }
+ .icon-wrap{
+    width:84px;height:84px; margin:0 auto 20px;
+    border-radius:20px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#6366f1,#4f46e5);
+    box-shadow:0 10px 30px rgba(79,70,229,0.3);
+    animation: floatIcon 3s ease-in-out infinite;
+  }
+  @keyframes floatIcon{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-8px)}
+  }
+ .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe;
+    padding:4px 12px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:0.6px;
+    margin-bottom:16px;
+  }
+  h1{font-size:42px; font-weight:800; color:#0f172a; letter-spacing:-1px; line-height:1}
+  h1 span{ background:linear-gradient(90deg,#6366f1,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent }
+ .num404{
+    font-size:96px; font-weight:800; line-height:1; letter-spacing:-4px;
+    color:#0f172a; margin:8px 0; display:flex; justify-content:center; gap:4px;
+  }
+ .num404 b{ display:inline-block; animation: bounceNum 2s ease-in-out infinite }
+ .num404 b:nth-child(2){animation-delay:0.15s}
+ .num404 b:nth-child(3){animation-delay:0.3s}
+  @keyframes bounceNum{
+    0%,100%{transform:translateY(0)}
+    20%{transform:translateY(-10px)}
+    40%{transform:translateY(0)}
+  }
+ .desc{color:#64748b; font-size:14px; line-height:1.6; margin:12px auto 28px; max-width:320px}
+ .btns{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+ .btn{
+    padding:11px 22px; border-radius:12px; font-size:13px; font-weight:600;
+    text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    transition:all 0.2s; cursor:pointer; border:1px solid transparent;
+  }
+ .btn-primary{background:#0f172a; color:#fff; box-shadow:0 6px 20px rgba(15,23,42,0.2)}
+ .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 28px rgba(15,23,42,0.25)}
+ .btn-secondary{background:#fff; color:#0f172a; border-color:#e2e8f0}
+ .btn-secondary:hover{background:#f8fafc; transform:translateY(-2px)}
+ .footer{margin-top:28px; font-size:10px; color:#94a3b8; letter-spacing:0.8px}
+</style>
+</head>
+<body>
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<div class="card">
+  <div class="icon-wrap">
+    <i class="fa-solid fa-map-location-dot text-white text-"></i>
+  </div>
+
+  <div class="badge"><i class="fa-solid fa-triangle-exclamation"></i> ERROR 404</div>
+
+  <div class="num404">
+    <b>4</b><b>0</b><b>4</b>
+  </div>
+
+  <h1>Page <span>not found</span></h1>
+
+  <p class="desc">
+    The page you are looking for doesn't exist, was moved, or your license has expired.
+  </p>
+
+  <div class="btns">
+    <a href="/dashboard" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> Go Home</a>
+    <a href="javascript:history.back()" class="btn btn-secondary"><i class="fa-solid fa-rotate-left"></i> Go Back</a>
+  </div>
+
+  <div class="footer">ERP CORE • SECURE ERP SYSTEM • 2026</div>
+</div>
+
+</body>
+</html>

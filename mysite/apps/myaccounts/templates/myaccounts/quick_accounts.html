@@ -1,0 +1,18 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'myaccounts/css/quick_accounts.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="flex:1; overflow-y:auto; overflow-x:hidden; padding:0;">
+    {% include 'myaccounts/modals/quick_accounts.modal.html' with mode='page' %}
+    
+    {% include 'myaccounts/modals/global_account_form_modal.html' %}
+</div>
+{% endblock %}
+
+<!-- {% block extra_js %}
+<script type="module" src="{% static 'myaccounts/js/modals/quick_accounts_modal.js' %}"></script>
+{% endblock %} -->

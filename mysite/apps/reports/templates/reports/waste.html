@@ -1,0 +1,24 @@
+{% comment %}
+            <div class="toolbar-right">
+                {% if data %}
+                <a href="{% url 'generate_daybook_pdf' %}?date_from={{ date_from }}&date_to={{ date_to }}" target="_blank" class="btn btn-secondary">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>PDF</span>
+                </a>
+                <a href="{% url 'generate_daybook_excell' %}?date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-secondary">
+                    <i class="fas fa-file-excel"></i>
+                    <span>Excel</span>
+                </a>
+                {% endif %}
+                {% comment %} <button type="button" class="btn btn-secondary" id="preview_selected_row">
+                    <i class="fas fa-eye"></i>
+                    <span>Preview</span>
+                </button>
+                {% if features.pos_load_prv_bill %}
+                <button type="button" class="btn btn-secondary" id="edit_selected_row">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit</span>
+                </button> {% endcomment %}
+                {% comment %} {% endif %} {% endcomment %}
+            </div>
+            {% endcomment %}

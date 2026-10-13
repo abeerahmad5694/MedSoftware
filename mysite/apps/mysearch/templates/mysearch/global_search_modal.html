@@ -1,0 +1,58 @@
+<!-- Global Search Modal — Reusable template. Include once per page. -->
+{% load static %}
+<link href="{% static 'mysearch/css/global_search_modal.css' %}" rel="stylesheet" />
+
+<div
+  id="gsm-overlay"
+  class="product-modal-overlay"
+  aria-hidden="true"
+  style="display: none"
+>
+  <div
+    class="product-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="gsm-title"
+  >
+    <!-- Header -->
+    <div class="modal-header">
+      <h3 id="gsm-title">Search</h3>
+      <div class="modal-controls">
+        <input
+          id="gsm-search-input"
+          type="text"
+          placeholder="Search..."
+          aria-label="Search"
+          autocomplete="off"
+        />
+        <button id="gsm-clear-btn" type="button" title="Clear search"
+                onclick="document.getElementById('gsm-search-input').value=''; document.getElementById('gsm-search-input').dispatchEvent(new Event('input')); document.getElementById('gsm-search-input').focus();">
+          Clear
+        </button>
+        <button id="gsm-close-btn" type="button" title="Close (Esc)"
+                onclick="GlobalSearchModal.close()">✕</button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div id="gsm-results" class="modal-results">
+        <!-- Table injected by JS -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <div class="gsm-footer-row">
+        <span id="gsm-result-count" class="gsm-result-count"></span>
+        <div id="gsm-pagination" class="modal-pagination"></div>
+        <span class="gsm-kbd-hints">
+          <kbd>↑↓</kbd> Navigate
+          <kbd>Enter</kbd> Select
+          <kbd>Esc</kbd> Close
+          <kbd>PgDn/Up</kbd> Page
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

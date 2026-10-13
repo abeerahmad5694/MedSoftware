@@ -1,0 +1,792 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 2vh;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: scale(0.9) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            width: 95%;
+            max-width: 1400px;
+            height: 95vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Demo Button (remove this in your actual implementation) */
+        .demo-section {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        /* #cash_receipt {
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #cash_receipt:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        } */
+
+        .container {
+            height: 100%;
+            background: #f0f4f8;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 0.8vh 2vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .company-name {
+            color: #fff;
+            font-size: 1.1vw;
+            font-weight: 600;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 0.5vw;
+        }
+
+        .window-controls button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 2vw;
+            height: 2vw;
+            min-width: 30px;
+            min-height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 1.2vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .window-controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .window-controls button.close-btn {
+            background: rgba(220, 53, 69, 0.8);
+        }
+
+        .window-controls button.close-btn:hover {
+            background: rgba(220, 53, 69, 1);
+        }
+
+        .main-content {
+            padding: 1.5vh 2vw;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .voucher-header {
+            background: linear-gradient(90deg, #000 0%, #1a1a1a 100%);
+            padding: 1.2vh 2vw;
+            border-radius: 6px;
+            margin-bottom: 1.5vh;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .voucher-title {
+            color: #00ff00;
+            font-size: 2vw;
+            font-weight: 700;
+            letter-spacing: 0.5vw;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .top-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1vw;
+            margin-bottom: 1.5vh;
+            flex-shrink: 0;
+        }
+
+        .voucher-info {
+            background: white;
+            padding: 1vh 1vw;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8vh;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+            min-width: 4vw;
+            font-size: 0.9vw;
+        }
+
+        .info-value {
+            background: #e8f4f8;
+            padding: 0.8vh 1vw;
+            border-radius: 4px;
+            flex: 1;
+            font-size: 0.9vw;
+            color: #333;
+            border: 1px solid #d0e4f0;
+        }
+
+        .ledger-section {
+            background: white;
+            padding: 1vh 1vw;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .ledger-title {
+            font-size: 1.1vw;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.8vh;
+            padding-bottom: 0.5vh;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .ledger-input {
+            background: #f8f9fa;
+            padding: 0.8vh 1vw;
+            border-radius: 4px;
+            margin-bottom: 0.8vh;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.85vw;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6vh;
+        }
+
+        .btn {
+            padding: 0.8vh 1vw;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85vw;
+        }
+
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-cancel-modal{
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-cancel-modal:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-print {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(23, 162, 184, 0.4);
+        }
+
+        .btn-quick {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-quick:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+        }
+
+        .btn-delete {
+            background: #6c757d;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .btn-delete:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .table-section {
+            background: white;
+            padding: 1vh 1vw;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1vh;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-wrapper {
+            flex: 1;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 1vh 0.8vw;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9vw;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e9ecef;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* td {
+            padding: 0.8vh 0.8vw;
+            font-size: 0.85vw;
+            color: #495057;
+            
+        }
+
+        td input {
+            width: 100%;
+            padding: 0.6vh 0.5vw;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            font-size: 0.85vw;
+        }
+
+        td input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        } */
+        /* Table cell */
+       td {
+            padding: 0.8vh 0.8vw;
+            font-size: 0.85vw;
+            color: #495057;
+            vertical-align: middle;  /* aligns text vertically */
+            background-color: rgba(87, 87, 87, 0.11);
+        }
+
+        /* Input inside table cells */
+        td input {
+            width: 100%;
+            padding: 0.6vh 0.5vw;
+            border: none;              /* remove default border */
+            border-radius: 0;          /* flat look */
+            background-color: transparent; /* no background, blends with table */
+            font-size: 0.85vw;
+            color: #495057;
+        }
+
+        /* Focus state: subtle underline / highlight */
+        td input:focus {
+            outline: none;
+            border-bottom: 1px solid #667eea; /* subtle line to indicate focus */
+            box-shadow: 0 1px 2px rgba(102, 126, 234, 0.2); /* soft glow */
+            background-color: transparent;
+        }
+
+        /* Placeholder styling */
+        td input::placeholder {
+            color: #adb5bd;
+            opacity: 1;
+            
+        }
+
+        /* Hover effect for better UX */
+        td input:hover {
+            background-color: rgba(87, 87, 87, 0.356);
+        }
+
+        /* ------------------------- */
+        /* Increase width of specific columns */
+
+        /* Account Detail - 2nd column */
+        .table-wrapper table th:nth-child(2),
+        .table-wrapper table td:nth-child(2) {
+            width: 300px; /* adjust as needed */
+            min-width: 250px;
+        }
+
+        /* Notes - 3rd column */
+        .table-wrapper table th:nth-child(3),
+        .table-wrapper table td:nth-child(3) {
+            width: 300px; /* adjust as needed */
+            min-width: 300px;
+        }
+
+        /* Optional: make table scrollable if wide */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        .remarks-section {
+            background: white;
+            padding: 1vh 1vw;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1vh;
+            flex-shrink: 0;
+        }
+
+        .remarks-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5vh;
+            display: block;
+            font-size: 0.9vw;
+        }
+
+        .remarks-input {
+            width: 100%;
+            padding: 0.8vh 1vw;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            background: #000;
+            color: #fff;
+            font-size: 0.85vw;
+            height: 5vh;
+            resize: none;
+        }
+
+        .total-section {
+            background: white;
+            padding: 1vh 1vw;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1vh;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .total-label {
+            font-size: 1.2vw;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .total-amount {
+            background: #000;
+            color: #00ffff;
+            padding: 1vh 2vw;
+            border-radius: 6px;
+            font-size: 1.5vw;
+            font-weight: 700;
+            min-width: 10vw;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .bottom-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 0.5vw;
+        }
+
+        .nav-btn {
+            padding: 0.8vh 1.5vw;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85vw;
+        }
+
+        .nav-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .voucher-number {
+            font-size: 0.95vw;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 0.8vh 2vw;
+            color: white;
+            text-align: right;
+            font-size: 0.9vw;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .modal-content {
+                width: 98%;
+                height: 98vh;
+            }
+
+            .company-name, .info-label, .info-value, .ledger-title, 
+            .ledger-input, .btn, th, td, td input, .remarks-label, 
+            .remarks-input, .total-label, .total-amount, .nav-btn, 
+            .voucher-number, .footer, .voucher-title {
+                font-size: 12px !important;
+            }
+            
+            .voucher-title {
+                letter-spacing: 3px !important;
+            }
+            
+            .top-section {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .window-controls button {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal-overlay {
+                padding: 0;
+            }
+
+            .modal-content {
+                width: 100%;
+                height: 100vh;
+                max-width: 100%;
+                border-radius: 0;
+            }
+            
+            .company-name, .info-label, .info-value, .ledger-title, 
+            .ledger-input, .btn, th, td, td input, .remarks-label, 
+            .remarks-input, .total-label, .total-amount, .nav-btn, 
+            .voucher-number, .footer {
+                font-size: 11px !important;
+            }
+            
+            .voucher-title {
+                font-size: 18px !important;
+                letter-spacing: 2px !important;
+            }
+
+            .top-section {
+                grid-template-columns: 1fr;
+                gap: 1vh;
+            }
+            
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-delete {
+                grid-column: span 1;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 0.5vh;
+            }
+            
+            .nav-btn {
+                padding: 1vh 2vw;
+                flex: 1;
+                min-width: 70px;
+            }
+            
+            th, td {
+                padding: 0.8vh 1vw;
+            }
+
+            .window-controls button {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .company-name, .info-label, .info-value, .ledger-title, 
+            .ledger-input, .btn, th, td, td input, .remarks-label, 
+            .remarks-input, .total-label, .total-amount, .nav-btn, 
+            .voucher-number, .footer {
+                font-size: 10px !important;
+            }
+            
+            .voucher-title {
+                font-size: 16px !important;
+                letter-spacing: 1px !important;
+            }
+            
+            .window-controls {
+                gap: 5px;
+            }
+            
+            .window-controls button {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+            
+            .bottom-navigation {
+                flex-direction: column;
+                gap: 1vh;
+            }
+            
+            .nav-buttons {
+                width: 100%;
+            }
+            
+            .nav-btn {
+                flex: 1;
+            }
+
+            #cash_receipt {
+                padding: 12px 30px;
+                font-size: 16px;
+            }
+        }
+
+        /* Ledger Section */
+.ledger-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    
+}
+
+
+/* Label */
+.ledger-title {
+    min-width: 140px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Input Wrapper */
+.ledger-input {
+    flex: 1;
+}
+
+/* Select / Input Styling */
+.ledger-input select {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 13px;
+    border: 1px solid #cfd6dd;
+    border-radius: 4px;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Focus State */
+.ledger-input select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Disabled / Hidden */
+#bank-section {
+    display: none;
+}
+
+.head_in_modal,
+.notes_in_modal{
+    color: red;
+    width: 100%;
+}
+
+
+#transaction_type {
+    background: #ffffff;
+    border: 1px solid #e3e6eb;
+    border-radius: 8px;
+    padding: 14px 16px;
+    max-width: 520px;
+}
+
+.jv-ledger-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.transaction_type_input {
+    display: flex;
+    align-items: center;
+    gap: 20px;   /* space between radio 1 and radio 2 */
+}
+
+.radio-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #dcdfe4;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #f9fafb;
+    font-size: 13px;
+    color: #34495e;
+    transition: all 0.2s ease;
+}
+
+.radio-box:hover {
+    border-color: #0d6efd;
+    background: #f0f6ff;
+}
+
+.radio-box input[type="radio"] {
+    accent-color: #0d6efd;
+    cursor: pointer;
+}
+
+.radio-box input[type="radio"]:checked + span {
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+
+.action-section {
+    display: block !important;   /* Remove flex */
+}
+
+.window-controls {
+    position: relative !important;
+    background: yellow !important;     /* ← to see its real position */
+    z-index: 100 !important;
+}
+
+.close-btn {
+    position: absolute !important;
+    top: 8px !important;
+    right: 12px !important;
+    background: red !important;
+}

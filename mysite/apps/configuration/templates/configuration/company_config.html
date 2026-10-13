@@ -1,0 +1,1177 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .config-container {
+        padding: 24px 24px 100px 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .config-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .config-title-group {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .config-title-icon {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .config-title h1 {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-main, #0f172a);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .config-title p {
+        font-size: 13px;
+        color: #64748b;
+        margin: 2px 0 0 0;
+    }
+    
+    /* Top Branch Selector Card */
+    .branch-selector-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .branch-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #f1f5f9;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    
+    /* Tab Navigation */
+    .erp-tabs {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 24px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+    .erp-tab-btn {
+        background: transparent;
+        border: none;
+        outline: none;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        border-radius: 8px 8px 0 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        white-space: nowrap;
+        position: relative;
+    }
+    .erp-tab-btn:hover {
+        color: #2563eb;
+        background: #f8fafc;
+    }
+    .erp-tab-btn.active {
+        color: #2563eb;
+        font-weight: 700;
+        background: #ffffff;
+    }
+    .erp-tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #2563eb;
+        border-radius: 2px;
+    }
+    
+    /* Tab Content Cards */
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .config-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .card-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .card-section-title i {
+        color: #2563eb;
+    }
+    
+    .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+    .config-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .config-item label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+    .config-item .hint {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+    .config-input {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+        outline: none;
+        color: #0f172a;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .config-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    
+    /* Toggle Switch */
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+    .toggle-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .toggle-info span {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .toggle-info small {
+        font-size: 11px;
+        color: #64748b;
+    }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .2s;
+        border-radius: 24px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .2s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider {
+        background-color: #2563eb;
+    }
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+    
+    /* Footer Action Bar */
+    .config-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-top: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+        position: sticky;
+        bottom: 20px;
+        z-index: 20;
+    }
+    .btn-save {
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        transition: all 0.15s;
+    }
+    .btn-save:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+    .all-branches-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="config-container">
+    <!-- Header -->
+    <div class="config-header">
+        <div class="config-title-group">
+            <div class="config-title-icon">
+                <i class="fas fa-sliders-h"></i>
+            </div>
+            <div class="config-title">
+                <h1>Company Configuration</h1>
+                <p>System policies, discount thresholds, hardware &amp; document printing rules</p>
+            </div>
+        </div>
+
+        <div>
+            <a href="{% url 'default_accounts' %}" class="btn-save" style="background: #0f172a; text-decoration: none;">
+                <i class="fas fa-book-open"></i> Default Accounts Settings &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Branch / Company Selector (Superuser / Multi-branch) -->
+    <div class="branch-selector-card">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div class="branch-badge">
+                <i class="fas fa-building text-blue-600"></i>
+                <span>Company: <strong>{{ company.name }}</strong></span>
+            </div>
+            <div class="branch-badge">
+                <i class="fas fa-store text-emerald-600"></i>
+                <span>Branch: <strong>{{ branch.name }}</strong></span>
+            </div>
+        </div>
+
+        {% if is_superuser and companies|length > 1 or branches|length > 1 %}
+        <form method="GET" style="display: flex; align-items: center; gap: 10px;">
+            <select name="company" class="config-input" onchange="this.form.submit()">
+                {% for c in companies %}
+                <option value="{{ c.id }}" {% if company.id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="branch" class="config-input" onchange="this.form.submit()">
+                {% for b in branches %}
+                <option value="{{ b.id }}" {% if branch.id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Main Configuration Form -->
+    <form method="POST" id="companyConfigForm">
+        {% csrf_token %}
+
+        <!-- Tab Navigation -->
+        <div class="erp-tabs">
+            <button type="button" class="erp-tab-btn active" onclick="switchTab('tab-pos')">
+                <i class="fas fa-cash-register"></i> POS &amp; Sales
+            </button>
+            <button type="button" class="erp-tab-btn" onclick="switchTab('tab-purchase')">
+                <i class="fas fa-shopping-cart"></i> Purchase
+            </button>
+            <button type="button" class="erp-tab-btn" onclick="switchTab('tab-quotation')">
+                <i class="fas fa-file-invoice"></i> Quotation
+            </button>
+            <button type="button" class="erp-tab-btn" onclick="switchTab('tab-inventory')">
+                <i class="fas fa-boxes"></i> Inventory
+            </button>
+            <button type="button" class="erp-tab-btn" onclick="switchTab('tab-vouchers')">
+                <i class="fas fa-receipt"></i> Vouchers
+            </button>
+            <button type="button" class="erp-tab-btn" onclick="switchTab('tab-general')">
+                <i class="fas fa-cog"></i> General &amp; Printing
+            </button>
+        </div>
+
+        <!-- 1. POS Tab -->
+        <div id="tab-pos" class="tab-content active">
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-percent"></i> Discount &amp; Pricing Limits
+                </h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>Max Row Discount Percent (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="pos_max_row_discount_percent" class="config-input" value="{{ config.pos.max_row_discount_percent|default:0 }}">
+                        <span class="hint">0 = Unlimited or unrestricted discount</span>
+                    </div>
+                    <div class="config-item">
+                        <label>Max Row Discount Amount (Rs)</label>
+                        <input type="number" step="0.01" min="0" name="pos_max_row_discount_amount" class="config-input" value="{{ config.pos.max_row_discount_amount|default:0 }}">
+                        <span class="hint">Max allowed discount on a single line item</span>
+                    </div>
+                    <div class="config-item">
+                        <label>Max Total Bill Discount (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="pos_max_total_discount_percent" class="config-input" value="{{ config.pos.max_total_discount_percent|default:0 }}">
+                        <span class="hint">Max invoice-level discount % allowed per receipt (0 = unlimited)</span>
+                    </div>
+                    <div class="config-item">
+                        <label>Default GST / Tax Percent (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="pos_total_gst_percent" class="config-input" value="{{ config.pos.total_gst_percent|default:0 }}">
+                        <span class="hint">Auto-fills GST rate on POS bill screen</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-toggle-on"></i> POS Toggles &amp; Features
+                </h3>
+                <div class="config-grid">
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Allow Delivery Charges</span>
+                            <small>Enable delivery fee input on sale screen</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_delivery_charges_allowed" {% if config.pos.delivery_charges_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Allow Sales Tax / Tax Charges</span>
+                            <small>Enable tax addition on bills</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_tax_charges_allowed" {% if config.pos.tax_charges_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Allow Misc / Extra Charges</span>
+                            <small>Enable miscellaneous charges input on POS</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_msc_charges_allowed" {% if config.pos.msc_charges_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Allow Per-Item Row Discount</span>
+                            <small>Show discount columns on each cart row</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_row_discount_allowed" {% if config.pos.row_discount_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Allow Price Decrease Below Original</span>
+                            <small>When OFF, cashier can increase price but NOT reduce below original item rate</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_allow_to_decrease_price" {% if config.pos.allow_to_decrease_price %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row hidden">
+                        <div class="toggle-info">
+                            <span>Allow Negative / Oversale</span>
+                            <small>Allow selling items with zero or negative stock</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_allow_negative_sale" {% if config.pos.allow_negative_sale %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Require Remarks on Sale</span>
+                            <small>Cashier must provide remarks/notes before saving the bill</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_require_remarks" {% if config.pos.require_remarks %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>FOC Allowed</span>
+                            <small>Allow giving items for free</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_foc_allowed" {% if config.pos.foc_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-print"></i> POS Printing Preferences
+                </h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>Default POS Receipt Page Size</label>
+                        <select name="pos_default_page_size" class="config-input">
+                            <option value="thermal_80" {% if config.pos.default_page_size == 'thermal_80' %}selected{% endif %}>Thermal 80mm</option>
+                            <option value="thermal_58" {% if config.pos.default_page_size == 'thermal_58' %}selected{% endif %}>Thermal 58mm</option>
+                            <option value="A4" {% if config.pos.default_page_size == 'A4' %}selected{% endif %}>A4 Full Page</option>
+                            <option value="A5" {% if config.pos.default_page_size == 'A5' %}selected{% endif %}>A5 Half Page</option>
+                            <option value="urdu_80mm" {% if config.pos.default_page_size == 'urdu_80mm' %}selected{% endif %}>Thermal 80mm — Urdu</option>
+                            <option value="urdu_58mm" {% if config.pos.default_page_size == 'urdu_58mm' %}selected{% endif %}>Thermal 58mm — Urdu</option>
+                            <option value="urdu_a4" {% if config.pos.default_page_size == 'urdu_a4' %}selected{% endif %}>A4 — Urdu</option>
+                            <option value="urdu_a5" {% if config.pos.default_page_size == 'urdu_a5' %}selected{% endif %}>A5 — Urdu</option>
+                            <option value="bilingual_80mm" {% if config.pos.default_page_size == 'bilingual_80mm' %}selected{% endif %}>Thermal 80mm — Bilingual</option>
+                            <option value="bilingual_a4" {% if config.pos.default_page_size == 'bilingual_a4' %}selected{% endif %}>A4 — Bilingual</option>
+                        </select>
+                    </div>
+                    <div class="toggle-row" style="align-self: flex-end;">
+                        <div class="toggle-info">
+                            <span>Direct Silent Printing Checked by Default</span>
+                            <small>Skip print preview dialog on saving bill</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="pos_default_direct_print_checked" {% if config.pos.default_direct_print_checked %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Purchase Tab -->
+        <div id="tab-purchase" class="tab-content">
+            <div class="config-card hidden">
+                <h3 class="card-section-title">
+                    <i class="fas fa-percent"></i> Purchase Discount Limits
+                </h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>Max Row Discount Percent (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="purchase_max_row_discount_percent" class="config-input" value="{{ config.purchase.max_row_discount_percent|default:0 }}">
+                        <span class="hint">0 = unlimited</span>
+                    </div>
+                    <div class="config-item">
+                        <label>Max Total Bill Discount (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="purchase_max_total_discount_percent" class="config-input" value="{{ config.purchase.max_total_discount_percent|default:0 }}">
+                        <span class="hint">Max invoice-level discount % per purchase (0 = unlimited)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-truck-loading"></i> Purchase Charges &amp; Landed Cost
+                </h3>
+                <div class="config-grid">
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Freight / Carriage Allowed</span>
+                            <small>Enable freight cost line on purchases</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="purchase_freight_charges_allowed" {% if config.purchase.freight_charges_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Labour Charges Allowed</span>
+                            <small>Enable labour fee line on purchases</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="purchase_labour_charges_allowed" {% if config.purchase.labour_charges_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Unloading Charges Allowed</span>
+                            <small>Enable unloading expense line on purchases</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="purchase_unload_charges_allowed" {% if config.purchase.unload_charges_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>FOC Allowed</span>
+                            <small>Allow giving items for free</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="purchase_foc_allowed" {% if config.purchase.foc_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row hidden">
+                        <div class="toggle-info">
+                            <span>Auto Update Cost Price in Inventory</span>
+                            <small>Update product cost price when purchase is saved</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="purchase_auto_update_cost_price" {% if config.purchase.auto_update_cost_price %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-print"></i> Purchase Printing Preferences
+                </h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>Default Purchase Receipt Page Size</label>
+                        <select name="purchase_default_page_size" class="config-input">
+                            <option value="thermal_80" {% if config.purchase.default_page_size == 'thermal_80' %}selected{% endif %}>Thermal 80mm</option>
+                            <option value="A4" {% if config.purchase.default_page_size == 'A4' %}selected{% endif %}>A4 Full Page</option>
+                            <option value="A5" {% if config.purchase.default_page_size == 'A5' %}selected{% endif %}>A5 Half Page</option>
+                            <option value="urdu_80mm" {% if config.purchase.default_page_size == 'urdu_80mm' %}selected{% endif %}>Thermal 80mm — Urdu</option>
+                            <option value="urdu_58mm" {% if config.purchase.default_page_size == 'urdu_58mm' %}selected{% endif %}>Thermal 58mm — Urdu</option>
+                            <option value="urdu_a4" {% if config.purchase.default_page_size == 'urdu_a4' %}selected{% endif %}>A4 — Urdu</option>
+                            <option value="urdu_a5" {% if config.purchase.default_page_size == 'urdu_a5' %}selected{% endif %}>A5 — Urdu</option>
+                            <option value="bilingual_80mm" {% if config.purchase.default_page_size == 'bilingual_80mm' %}selected{% endif %}>Thermal 80mm — Bilingual</option>
+                            <option value="bilingual_a4" {% if config.purchase.default_page_size == 'bilingual_a4' %}selected{% endif %}>A4 — Bilingual</option>
+                        </select>
+                    </div>
+                    <div class="toggle-row" style="align-self: flex-end;">
+                        <div class="toggle-info">
+                            <span>Direct Silent Printing for Purchase</span>
+                            <small>Skip print preview dialog on purchase vouchers</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="purchase_default_direct_print_checked" {% if config.purchase.default_direct_print_checked %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Quotation Tab -->
+        <div id="tab-quotation" class="tab-content">
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-file-signature"></i> Quotation Lifecycle &amp; Conversion
+                </h3>
+                <div class="config-grid">
+                    <div class="config-item hidden">
+                        <label>Quotation Validity Period (Days)</label>
+                        <input type="number" min="1" max="365" name="quotation_validity_days" class="config-input" value="{{ config.quotation.quotation_validity_days|default:30 }}">
+                        <span class="hint">Number of days quotation remains valid</span>
+                    </div>
+
+                    <div class="toggle-row hidden">
+                        <div class="toggle-info">
+                            <span>Auto Convert to Bill Directly</span>
+                            <small>Allow instant conversion from quotation book / POS</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="quotation_auto_convert_to_bill" {% if config.quotation.auto_convert_to_bill %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Default Quotation Print Format</label>
+                        <select name="quotation_default_page_size" class="config-input">
+                            <option value="thermal_80" {% if config.quotation.default_page_size == 'thermal_80' %}selected{% endif %}>Thermal 80mm</option>
+                            <option value="A4" {% if config.quotation.default_page_size == 'A4' %}selected{% endif %}>A4 Professional Document</option>
+                            <option value="A5" {% if config.quotation.default_page_size == 'A5' %}selected{% endif %}>A5 Half Page</option>
+                            <option value="urdu_80mm" {% if config.quotation.default_page_size == 'urdu_80mm' %}selected{% endif %}>Thermal 80mm — Urdu</option>
+                            <option value="urdu_58mm" {% if config.quotation.default_page_size == 'urdu_58mm' %}selected{% endif %}>Thermal 58mm — Urdu</option>
+                            <option value="urdu_a4" {% if config.quotation.default_page_size == 'urdu_a4' %}selected{% endif %}>A4 — Urdu</option>
+                            <option value="urdu_a5" {% if config.quotation.default_page_size == 'urdu_a5' %}selected{% endif %}>A5 — Urdu</option>
+                            <option value="bilingual_80mm" {% if config.quotation.default_page_size == 'bilingual_80mm' %}selected{% endif %}>Thermal 80mm — Bilingual</option>
+                            <option value="bilingual_a4" {% if config.quotation.default_page_size == 'bilingual_a4' %}selected{% endif %}>A4 — Bilingual</option>
+                        </select>
+                    </div>
+
+                    <div class="toggle-row" style="align-self: flex-end;">
+                        <div class="toggle-info">
+                            <span>Direct Printing for Quotation</span>
+                            <small>Print directly without preview popup</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="quotation_default_direct_print_checked" {% if config.quotation.default_direct_print_checked %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Inventory Tab -->
+        <div id="tab-inventory" class="tab-content">
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-warehouse"></i> Stock &amp; Warehouse Control
+                </h3>
+                <div class="config-grid">
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Enable Expiry Date Tracking</span>
+                            <small>Show expiry dates on inventory &amp; billing</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="inventory_enable_expiry_tracking" {% if config.inventory.enable_expiry_tracking %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Enable Low Stock Alerts</span>
+                            <small>Highlight items reaching minimum reorder level</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="inventory_enable_low_stock_alerts" {% if config.inventory.enable_low_stock_alerts %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row hidden">
+                        <div class="toggle-info">
+                            <span>Allow Negative Stock on Item Ledger</span>
+                            <small>Allow balance quantities to drop below 0</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="inventory_allow_negative_stock" {% if config.inventory.allow_negative_stock %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+
+
+
+        <!-- 4. Vouchers Tab -->
+<div id="tab-vouchers" class="tab-content">
+    {% comment %} 
+        <div class="config-card hidden">
+
+            <h3 class="card-section-title">
+                <i class="fas fa-receipt"></i>
+                Voucher Controls
+            </h3>
+
+            <div class="config-grid">
+
+                <!-- Allow Edit -->
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span>Allow Voucher Editing</span>
+                        <small>
+                            Allow users to edit existing vouchers.
+                        </small>
+                    </div>
+
+                    <label class="switch">
+                        <input
+                            type="checkbox"
+                            name="voucher_allow_edit"
+                            {% if config.vouchers.allow_edit %}checked{% endif %}
+                        >
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+
+                <!-- Allow Delete -->
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span>Allow Voucher Deletion</span>
+                        <small>
+                            Allow users to delete existing vouchers.
+                        </small>
+                    </div>
+
+                    <label class="switch">
+                        <input
+                            type="checkbox"
+                            name="voucher_allow_delete"
+                            {% if config.vouchers.allow_delete %}checked{% endif %}
+                        >
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+
+                <!-- Require Remarks -->
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span>Require Voucher Remarks</span>
+                        <small>
+                            Require remarks before saving a voucher.
+                        </small>
+                    </div>
+
+                    <label class="switch">
+                        <input
+                            type="checkbox"
+                            name="voucher_require_remarks"
+                            {% if config.vouchers.require_remarks %}checked{% endif %}
+                        >
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+
+                <!-- Backdated -->
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <span>Allow Backdated Vouchers</span>
+                        <small>
+                            Allow users to create vouchers with an earlier date.
+                        </small>
+                    </div>
+
+                    <label class="switch">
+                        <input
+                            type="checkbox"
+                            name="voucher_allow_backdated"
+                            {% if config.vouchers.allow_backdated %}checked{% endif %}
+                        >
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+            </div>
+
+        </div> 
+    {% endcomment %}
+
+    <!-- Printing -->
+    <div class="config-card">
+
+        <h3 class="card-section-title">
+            <i class="fas fa-print"></i>
+            Voucher Printing Preferences
+        </h3>
+
+        <div class="config-grid">
+
+            <div class="config-item">
+
+                <label>
+                    Default Voucher Print Format
+                </label>
+
+                <select
+                    name="voucher_default_page_size"
+                    class="config-input"
+                >
+
+                    <option
+                        value="thermal_80"
+                        {% if config.vouchers.default_page_size == 'thermal_80' %}
+                        selected
+                        {% endif %}
+                    >
+                        Thermal 80mm
+                    </option>
+
+                    <option
+                        value="thermal_58"
+                        {% if config.vouchers.default_page_size == 'thermal_58' %}
+                        selected
+                        {% endif %}
+                    >
+                        Thermal 58mm
+                    </option>
+
+                    <option
+                        value="A4"
+                        {% if config.vouchers.default_page_size == 'A4' %}
+                        selected
+                        {% endif %}
+                    >
+                        A4
+                    </option>
+
+                    <option
+                        value="A5"
+                        {% if config.vouchers.default_page_size == 'A5' %}
+                        selected
+                        {% endif %}
+                    >
+                        A5
+                    </option>
+
+                    <option
+                        value="urdu_80mm"
+                        {% if config.vouchers.default_page_size == 'urdu_80mm' %}
+                        selected
+                        {% endif %}
+                    >
+                        Thermal 80mm — Urdu
+                    </option>
+
+                    <option
+                        value="urdu_a4"
+                        {% if config.vouchers.default_page_size == 'urdu_a4' %}
+                        selected
+                        {% endif %}
+                    >
+                        A4 — Urdu
+                    </option>
+
+                    <option
+                        value="bilingual_80mm"
+                        {% if config.vouchers.default_page_size == 'bilingual_80mm' %}
+                        selected
+                        {% endif %}
+                    >
+                        Thermal 80mm — Bilingual
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div
+                class="toggle-row"
+                style="align-self: flex-end;"
+            >
+
+                <div class="toggle-info">
+
+                    <span>
+                        Direct Printing for Voucher
+                    </span>
+
+                    <small>
+                        Print directly without preview popup.
+                    </small>
+
+                </div>
+
+                <label class="switch">
+
+                    <input
+                        type="checkbox"
+                        name="voucher_default_direct_print_checked"
+                        {% if config.vouchers.default_direct_print_checked %}
+                        checked
+                        {% endif %}
+                    >
+
+                    <span class="slider"></span>
+
+                </label>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- 5. General Tab -->
+        <div id="tab-general" class="tab-content">
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-globe"></i> General System &amp; Currency Settings
+                </h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>Currency Symbol</label>
+                        <input type="text" name="general_currency_symbol" class="config-input" value="{{ config.general.currency_symbol|default:'Rs' }}">
+                        <span class="hint">e.g. Rs, $, AED, SAR</span>
+                    </div>
+
+                    <div class="config-item">
+                        <label>Multiple Bill Copies by Default</label>
+                        <input type="number" min="1" max="10" name="general_multiple_bill_prints" class="config-input" value="{{ config.general.multiple_bill_prints|default:1 }}">
+                        <span class="hint">Number of copies sent to thermal printer per receipt</span>
+                    </div>
+
+                    <div class="config-item hidden" style="grid-column: span 2;">
+                        <label>Company Tagline / Subtitle on Prints</label>
+                        <input type="text" name="general_company_tagline" class="config-input" value="{{ config.general.company_tagline|default:'' }}" placeholder="e.g. Quality Products at Best Prices">
+                    </div>
+
+                    <div class="config-item">
+                        <label>Software Online Mode</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="general_online_software" name="general_online_software" {% if config.general.online_software %}checked{% endif %}>
+                            <label for="general_online_software" class="toggle-label">
+                                <span class="toggle-text">Check if Online</span>
+                                <!-- <span class="slider"></span> -->
+                            </label>
+                        </div>
+                        <span class="hint">Check if software operates online (cloud) to sync offline bills</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <h3 class="card-section-title">
+                    <i class="fas fa-gauge-high"></i> Dashboard Preferences
+                </h3>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="dashboard_default_period">Default dashboard period</label>
+                        <select id="dashboard_default_period" name="dashboard_default_period" class="config-input">
+                            <option value="today" {% if config.dashboard.default_period == 'today' %}selected{% endif %}>Today</option>
+                            <option value="7_days" {% if config.dashboard.default_period == '7_days' %}selected{% endif %}>Last 7 days</option>
+                            <option value="this_month" {% if config.dashboard.default_period == 'this_month' %}selected{% endif %}>This month</option>
+                        </select>
+                        <span class="hint">Choose the period selected automatically when this company’s dashboard opens.</span>
+                    </div>
+
+
+
+
+
+
+
+
+
+                    <div class="config-item">
+    <label for="stock_valuation_method">
+        Stock valuation method
+        <i
+            class="fas fa-info-circle hint"
+            title="Method used to calculate item costs and value of stock on hand"
+        ></i>
+    </label>
+
+    <select
+        id="stock_valuation_method"
+        name="stock_valuation_method"
+        class="config-input"
+    >
+        <option value="" disabled>
+            Select Method
+        </option>
+
+        <option
+            value="FEFO"
+            {% if config.general.stock_valuation_method == 'FEFO' %}selected{% endif %}
+        >
+            FEFO (First Expired, First Out)
+        </option>
+
+        <option
+            value="FIFO"
+            {% if config.general.stock_valuation_method == 'FIFO' %}selected{% endif %}
+        >
+            FIFO (First In, First Out)
+        </option>
+
+        <option
+            value="LIFO"
+            {% if config.general.stock_valuation_method == 'LIFO' %}selected{% endif %}
+        >
+            LIFO (Last In, First Out)
+        </option>
+
+        <option
+            value="AVERAGE"
+            {% if config.general.stock_valuation_method == 'AVERAGE' %}selected{% endif %}
+        >
+            Average Cost
+        </option>
+
+        <option
+            value="LAST_PUR_PRICE"
+            {% if config.general.stock_valuation_method == 'LAST_PUR_PRICE' %}selected{% endif %}
+        >
+            Last Purchase Price
+        </option>
+    </select>
+
+    <span class="hint">
+        Changes take effect immediately for new stock entries.
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Bottom Actions -->
+        <div class="config-actions">
+            <label class="all-branches-label">
+                <input type="checkbox" name="all_branches" style="width: 18px; height: 18px; accent-color: #2563eb;">
+                <span>Apply this configuration to <strong>ALL Branches</strong> of {{ company.name }}</span>
+            </label>
+
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> Save Configuration
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.erp-tab-btn').forEach(el => el.classList.remove('active'));
+
+        const targetContent = document.getElementById(tabId);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
+
+        const activeBtn = Array.from(document.querySelectorAll('.erp-tab-btn')).find(
+            btn => btn.getAttribute('onclick')?.includes(tabId)
+        );
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        window.location.hash = tabId;
+    }
+
+    // Restore tab from URL hash if available
+    window.addEventListener('DOMContentLoaded', () => {
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            if (document.getElementById(hash)) {
+                switchTab(hash);
+            }
+        }
+    });
+</script>
+{% endblock extra_js %}

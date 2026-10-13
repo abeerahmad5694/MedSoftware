@@ -1,0 +1,64 @@
+{% load extra_filters %}
+
+
+<style>
+.converted-row {
+    background-color: #d4edda !important; /* light green */
+}
+.converted-row td {
+    background-color: #d4edda !important;
+    color: #155724;
+    font-weight: 500;
+}
+.status-badge.converted {
+    background: #28a745;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+.status-badge.pending {
+    background: #ffc107;
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+</style>
+
+
+<table>
+    {% if columns and columns.0.width %}
+    <colgroup>
+        {% for col in columns %}
+        <col style="width: {{ col.width|default:'auto' }};">
+        {% endfor %}
+    </colgroup>
+    {% else %}
+    <colgroup>
+        <col style="width: 11%;">   <!-- DATE -->
+        <col style="width: 7%;">    <!-- Vch Type -->
+        <col style="width: 8%;">    <!-- INV/VCH# -->
+        <col style="width: 10%;">   <!-- A/C -->
+        <col style="width: 38%;">   <!-- Desc - WIDEST -->
+        <col style="width: 13%;">   <!-- Debit -->
+        <col style="width: 13%;">   <!-- Credit -->
+    </colgroup>
+    {% endif %}
+    <thead>
+        <tr>
+            {% for col in columns %}
+                <th>{{ col.label }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody{% if tbody_id %} id="{{ tbody_id }}"{% endif %}>
+        {% for row in data %}
+            <tr class='table_row' data-id="{{row.desc}}">
+                {% for col in columns %}
+                    <td class="ledgerRowCell" data-key="{{ col.key }}">{{ row|get_item:col.key }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

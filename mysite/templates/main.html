@@ -1,0 +1,740 @@
+    {% load static %}
+    <!DOCTYPE html>
+    <html lang="en" data-theme="blue">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Enterprise ERP Core</title>
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'css/main.css' %}">
+        <link rel="stylesheet" href="{% static 'vendor/font-awesome/css/all.min.css' %}">
+        <link rel="stylesheet" href="{% static 'vendor/inter/inter.css' %}">
+        <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+
+    </head>
+
+    <body class="flex h-screen overflow-hidden">
+        {% block extra_css %}
+        {% endblock %}
+
+        <!-- ═══════════════════════════════════
+            MOBILE TOP BAR (visible < 769px)purchs
+            ═══════════════════════════════════ -->
+        <div class="mobile-header fixed top-0 left-0 right-0 h-12 surface items-center justify-between px-4 z-30 shadow-sm"
+            style="display:none;">
+            <button onclick="toggleMobileSidebar()"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--color-primary-light)] cursor-pointer">
+                <i class="fa-solid fa-bars text-base"></i>
+            </button>
+            <span class="text-sm font-bold text-[var(--text-main)] tracking-wide">ERP Core</span>
+            <button onclick="openThemePanel()"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--color-primary-light)] cursor-pointer">
+                <i class="fa-solid fa-palette text-base"></i>
+            </button>
+        </div>
+
+        <!-- Mobile overlay -->
+        <div id="mobileOverlay" onclick="toggleMobileSidebar()"></div>
+
+        <!-- ═══════════════════════════════════
+            SIDEBAR
+            ═══════════════════════════════════ -->
+        <aside id="sidebar" class="flex flex-col flex-shrink-0 z-40 h-full relative">
+
+            <!-- Logo -->
+            <div class="flex items-center h-12 px-2.5 flex-shrink-0 border-b border-white/[0.06]">
+                <div class="nav-icon flex-shrink-0">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs"
+                        style="background:var(--accent-indicator);">E</div>
+                </div>
+                <span class="sb-label ml-2.5 font-bold text-white text-sm tracking-wide">ERP Core</span>
+            </div>
+
+            <!-- Search -->
+            <div class="sb-search mt-1" style="position:relative;">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="sbSearchInput" placeholder="Search... (Ctrl+K)" autocomplete="off">
+                <div id="sbSearchResults"></div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto overflow-x-hidden py-1 pb-4 custom-scroll">
+
+
+                {% if 'view_dashboard' in user_perm_codes %}
+                <div class="sb-section-label sb-label">Main</div>
+                <a href="{%url 'dashboard' %}"
+                    class="nav-item {%if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                    data-tip="Dashboard">
+                    <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span class="sb-label ml-2.5">Dashboard</span>
+                </a>
+                {% endif %}
+
+                <!-- <a href="#" class="nav-item" data-tip="Analytics">
+                    <span class="nav-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                    <span class="sb-label ml-2.5">Analytics</span>
+                </a> -->
+   
+                <div class="sb-section-label sb-label">Operations</div>
+
+                {% if 'view_inventory' in user_perm_codes %}
+                <div class="sub-parent">
+                    <button onclick="toggleSub(this)" class="nav-item" data-tip="Inventory">
+                        <span class="nav-icon"><i class="fa-solid fa-cubes"></i></span>
+                        <span class="sb-label ml-2.5 flex-1 flex items-center justify-between">
+                            Inventory
+                            <i class="fa-solid fa-chevron-down text-[0.5625rem] chevron-icon opacity-60"></i>
+                        </span>
+                    </button>
+                    <div class="submenu">
+                        <a href="{% url 'inventory' %}">Inventory / Item List</a>
+                        
+                        {% if 'view_stock_report' in user_perm_codes %}
+                        <a href="{% url 'item_ledger' %}">Item Ledger</a> 
+                        {% endif %}
+
+                        {% if 'view_stock_report' in user_perm_codes %}
+                        <a href="{% url 'stock_report' %}">Stock Report</a>
+                        {% endif %}
+                        
+                        {% if 'view_and_update_inventory_bulk' in user_perm_codes %}
+                        <a href="{% url 'inventory_update' %}">Bulk Inventory Update</a>
+                        {% endif %}
+
+                        {% if 'stock_update' in user_perm_codes %}
+                        {% comment %} <a href="{% url 'stock_audit' %}">Stock Audit</a> {% endcomment %}
+                        <a href="{% url 'stock_adjustment' %}">Stock Adjustment</a>
+                        {% endif %}
+                        <!-- <a href="#">Warehouse</a>
+                        <a href="#">Transfers</a> -->
+                    </div>
+                </div>
+                {% endif %}
+
+
+
+                <!-- Purchase -->
+                {% if 'view_own_purchases' in user_perm_codes or 'create_purchase_invoice' in user_perm_codes %}
+                <a href="{% url 'main_purchase' %}" class="nav-item" data-tip="Purchase">
+                    <span class="nav-icon"><i class="fa-solid fa-book"></i></span>
+                    <span class="sb-label ml-2.5">Purchase</span>
+                </a>
+                {% endif %}
+                {% if 'view_own_sales' in user_perm_codes or 'create_invoice' in user_perm_codes %}
+                <a href="{% url 'sale:main_sale' %}" class="nav-item" data-tip="POS">
+                    <span class="nav-icon"><i class="fa-solid fa-receipt"></i></span>
+                    <span class="sb-label ml-2.5">POS</span>
+                </a>
+                {% endif %}
+
+
+
+                 {% if 'create_quotation' in user_perm_codes or 'view_own_quotation' in user_perm_codes %}
+
+                <div class="sub-parent">
+                    <button onclick="toggleSub(this)" class="nav-item" data-tip="Quotation">
+                        <span class="nav-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+                        <span class="sb-label ml-2.5 flex-1 flex items-center justify-between">
+                            Quotation
+                            <i class="fa-solid fa-chevron-down text-[0.5625rem] chevron-icon opacity-60"></i>
+                        </span>
+                    </button>
+                    <div class="submenu">
+                        <a href="{% url 'main_quotation' %}">Quotations</a>
+                        <a href="{% url 'quotation_book' %}">Quotation Book</a>
+
+                    </div>
+                </div>
+
+                {% endif %}
+
+
+
+
+                <!-- <div class="sub-parent">
+                    <button onclick="toggleSub(this)" class="nav-item" data-tip="Purchase">
+                        <span class="nav-icon"><i class="fa-solid fa-basket-shopping"></i></span>
+                        <span class="sb-label ml-2.5 flex-1 flex items-center justify-between">
+                            Purchase
+                            <i class="fa-solid fa-chevron-down text-[0.5625rem] chevron-icon opacity-60"></i>
+                        </span>
+                    </button>
+                    <div class="submenu">
+                        <a href="{% url 'main_purchase' %}">Purchase</a>
+                        
+                    </div>
+                </div> -->
+
+                <!-- Inventory -->
+
+
+                <!-- HR -->
+                {% if 'view_daybook' in user_perm_codes or 'see_reports' in user_perm_codes or 'view_own_sales' in user_perm_codes %}
+                <div class="sb-section-label sb-label">Reports</div>
+
+                <a href="{% url 'daybook' %}" class="nav-item" data-tip="Daybook">
+                    <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+                    <span class="sb-label ml-2.5">Daybook</span>
+                </a>
+                {% endif %}
+
+                {% if 'see_reports' in user_perm_codes %}
+                <div class="sub-parent">
+                    <button onclick="toggleSub(this)" class="nav-item" data-tip="Sale Reports">
+                        <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
+                        <span class="sb-label ml-2.5 flex-1 flex items-center justify-between">
+                            Sale Reports
+                            <i class="fa-solid fa-chevron-down text-[0.5625rem] chevron-icon opacity-60"></i>
+                        </span>
+                    </button>
+                    <div class="submenu">
+                        <a href="{% url 'comprehensive_sale' %}">Comprehensive Sale</a>
+                        <a href="{% url 'item_wise_profit_and_loss' %}">Itemwise Profit & Loss</a>
+                        <a href="{% url 'bill_wise_profit_and_loss' %}">Billwise Profit & Loss</a>
+
+                    </div>
+                </div>
+                {% endif %}
+
+
+                <!-- 
+
+
+                
+                <a href="{% url 'item_wise_profit_and_loss' %}" class="nav-item" data-tip="Itemwise Profit & Loss">
+                    <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+                    <span class="sb-label ml-2.5"></span>
+                </a>
+                <a href="{% url 'bill_wise_profit_and_loss' %}" class="nav-item" data-tip="Billwise Profit & Loss">
+                    <span class="nav-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+                    <span class="sb-label ml-2.5">Billwise Profit & Loss</span>
+                </a>
+                <a href="{% url 'quotation_book' %}" class="nav-item" data-tip="Quotation Book">
+                    <span class="nav-icon"><i class="fa-solid fa-file-signature"></i></span>
+                    <span class="sb-label ml-2.5">Quotation Book</span>
+                </a>
+                <a href="{% url 'comprehensive_sale' %}" class="nav-item" data-tip="Comprehensive Sale">
+                    <span class="nav-icon"><i class="fa-solid fa-table-list"></i></span>
+                    <span class="sb-label ml-2.5">Comprehensive Sale</span>
+                </a>
+                <a href="{% url 'accounts_receivable' %}" class="nav-item" data-tip="Accounts Receivable">
+                    <span class="nav-icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                    <span class="sb-label ml-2.5">Accounts Receivable</span>
+                </a>
+                <a href="{% url 'accounts_payable' %}" class="nav-item" data-tip="Accounts Payable">
+                    <span class="nav-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+                    <span class="sb-label ml-2.5">Accounts Payable</span>
+                </a> -->
+
+                {% if 'view_ledger' in user_perm_codes or 'create_vouchers' in user_perm_codes or 'create_accounts' in user_perm_codes or 'edit_accounts' in user_perm_codes %}
+                <div class="sb-section-label sb-label">Finance</div>
+                {% endif %}
+
+                {% if 'view_ledger' in user_perm_codes %}
+                <a href="{% url 'general_ledger' %}" class="nav-item" data-tip="General Ledger">
+                    <span class="nav-icon"><i class="fa-solid fa-book"></i></span>
+                    <span class="sb-label ml-2.5">General Ledger</span>
+                </a>
+                {% endif %}
+
+
+                <!-- Vouchers Dropdown -->
+                {% if 'create_vouchers' in user_perm_codes %}
+                <div class="sub-parent">
+                    <button onclick="toggleSub(this)" class="nav-item" data-tip="Vouchers">
+                        <span class="nav-icon"><i class="fa-solid fa-receipt"></i></span>
+                        <span class="sb-label ml-2.5 flex-1 flex items-center justify-between">
+                            Vouchers
+                            <i class="fa-solid fa-chevron-down text-[0.5625rem] chevron-icon opacity-60"></i>
+                        </span>
+                    </button>
+                    <div class="submenu">
+                        <a href="{% url 'dynamic_voucher_page_vtype' 'CR' %}">Cash Receipt</a>
+                        <a href="{% url 'dynamic_voucher_page_vtype' 'CP' %}">Cash Payment</a>
+                        <a href="{% url 'dynamic_voucher_page_vtype' 'BR' %}">Bank Receipt</a>
+                        <a href="{% url 'dynamic_voucher_page_vtype' 'BP' %}">Bank Payment</a>
+                        <a href="{% url 'jv_voucher_page' %}">Journal Voucher</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- General Ledger Link -->
+
+
+                <!-- Accounts Dropdown -->
+                {% if 'create_accounts' in user_perm_codes or 'edit_accounts' in user_perm_codes %}
+                <div class="sub-parent">
+                    <button onclick="toggleSub(this)" class="nav-item" data-tip="Accounts">
+                        <span class="nav-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+                        <span class="sb-label ml-2.5 flex-1 flex items-center justify-between">
+                            Accounts
+                            <i class="fa-solid fa-chevron-down text-[0.5625rem] chevron-icon opacity-60"></i>
+                        </span>
+                    </button>
+                    <div class="submenu">
+                        <a href="{% url 'quick_accounts' %}">Quick Account</a>
+                        <a href="{% url 'chart_of_accounts' %}">Advance Accounts</a>
+
+                        {% if 'see_receivables_statements' in user_perm_codes %}
+                        <a href="{% url 'accounts_receivable' %}">Receivable Statement</a>
+
+                        {% endif %}
+                        {% if 'see_payable_statements' in user_perm_codes %}
+                        <a href="{% url 'accounts_payable' %}">Payable Statement</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+
+
+                {% if 'manage_users' in user_perm_codes or 'configure_system' in user_perm_codes %}
+                <div class="sb-section-label sb-label">System</div>
+                {% endif %}
+                <!-- 
+                <a href="#" class="nav-item" data-tip="Settings">
+                    <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                    <span class="sb-label ml-2.5">Settings</span>
+                </a> -->
+
+                {% if 'manage_users' in user_perm_codes or 'configure_system' in user_perm_codes %}
+                <div class="sub-parent">
+                    <button onclick="toggleSub(this)" class="nav-item" data-tip="Settings">
+                        <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                        <span class="sb-label ml-2.5 flex-1 flex items-center justify-between">
+                            Settings
+                            <i class="fa-solid fa-chevron-down text-[0.5625rem] chevron-icon opacity-60"></i>
+                        </span>
+                    </button>
+                    <div class="submenu">
+                        <a href="{% url 'company_config' %}">Company Policies</a>
+                        <a href="{% url 'default_accounts' %}">Default Accounts</a>
+                        <a href="{%url 'invoice_designer:designer_default'%}">Invoice Designer</a>
+                        <a href="{% url 'company' %}">Company</a>
+                        <a href="{% url 'branch' %}">Branch</a>
+                        <a href="{% url 'posterminal' %}">Posterminal</a>
+                        <a href="{% url 'permissions' %}">Permissions</a>
+                        <a href="{% url 'users' %}">Users</a>
+                    </div>
+                </div>
+                {% endif %}
+
+            </nav>
+
+            <!-- Sidebar Bottom -->
+            <div class="flex-shrink-0 border-t border-white/[0.06]">
+                <!-- Theme trigger -->
+                <button onclick="openThemePanel()" class="nav-item w-full my-1" data-tip="Theme"
+                    style="width:calc(100% - 0.75rem);">
+                    <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+                    <span class="sb-label ml-2.5">Appearance</span>
+                </button>
+
+                <!-- User -->
+                <div class="flex items-center h-11 px-2.5 mb-0.5 overflow-hidden">
+                    <img class="sb-user-avatar" src="" alt="User">
+                    <div class="sb-label ml-2.5 min-w-0">
+                        <p class="text-xs font-semibold text-white truncate leading-tight">Abeer Ahmad</p>
+                        <p class="text-[0.625rem] truncate leading-tight" style="color: var(--text-sidebar); opacity:.7;">
+                            Admin</p>
+                    </div>
+
+                    <button onclick="window.IndexDBConfig && window.IndexDBConfig.reload_inventory(this)"
+                        title="Refresh Inventory Cache" id="sync_local_inventory"
+                        class="sb-label ml-auto text-[var(--text-sidebar)] hover:text-[var(--text-sidebar-active)] cursor-pointer flex-shrink-0">
+                        <i class="fa-solid fa-sync text-xs"></i>
+                    </button>
+
+
+
+                    <!-- In your Settings > Company Policies page -->
+                    <button onclick="openLicenseModal()" class="hidden sb-label ml-auto text-[var(--text-sidebar)] hover:text-[var(--text-sidebar-active)] cursor-pointer flex-shrink-0
+                        style=" color:white;">
+                        <i class="fa-solid fa-key mr-1.5"></i>
+                    </button>
+
+
+
+
+
+
+                    <form id="logoutForm" action="{%url 'logout' %}" method="post" style="margin-left: 1.5rem;">
+                        {% csrf_token %}
+                        <button type="submit"
+                            class="sb-label ml-auto text-[var(--text-sidebar)] hover:text-[var(--text-sidebar-active)] cursor-pointer flex-shrink-0">
+                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        </button>
+                    </form>
+                    <!-- <button
+                        type = "submit"
+                        form = "loginForm"
+                        class="sb-label ml-auto text-[var(--text-sidebar)] hover:text-[var(--text-sidebar-active)] cursor-pointer flex-shrink-0">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    </button> -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- ═══════════════════════════════════
+            THEME PANEL (Modal)
+            ═══════════════════════════════════ -->
+        <div id="themePanel">
+            <div class="panel-backdrop" onclick="closeThemePanel()"></div>
+            <div class="panel-body">
+                <div class="flex items-center   ">
+                    <h3 class="text-base font-bold text-[var(--text-main)]">Appearance</h3>
+                    <button onclick="closeThemePanel()"
+                        class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[var(--color-primary-light)] text-[var(--text-muted)] cursor-pointer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-[var(--text-muted)] mb-3">Select a theme preset for the entire application.</p>
+                <div class="space-y-1.5" id="themeList">
+                    <!-- filled by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════
+            MAIN CONTENT AREA
+            ═══════════════════════════════════ -->
+        <div class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto custom-scroll">
+
+
+            <!-- On mobile, offset for the fixed header -->
+            <div class="h-12 flex-shrink-0 md:hidden"></div>
+
+            {% block content %}
+
+            {% endblock %}
+        </div>
+
+
+
+        {% include "users/license_modal.html" %}
+
+
+
+
+        <!-- ═══════════════════════════════════
+            JAVASCRIPT
+            ═══════════════════════════════════ -->
+        <script defer src="{% static main_js %}"></script>
+        <script defer src="{% static app_constants_js %}"></script>
+        <script defer src="{% static fetch_full_model_js %}"></script>
+        <script defer src="{% static indexdb_config_js %}"></script>
+        {% block extra_js %}
+        {% endblock %}
+
+        <!-- ── Sidebar Search ──────────────────────────────────────── -->
+        <script>
+            (function () {
+
+
+                // ── Build navigation index from the DOM ───────────────────
+                // Runs after defer scripts, so the nav is fully rendered.
+                function buildNavIndex() {
+                    const index = [];
+
+                    // Direct nav links (anchor with .nav-item)
+                    document.querySelectorAll('nav a.nav-item').forEach(a => {
+                        const label = a.querySelector('.sb-label')?.textContent.trim()
+                            || a.getAttribute('data-tip')
+                            || '';
+                        const href = a.getAttribute('href') || '#';
+                        if (label && href) {
+                            index.push({ label, href, parent: null });
+                        }
+                    });
+
+                    // Sub-menu items inside .submenu
+                    document.querySelectorAll('nav .sub-parent').forEach(sp => {
+                        const parentBtn = sp.querySelector(':scope > button.nav-item');
+                        const parentLabel = parentBtn?.querySelector('.sb-label')?.childNodes[0]?.textContent.trim()
+                            || parentBtn?.getAttribute('data-tip')
+                            || '';
+                        sp.querySelectorAll('.submenu a').forEach(a => {
+                            const label = a.textContent.trim();
+                            const href = a.getAttribute('href') || '#';
+                            if (label && href) {
+                                index.push({ label, href, parent: parentLabel || null });
+                            }
+                        });
+                    });
+
+                    return index;
+                }
+
+                let navIndex = [];
+                let focusedIdx = -1;
+                let results = [];
+
+                const input = document.getElementById('sbSearchInput');
+                const dropdown = document.getElementById('sbSearchResults');
+
+                if (!input || !dropdown) return;
+
+                // Init index once after page is ready
+                {% comment %} document.addEventListener('DOMContentLoaded', () => {
+                    navIndex = buildNavIndex();
+                }); {% endcomment %}
+                navIndex = buildNavIndex();
+
+
+                // ── Sidebar expand/collapse helpers ─────────────────────
+                const sidebar = document.getElementById('sidebar');
+                let sbPinnedBySearch = false;
+
+                function sidebarPin() {
+                    if (!sidebar) return;
+                    sbPinnedBySearch = true;
+                    sidebar.classList.add('pinned');
+                }
+
+                function sidebarUnpin() {
+                    if (!sbPinnedBySearch) return;
+                    sbPinnedBySearch = false;
+                    sidebar.classList.remove('pinned');
+                }
+
+                // ── Ctrl+K: expand sidebar + focus search ───────────────────
+                document.addEventListener('keydown', e => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                        e.preventDefault();
+                        sidebarPin();
+                        // Small delay so sidebar width transition fires before focus
+                        setTimeout(() => {
+                            input.value = '';
+                            input.focus();
+                            // Flash the search bar to signal activation
+                            input.style.transition = 'box-shadow 0.15s';
+                            input.style.boxShadow = '0 0 0 2px var(--accent-indicator)';
+                            setTimeout(() => { input.style.boxShadow = ''; }, 600);
+                        }, 60);
+                    }
+                });
+
+                // ── Fuzzy match ─────────────────────────────────────────────
+                // Returns a score 0..1 (0 = no match). Combines:
+                //   • Exact substring bonus
+                //   • Sequential char match (all query chars appear in order)
+                //   • Trigram overlap (handles spelling mismatches)
+                function fuzzyScore(str, q) {
+                    if (!str || !q) return 0;
+                    const s = str.toLowerCase();
+                    const t = q.toLowerCase();
+
+                    // Exact substring → top score
+                    if (s.includes(t)) return 1 + (s.startsWith(t) ? 0.5 : 0);
+
+                    // Sequential char match — all chars of query appear in order in str
+                    let si = 0, score = 0, lastIdx = -1, consec = 0;
+                    for (let i = 0; i < t.length; i++) {
+                        const idx = s.indexOf(t[i], si);
+                        if (idx === -1) { score = 0; break; }
+                        // Reward consecutive / adjacent chars
+                        consec = (idx === lastIdx + 1) ? consec + 1 : 0;
+                        score += 1 + consec * 0.3;
+                        lastIdx = idx;
+                        si = idx + 1;
+                    }
+                    const seqScore = score > 0 ? (score / (t.length * 1.3)) * 0.8 : 0;
+
+                    // Trigram similarity — tolerates typos
+                    function trigrams(w) {
+                        const set = new Set();
+                        const padded = ' ' + w + ' ';
+                        for (let i = 0; i < padded.length - 2; i++) set.add(padded.slice(i, i + 3));
+                        return set;
+                    }
+                    const tS = trigrams(s), tT = trigrams(t);
+                    let common = 0;
+                    tT.forEach(g => { if (tS.has(g)) common++; });
+                    const triScore = (2 * common) / (tS.size + tT.size) * 0.6;
+
+                    return Math.max(seqScore, triScore);
+                }
+
+                // ── Filter ─────────────────────────────────────────────────
+                function filter(q) {
+                    if (!q) return [];
+                    const THRESHOLD = 0.18;
+                    const scored = navIndex.map(item => {
+                        const labelScore = fuzzyScore(item.label, q);
+                        const parentScore = item.parent ? fuzzyScore(item.parent, q) * 0.6 : 0;
+                        return { item, score: Math.max(labelScore, parentScore) };
+                    })
+                        .filter(r => r.score >= THRESHOLD)
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, 10)
+                        .map(r => r.item);
+                    return scored;
+                }
+
+                // ── Render results ──────────────────────────────────────────
+                function render(items) {
+                    focusedIdx = -1;
+                    results = items;
+                    if (!items.length) {
+                        dropdown.innerHTML = '<div class="sb-result-empty">No results</div>';
+                        dropdown.classList.add('open');
+                        return;
+                    }
+                    dropdown.innerHTML = items.map((item, i) =>
+                        `<a class="sb-result-item" href="${item.href}" data-idx="${i}">
+                        <span class="sb-res-label">${item.label}</span>
+                        ${item.parent ? `<span class="sb-res-parent">${item.parent}</span>` : ''}
+                    </a>`
+                    ).join('');
+                    dropdown.classList.add('open');
+                }
+
+                function close() {
+                    dropdown.classList.remove('open');
+                    dropdown.innerHTML = '';
+                    focusedIdx = -1;
+                    results = [];
+                    sidebarUnpin();
+                }
+
+                function setFocus(idx) {
+                    const items = dropdown.querySelectorAll('.sb-result-item');
+                    items.forEach(el => el.classList.remove('sb-focused'));
+                    if (idx >= 0 && idx < items.length) {
+                        items[idx].classList.add('sb-focused');
+                        items[idx].scrollIntoView({ block: 'nearest' });
+                    }
+                }
+
+                // ── Events ─────────────────────────────────────────────────
+                input.addEventListener('input', function () {
+                    const q = this.value.trim();
+                    if (!q) { close(); return; }
+                    if (!navIndex.length) navIndex = buildNavIndex();
+                    render(filter(q));
+                });
+
+                input.addEventListener('keydown', function (e) {
+                    const items = dropdown.querySelectorAll('.sb-result-item');
+                    const count = items.length;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        focusedIdx = Math.min(focusedIdx + 1, count - 1);
+                        setFocus(focusedIdx);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        focusedIdx = Math.max(focusedIdx - 1, 0);
+                        setFocus(focusedIdx);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (focusedIdx >= 0 && results[focusedIdx]) {
+                            window.location.href = results[focusedIdx].href;
+                        } else if (results.length === 1) {
+                            window.location.href = results[0].href;
+                        }
+                    } else if (e.key === 'Escape') {
+                        close();
+                        input.value = '';
+                        this.blur();
+                    }
+                });
+
+                // Close on outside click
+                document.addEventListener('mousedown', e => {
+                    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                        close();
+                    }
+                });
+
+                // Clear on blur if no focus moving to dropdown
+                input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        if (!document.activeElement || !dropdown.contains(document.activeElement)) {
+                            close();
+                        }
+                    }, 180);
+                });
+
+            })();
+        </script>
+        
+        <script src="{% static 'invoice_designer/js/offline_template_engine.js' %}?v=2"></script>
+        
+        <script>
+            (
+                function(){
+                // 1. Check if already ran in this session
+                    if (sessionStorage.getItem('inventory_reloaded')) {
+                        return; // already done for this session
+                    }
+
+                    function runInBackground() {
+                        if (window.IndexDBConfig && typeof window.IndexDBConfig.reload_inventory === 'function') {
+                            try {
+                                console.log("[IndexDB] Background reload started...");
+                                // use null instead of 'this' - 'this' will be window in background
+                                Promise.resolve(window.IndexDBConfig.reload_inventory()).catch(() => { }).finally(() => {
+                                    // mark done even if fails, so it doesn't retry every page
+                                    sessionStorage.setItem('inventory_reloaded', '1');
+                                });
+                            } catch (e) {
+                                console.warn("IndexDB reload failed", e);
+                                sessionStorage.setItem('inventory_reloaded', '1');
+                            }
+                        }
+                    }
+
+                    const TEMPLATE_PRELOAD_KEY = 'template_configs_preloaded';
+                    async function runTemplatePreload() {
+                        if (sessionStorage.getItem(TEMPLATE_PRELOAD_KEY)) return;
+                        if (!navigator.onLine) return;
+                        if (!window.OfflineTemplateEngine || typeof window.OfflineTemplateEngine.preloadOfflineRenderData !== 'function') return;
+
+                        try {
+                            console.log("[OTE] Background preload started...");
+                            await window.OfflineTemplateEngine.preloadOfflineRenderData();
+                            // sessionStorage.setItem(TEMPLATE_PRELOAD_KEY, '1');
+                            // Only mark done when the field registry actually
+                            // reached IndexedDB — otherwise header/footer/logo
+                            // fields would stay hidden all session and the
+                            // preload would never be retried.
+                            const reg = await window.OfflineTemplateEngine.getCachedRegistry();
+                            if (reg && reg.fields) {
+                                sessionStorage.setItem(TEMPLATE_PRELOAD_KEY, '1');
+                            } else {
+                                console.warn("[OTE] Registry not cached after preload; will retry on next page");
+                            }
+                        } catch(e) {
+                            console.warn("[OTE] Template preload failed:", e);
+                        }
+                    }
+
+                    function schedule() {
+                        // Run when browser is idle, not blocking load
+                        if ('requestIdleCallback' in window) {
+                            requestIdleCallback(runInBackground, { timeout: 3000 });
+                            requestIdleCallback(runTemplatePreload, { timeout: 5000 });
+                        } else {
+                            // fallback - run 1 sec after load
+                            setTimeout(runInBackground, 1000);
+                            setTimeout(runTemplatePreload, 2000);
+                        }
+                    }
+
+                    // Wait for full page load, then schedule background task
+                    if (document.readyState === 'complete') {
+                        schedule();
+                    } else {
+                        window.addEventListener('load', schedule);
+                    }
+
+                    
+            
+            })();
+        </script>
+    </body>
+
+    </html>

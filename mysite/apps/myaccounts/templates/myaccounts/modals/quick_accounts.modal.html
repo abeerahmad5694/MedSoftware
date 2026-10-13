@@ -1,0 +1,223 @@
+{% load static %}
+<style>
+/* CSS styles for Quick Accounts Modal & Page */
+.qa-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    transition: opacity 0.2s ease;
+}
+
+.qa-page-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--clr-bg-body, #f0f4f8);
+    padding: 20px;
+}
+
+.qa-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 580px;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.qa-topbar {
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    color: #ffffff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(15, 118, 110, 0.15);
+}
+
+.qa-topbar-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+}
+
+.qa-topbar-exit {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #ffffff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.qa-topbar-exit:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.qa-body {
+    padding: 24px;
+}
+
+.qa-instruction {
+    margin-bottom: 20px;
+}
+
+.qa-instruction p {
+    color: #475569;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.qa-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.qa-btn-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.qa-btn-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.qa-btn-icon {
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.qa-btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.qa-btn-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.qa-btn-desc {
+    font-size: 11px;
+    color: #64748b;
+}
+
+/* Individual card flavors */
+.qa-btn-client .qa-btn-icon { background: rgba(37, 99, 235, 0.1); }
+.qa-btn-client:hover { border-color: #2563eb; }
+
+.qa-btn-supplier .qa-btn-icon { background: rgba(124, 58, 237, 0.1); }
+.qa-btn-supplier:hover { border-color: #7c3aed; }
+
+.qa-btn-expense .qa-btn-icon { background: rgba(220, 38, 38, 0.1); }
+.qa-btn-expense:hover { border-color: #dc2626; }
+
+.qa-btn-bank .qa-btn-icon { background: rgba(15, 118, 110, 0.1); }
+.qa-btn-bank:hover { border-color: #0f766e; }
+
+@media (max-width: 500px) {
+    .qa-buttons-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+{% csrf_token %}
+
+{% if mode == 'modal' %}
+<div class="qa-modal-overlay" id="quickAccountsModalOverlay" style="display:none;">
+  <div class="qa-panel" id="quickAccountsModalPanel">
+{% else %}
+<div class="qa-page-wrapper" id="quickAccountsPageWrapper">
+  <div class="qa-panel" id="quickAccountsPagePanel">
+{% endif %}
+
+    <!-- Topbar / Header -->
+    <div class="qa-topbar">
+      <span class="qa-topbar-title">⚡ Quick Accounts Creator</span>
+      <div class="qa-topbar-controls">
+        {% if mode == 'modal' %}
+        <button class="qa-topbar-exit" id="qa_modal_close_button">✕ Close</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="qa-body">
+      <div class="qa-instruction">
+        <p>Select the type of account you want to create:</p>
+      </div>
+      
+      <div class="qa-buttons-grid">
+        <button type="button" class="qa-btn-card qa-btn-client" id="btnClientOpen">
+          <div class="qa-btn-icon">👤</div>
+          <div class="qa-btn-text">
+            <span class="qa-btn-title">New Client</span>
+            <span class="qa-btn-desc">Create customer account</span>
+          </div>
+        </button>
+
+        <button type="button" class="qa-btn-card qa-btn-supplier" id="btnSupplierOpen">
+          <div class="qa-btn-icon">🤝</div>
+          <div class="qa-btn-text">
+            <span class="qa-btn-title">New Supplier/Vendor</span>
+            <span class="qa-btn-desc">Create supplier account</span>
+          </div>
+        </button>
+
+        <button type="button" class="qa-btn-card qa-btn-expense" id="btnExpenseOpen">
+          <div class="qa-btn-icon">💸</div>
+          <div class="qa-btn-text">
+            <span class="qa-btn-title">General Expense</span>
+            <span class="qa-btn-desc">Create expense account</span>
+          </div>
+        </button>
+
+        <button type="button" class="qa-btn-card qa-btn-bank" id="btnBankOpen">
+          <div class="qa-btn-icon">🏦</div>
+          <div class="qa-btn-text">
+            <span class="qa-btn-title">New Bank</span>
+            <span class="qa-btn-desc">Create bank/cash account</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script type="module" src="{% static 'myaccounts/js/modals/quick_accounts_modal.js' %}"></script>

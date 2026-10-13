@@ -1,0 +1,173 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 custom-scroll">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-xl md:text-2xl font-bold text-[var(--text-main)] tracking-tight">Roles & Permissions</h1>
+            <p class="text-xs md:text-sm text-[var(--text-muted)] mt-0.5">Manage access levels and application roles.</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="space-y-2">
+        {% for message in messages %}
+            <div class="p-3 text-xs rounded-lg border flex items-center gap-2 {% if message.tags == 'success' %}text-emerald-700 bg-emerald-50 border-emerald-200{% else %}text-red-700 bg-red-50 border-red-200{% endif %} shadow-sm">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-5">
+        
+        <!-- Sidebar - Roles List & Creation -->
+        <div class="lg:col-span-1 space-y-4">
+            
+            <!-- Roles Navigation -->
+            <div class="surface rounded-xl p-4 shadow-sm">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background: rgba(var(--color-primary-rgb),0.1); color: var(--color-primary);">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm text-[var(--text-main)]">User Roles</h3>
+                </div>
+                
+                <div class="space-y-2 max-h-60 overflow-y-auto custom-scroll pr-1">
+                    {% if roles %}
+                        {% for role in roles %}
+                            <a href="?role_id={{ role.id }}" class="block p-2.5 border rounded-lg transition-all duration-200 
+                                {% if active_role and role.id == active_role.id %}
+                                    bg-[var(--color-primary-light)] border-[var(--color-primary)] text-[var(--color-primary)] font-semibold shadow-sm
+                                {% else %}
+                                    border-[var(--border-color)] text-[var(--text-main)] hover:bg-[var(--bg-canvas)] hover:border-[var(--color-primary)]/50
+                                {% endif %}">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs">{{ role.name }}</span>
+                                    <i class="fas fa-chevron-right text-[10px] {% if active_role and role.id == active_role.id %}opacity-100{% else %}opacity-30{% endif %}"></i>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-[var(--text-muted)] text-center py-2">No roles configured.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Create Role Form -->
+            <div class="surface rounded-xl p-4 shadow-sm border border-[var(--border-color)] border-dashed bg-transparent">
+                 <h3 class="font-semibold text-sm mb-3 text-[var(--text-main)]">Create New Role</h3>
+                 <form method="POST">
+                     {% csrf_token %}
+                     <input type="hidden" name="action" value="create_role">
+                     <div class="mb-3">
+                         <input type="text" name="role_name" required placeholder="E.g., Cashier, Supervisor" class="w-full border border-[var(--border-color)] rounded-lg px-3 py-2 bg-transparent text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition">
+                     </div>
+                     <button type="submit" class="btn btn-primary w-full shadow-sm"><i class="fas fa-plus text-[10px]"></i> Create Role</button>
+                 </form>
+            </div>
+        </div>
+
+        <!-- Main Content - Permissions Matrix -->
+        <div class="lg:col-span-3 surface rounded-xl p-4 md:p-6 shadow-sm min-h-[400px] flex flex-col">
+            {% if active_role %}
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 border-b border-[var(--border-color)] pb-4 gap-3">
+                    <div>
+                        <h3 class="font-semibold text-base text-[var(--text-main)] flex items-center gap-2">
+                            Permissions for <span class="bg-[var(--color-primary-light)] text-[var(--color-primary)] px-2 py-1 rounded border border-[var(--color-primary)] text-sm">{{ active_role.name }}</span>
+                        </h3>
+                        <p class="text-xs text-[var(--text-muted)] mt-1">Assign module-level access permissions below.</p>
+                    </div>
+                </div>
+                
+                <form method="POST" class="flex-1 flex flex-col">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_permissions">
+                    <input type="hidden" name="role_id" value="{{ active_role.id }}">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5 flex-1">
+                        {% for module_name, perms in modules.items %}
+                            <div class="border border-[var(--border-color)] rounded-lg overflow-hidden h-fit flex flex-col shadow-sm">
+                                <div class="bg-[var(--bg-canvas)]/80 backdrop-blur-sm px-3 py-2.5 border-b border-[var(--border-color)] font-bold text-xs text-[var(--text-main)] uppercase tracking-wider flex items-center justify-between">
+                                    <span>{{ module_name }}</span>
+                                    <i class="fas fa-layer-group text-[10px] text-[var(--text-muted)]"></i>
+                                </div>
+                                <div class="p-3 space-y-2">
+                                    {% for perm in perms %}
+                                        <label class="flex items-start gap-3 cursor-pointer group p-1.5 rounded-md hover:bg-[var(--bg-canvas)] transition-colors">
+                                            <div class="flex items-center h-5">
+                                                <input type="checkbox" name="permissions" value="{{ perm.code }}" {% if perm.code in active_perms %}checked{% endif %} class="w-4 h-4 rounded border-[var(--border-color)] text-[var(--color-primary)] bg-[var(--bg-surface)] focus:ring-[var(--color-primary)] focus:ring-offset-[var(--bg-surface)] cursor-pointer">
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-xs font-semibold text-[var(--text-main)] group-hover:text-[var(--color-primary)] transition-colors">{{ perm.name }}</span>
+                                                <span class="text-[0.625rem] text-[var(--text-muted)] font-mono">{{ perm.code }}</span>
+                                            </div>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% if not modules %}
+                            <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10">
+                                <p class="text-sm text-[var(--text-muted)]">No permissions registered in the system database.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4 pt-5 border-t border-[var(--border-color)] mt-auto">
+                        <button type="button" class="btn btn-secondary !py-2 !px-4 !text-red-500 hover:!bg-red-50 hover:!border-red-200 hover:shadow-sm transition-all w-full sm:w-auto" onclick="document.getElementById('deleteRoleModal').classList.remove('hidden'); document.getElementById('deleteRoleModal').classList.add('flex');">
+                            <i class="fas fa-trash-alt text-[10px]"></i> Delete Role
+                        </button>
+                        <button type="submit" class="btn btn-primary !py-2.5 px-8 w-full sm:w-auto shadow-md hover:shadow-lg transition-all">
+                            <i class="fas fa-save text-[10px]"></i> Save Permissions
+                        </button>
+                    </div>
+                </form>
+
+            {% else %}
+                <div class="h-full flex flex-col items-center justify-center text-center text-[var(--text-muted)] py-16 m-auto">
+                    <div class="w-16 h-16 rounded-full bg-[var(--bg-canvas)] flex items-center justify-center mb-4 border border-[var(--border-color)] shadow-inner">
+                        <i class="fas fa-user-lock text-2xl opacity-40"></i>
+                    </div>
+                    <h4 class="text-base font-bold text-[var(--text-main)] mb-1">No Role Selected</h4>
+                    <p class="text-xs max-w-xs leading-relaxed">Please configure a role using the creation form or select an existing role from the list on the left to review and manage module-level permissions.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+{% if active_role %}
+<!-- Delete Confirmation Modal -->
+<div id="deleteRoleModal" class="fixed inset-0 bg-black/40 z-[9999] hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl p-6 max-w-sm w-full text-center shadow-2xl relative animate-fadeIn scale-100">
+        <button type="button" class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-canvas)] hover:text-[#e11d48] transition-colors cursor-pointer" onclick="document.getElementById('deleteRoleModal').classList.add('hidden'); document.getElementById('deleteRoleModal').classList.remove('flex');">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+        <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+            <i class="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+        </div>
+        <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">Delete Role?</h3>
+        <p class="text-xs text-[var(--text-muted)] mb-6 px-2 leading-relaxed">
+            Are you sure you want to completely remove the <strong class="text-[var(--text-main)]">{{ active_role.name }}</strong> role? This action is permanent and may affect users currently assigned to it.
+        </p>
+        <div class="flex gap-3">
+            <button type="button" class="btn btn-secondary flex-1 py-2.5 font-semibold" onclick="document.getElementById('deleteRoleModal').classList.add('hidden'); document.getElementById('deleteRoleModal').classList.remove('flex');">Cancel</button>
+            <form method="POST" class="flex-1">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_role">
+                <input type="hidden" name="role_id" value="{{ active_role.id }}">
+                <button type="submit" class="btn btn-primary w-full py-2.5 font-semibold !bg-red-500 hover:!bg-red-600 !border-red-600 !shadow-red-500/30">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

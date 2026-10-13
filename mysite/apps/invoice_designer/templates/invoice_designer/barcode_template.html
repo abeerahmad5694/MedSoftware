@@ -1,0 +1,51 @@
+{% load designer_extras %}
+<div class="barcode-sheet">
+    {% for label in labels %}
+    <div class="barcode-label"
+         data-field="barcode.label"
+         style="width: {{ barcode.label_size.width_mm }}mm;
+                height: {{ barcode.label_size.height_mm }}mm;
+                margin: {{ barcode.label_size.margin_mm }}mm;
+                padding: {{ barcode.label_size.padding_mm }}mm;">
+
+        {% if barcode.display.show_company_name and label.company_name %}
+        <div class="barcode-company" style="{{ barcode.fonts.product_name|field_style_css }}">{{ label.company_name }}</div>
+        {% endif %}
+
+        {% if barcode.display.show_product_name %}
+        <div class="barcode-product-name" data-field="barcode.product_name" style="{{ barcode.fonts.product_name|field_style_css }}">{{ label.product_name }}</div>
+        {% endif %}
+
+        <div class="barcode-symbol" data-barcode-type="{{ barcode.barcode_type }}" data-barcode-value="{{ label.barcode_number }}">
+            {# Rendered client-side by JsBarcode / a QR library based on data-barcode-type — see barcode_render.js #}
+        </div>
+
+        {% if barcode.display.show_barcode_number %}
+        <div class="barcode-number" data-field="barcode.barcode_number" style="{{ barcode.fonts.barcode_number|field_style_css }}">{{ label.barcode_number }}</div>
+        {% endif %}
+
+        <div class="barcode-meta-row">
+            {% if barcode.display.show_sale_price %}
+            <span data-field="barcode.sale_price" style="{{ barcode.fonts.price|field_style_css }}">Rs. {{ label.sale_price }}</span>
+            {% endif %}
+            {% if barcode.display.show_wholesale_price %}
+            <span data-field="barcode.wholesale_price" style="{{ barcode.fonts.price|field_style_css }}">W: {{ label.wholesale_price }}</span>
+            {% endif %}
+            {% if barcode.display.show_unit %}
+            <span>{{ label.unit }}</span>
+            {% endif %}
+            {% if barcode.display.show_batch %}
+            <span>Batch: {{ label.batch }}</span>
+            {% endif %}
+            {% if barcode.display.show_expiry %}
+            <span>Exp: {{ label.expiry }}</span>
+            {% endif %}
+            {% if barcode.display.show_sku %}
+            <span>SKU: {{ label.sku }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="doc-empty-row">No labels supplied</div>
+    {% endfor %}
+</div>

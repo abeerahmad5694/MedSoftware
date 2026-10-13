@@ -1,0 +1,504 @@
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 40px;
+        }
+
+        /* Demo Button */
+        .demo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* #jv_pro_modal {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        } */
+
+        /* #jv_pro_modal:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        } */
+
+        /* Modal Overlay */
+        .jv-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .jv-modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Search Modal Overlay - Higher z-index */
+        .search-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .search-modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Modal Container */
+        .jv-modal-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        /* Search Modal Container */
+        .search-modal-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        /* Modal Header */
+        .jv-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-modal-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .jv-modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .jv-modal-title::before {
+            content: "📝";
+            font-size: 24px;
+        }
+
+        .search-modal-title::before {
+            content: "🔍";
+            font-size: 22px;
+        }
+
+        .jv-modal-close,
+        .search-modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .jv-modal-close:hover,
+        .search-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        /* Modal Body */
+        .jv-modal-body {
+            padding: 30px 25px;
+            max-height: calc(90vh - 160px);
+            overflow-y: auto;
+        }
+
+        .search-modal-body {
+            padding: 20px 25px;
+            max-height: calc(80vh - 140px);
+            overflow-y: auto;
+        }
+
+        /* Form Groups */
+        .jv-form-group {
+            margin-bottom: 20px;
+        }
+
+        .jv-form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .jv-form-label.required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        /* Input Styles */
+        .jv-form-input,
+        .jv-form-select,
+        .jv-form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .jv-form-input:focus,
+        .jv-form-select:focus,
+        .jv-form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Account Input with Search Button */
+        .account-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        .account-input-wrapper .jv-form-input {
+            flex: 1;
+            padding-right: 15px;
+        }
+
+        .search-account-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .search-account-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+        }
+
+        /* Search Input in Search Modal */
+        .search-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #f5576c;
+            box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+        }
+
+        /* Account List */
+        .account-list {
+            list-style: none;
+        }
+
+        .account-item {
+            padding: 12px 15px;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .account-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .account-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .account-code {
+            font-size: 12px;
+            color: #999;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .no-results::before {
+            content: "🔍";
+            font-size: 48px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* Transaction Type Pills */
+        .jv-transaction-type {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .jv-type-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .jv-type-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .jv-type-label {
+            display: block;
+            padding: 12px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            background: #f8f9fa;
+        }
+
+        .jv-type-option input[type="radio"]:checked + .jv-type-label {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .jv-type-label.debit {
+            border-color: #27ae60;
+        }
+
+        .jv-type-option input[type="radio"]:checked + .jv-type-label.debit {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .jv-type-label.credit {
+            border-color: #e74c3c;
+        }
+
+        .jv-type-option input[type="radio"]:checked + .jv-type-label.credit {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .jv-form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Modal Footer */
+        .jv-modal-footer {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e6ed;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .jv-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .jv-btn-cancel {
+            background: #e0e6ed;
+            color: #333;
+        }
+
+        .jv-btn-cancel:hover {
+            background: #d1d8e0;
+        }
+
+        .jv-btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .jv-btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .jv-modal-body::-webkit-scrollbar,
+        .search-modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .jv-modal-body::-webkit-scrollbar-track,
+        .search-modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .jv-modal-body::-webkit-scrollbar-thumb,
+        .search-modal-body::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .jv-modal-body::-webkit-scrollbar-thumb:hover,
+        .search-modal-body::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .jv-modal-container,
+            .search-modal-container {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .jv-modal-body {
+                padding: 20px 15px;
+            }
+
+            .jv-transaction-type {
+                flex-direction: column;
+            }
+
+            .jv-modal-footer {
+                flex-direction: column;
+            }
+
+            .jv-btn {
+                width: 100%;
+            }
+
+            .account-input-wrapper {
+                flex-direction: column;
+            }
+
+            .search-account-btn {
+                width: 100%;
+            }
+        }

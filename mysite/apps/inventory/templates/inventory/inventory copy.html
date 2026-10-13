@@ -1,0 +1,1167 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .erp-input-field {
+        background: #ffffff !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 4px !important;
+        padding: 0 8px !important;
+        font-size: 0.75rem !important;
+        height: 28px !important;
+        color: #000000 !important;
+        transition: border-color 0.2s;
+    }
+
+    .erp-input-field:focus {
+        border-color: var(--color-primary) !important;
+        outline: none;
+    }
+
+    .big-name-field {
+        background: #000000 !important;
+        color: #ffffff !important;
+        border: 2px solid #000000 !important;
+        font-size: 1.1rem !important;
+        font-weight: 800 !important;
+        height: 42px !important;
+        padding: 0 12px !important;
+        border-radius: 4px !important;
+        width: 100% !important;
+    }
+
+    .section-title {
+        font-size: 1.0rem;
+        font-weight: 800;
+        color: #1e293b;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 2px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-group-h {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .form-label-h {
+        flex: 0 0 80px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        font-size: 0.9rem;
+        padding: 5px;
+    }
+
+    .form-input-h {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.8rem;
+
+    }
+
+    .panel-left {
+        flex: 3.5;
+        background: var(--bg-canvas);
+    }
+
+    .panel-right {
+        flex: 1;
+        border-left: 1px solid var(--border-color);
+        background: var(--bg-surface);
+    }
+
+    .unit-card {
+        background: var(--bg-surface);
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .unit-card-title {
+        font-size: 0.65rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-action {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-save {
+        background: #000;
+        color: white;
+    }
+
+    .btn-save:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .btn-clear {
+        background: var(--bg-canvas);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .btn-list {
+        background: var(--bg-canvas);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+    }
+
+    /* Compact scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    /* ── Inline Search Widget ── */
+    .isw-panel {
+        margin-top: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border-color, #e2e8f0);
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+    }
+
+    .isw-header {
+        background: linear-gradient(135deg, #1e3a8a, #1e40af);
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .isw-header-title {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: #bfdbfe;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        white-space: nowrap;
+    }
+
+    .isw-header-icon {
+        color: #93c5fd;
+        font-size: 0.7rem;
+    }
+
+    #iswSearchInput {
+        flex: 1;
+        border: none;
+        background: rgba(255, 255, 255, .15);
+        color: #fff;
+        padding: 6px 10px 6px 28px;
+        border-radius: 5px;
+        font-size: 0.78rem;
+        outline: none;
+        transition: background .18s;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%2393c5fd'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 8px center;
+        background-size: 13px;
+    }
+
+    #iswSearchInput::placeholder {
+        color: rgba(255, 255, 255, .5);
+    }
+
+    #iswSearchInput:focus {
+        background-color: rgba(255, 255, 255, .25);
+    }
+
+    .isw-body {
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .isw-body::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .isw-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    .isw-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
+
+    .isw-table thead th {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.62rem;
+        font-weight: 800;
+        padding: 6px 10px;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .isw-table tbody .isw-row {
+        cursor: pointer;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background .1s;
+    }
+
+    .isw-table tbody .isw-row:nth-child(even) {
+        background: #f8fafc;
+    }
+
+    .isw-table tbody .isw-row:hover {
+        background: #dbeafe !important;
+    }
+
+    .isw-table td {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        color: #334155;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 140px;
+    }
+
+    .isw-row.isw-highlight {
+        background: #1e40af !important;
+    }
+
+    .isw-row.isw-highlight td {
+        color: #fff !important;
+        font-weight: 600;
+    }
+
+    .isw-row.isw-highlight mark {
+        background: rgba(255, 255, 255, .35);
+        color: #fff;
+    }
+
+    .isw-table mark {
+        background: rgba(253, 224, 71, 0.55);
+        color: #0f172a;
+        padding: 0 1px;
+        border-radius: 2px;
+        font-weight: 700;
+    }
+
+    .isw-footer {
+        padding: 6px 14px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .isw-count {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #94a3b8;
+    }
+
+    .isw-kbd {
+        font-size: 0.6rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .isw-kbd kbd {
+        display: inline-block;
+        padding: 1px 4px;
+        font-size: 0.58rem;
+        font-family: inherit;
+        font-weight: 700;
+        color: #475569;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 3px;
+        box-shadow: 0 1px 0 #cbd5e1;
+    }
+
+    .isw-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 28px 14px;
+        color: #94a3b8;
+        gap: 6px;
+        font-size: 0.78rem;
+    }
+
+    .isw-empty i {
+        font-size: 1.2rem;
+        opacity: 0.4;
+    }
+
+    .isw-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+    }
+
+    .isw-spinner {
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #2563eb;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: gsm-spin 0.75s linear infinite;
+    }
+
+    /* ================= MOBILE FIX - RIGHT PANEL AFTER LEFT ================= */
+    @media (max-width: 1024px) {
+        main.flex.h-full {
+            display: block !important;
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+        }
+
+        .panel-left {
+            flex: none !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+        }
+
+        .panel-left .flex-1.overflow-y-auto {
+            overflow: visible !important;
+            height: auto !important;
+            flex: none !important;
+        }
+
+        .panel-right {
+            flex: none !important;
+            width: 100% !important;
+            height: auto !important;
+            border-left: none !important;
+            border-top: 1px solid var(--border-color);
+            /* IMPORTANT - remove sticky overlap */
+            position: static !important;
+            bottom: auto !important;
+            z-index: 1 !important;
+            box-shadow: none !important;
+            display: block !important;
+            overflow: visible !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-group-h {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 4px !important;
+        }
+
+        .form-label-h {
+            width: 100% !important;
+            flex: none !important;
+        }
+
+        .form-input-h {
+            width: 100% !important;
+        }
+
+        .erp-input-field {
+            height: 40px !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* make buttons stack normally, not overlapping */
+        .panel-right .space-y-2 {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .btn-action {
+            min-height: 44px !important;
+        }
+    }    /* --- Image Upload UI --- */
+    .image-drop-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+        height: 180px;
+    }
+    .image-drop-zone:hover, .image-drop-zone.drag-over {
+        border-color: var(--color-primary);
+        background: #f1f5f9;
+    }
+    .image-preview-wrapper {
+        position: absolute;
+        inset: 0;
+        display: none;
+        background: #fff;
+    }
+    .image-preview-wrapper.has-image {
+        display: block;
+    }
+    .image-preview-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .image-actions {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        display: flex;
+        gap: 6px;
+    }
+    .image-btn {
+        background: rgba(0,0,0,0.7);
+        color: white;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: background 0.2s;
+        border: none;
+    }
+    .image-btn:hover {
+        background: rgba(0,0,0,0.9);
+    }
+    .image-btn.btn-remove {
+        background: rgba(220, 38, 38, 0.8);
+    }
+    .image-btn.btn-remove:hover {
+        background: rgba(220, 38, 38, 1);
+    }
+
+
+
+
+
+    /* --- NEW PRODUCT IDENTITY HEADER --- */
+.identity-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 20px;
+    align-items: start;
+}
+.identity-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.identity-label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #475569;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.prod-name-input {
+    height: 38px!important;
+    font-size: 0.9rem!important;
+    font-weight: 700!important;
+}
+.urdu-row {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 12px;
+    align-items: end;
+}
+.toggle-active {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    height: 38px;
+}
+.switch {
+    width: 36px; height: 20px;
+    background: #cbd5e1; border-radius: 20px;
+    position: relative; cursor: pointer; transition:.2s;
+}
+.switch.on { background: #2563eb; }
+.switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; background: white; border-radius: 50%;
+    transition:.2s;
+}
+.switch.on::after { transform: translateX(16px); }
+
+/* compact image for header */
+.identity-image.image-drop-zone {
+    height: 108px!important;
+    border-radius: 8px;
+}
+.identity-image.image-drop-zone.text-gray-400 { margin-bottom: 2px!important; }
+.identity-image.image-drop-zone.text-3xl { font-size: 1.2rem!important; }
+
+/* FOOTER SAVE BAR */
+.form-footer-save {
+    position: sticky;
+    bottom: 0;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border-color);
+    padding: 12px 16px;
+    margin: 20px -24px -24px -24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    z-index: 20;
+}
+@media (max-width: 768px){
+   .identity-card { grid-template-columns: 1fr; }
+   .urdu-row { grid-template-columns: 1fr; }
+}
+
+/* --- FOOTER OPERATIONS BAR - RESPONSIVE --- */
+.footer-operations {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    padding: 10px 16px;
+    margin: 24px -24px -24px -24px;
+    z-index: 50;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+}
+.footer-actions-left {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.footer-actions-right {
+    display: flex;
+    gap: 8px;
+}
+.footer-actions-left.btn-action,
+.footer-actions-right.btn-action {
+    width: auto;
+    min-width: 110px;
+    height: 38px;
+    padding: 0 14px;
+}
+@media (max-width: 768px){
+   .footer-grid {
+        grid-template-columns: 1fr;
+    }
+   .footer-actions-left {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+   .footer-actions-right {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+   .footer-actions-right.btn-save {
+        grid-column: span 3;
+        order: -1;
+    }
+}
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="flex h-full overflow-hidden">
+    <!-- Left Panel: Data Entry -->
+    <div class="panel-left custom-scroll p-4 md:p-6 overflow-y-auto">
+        <form id="inventoryForm" method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <input type="hidden" name="inv_id" value="{{ form.inv_id|default:'' }}" id="id_inv_id">
+            <input type="hidden" name="company" value="{{ company_id }}" id="id_company">
+            <input type="hidden" name="branch" value="{{ branch_id }}" id="id_branch">
+            <!-- Header & Prominent Name -->
+            {% comment %} <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
+                <div class="w-full md:w-1/2">
+                    <h1 class="text-lg font-black text-gray-900 mb-2">Add or Update Item</h1>
+                    <div class="form-group-h">
+                        <div class="form-input-h flex flex-col gap-1 w-full">
+                            {{ form.prod_name }}
+                            {{ form.prod_name_ur }}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-4 pb-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        {{ form.active }}
+                        <span class="text-[0.65rem] font-black text-gray-700">ACTIVE</span>
+                    </label>
+                </div>
+            </div> {% endcomment %}
+
+            <!-- NEW PRODUCT IDENTITY - Like your 2nd image -->
+<div class="identity-card">
+    <div class="identity-fields">
+        <div>
+            {% comment %} <div class="identity-label"><i class="fas fa-box text- text-blue-500"></i> PRODUCT IDENTITY</div> {% endcomment %}
+            <label class="identity-label">Product Name *</label>
+            <div class="flex gap-2">
+                <div class="flex-1">{{ form.prod_name }}</div>
+                <span class="h- px-3 flex items-center text- font-bold bg-slate-100 border border-slate-200 rounded-md text-slate-500">ENGLISH</span>
+            </div>
+        </div>
+        <div class="urdu-row">
+            <div>
+                <label class="identity-label">Urdu Name (اردو نام)</label>
+                {{ form.prod_name_ur }}
+            </div>
+            <div>
+                <label class="identity-label">Status</label>
+                <label class="toggle-active cursor-pointer" id="activeToggleLabel">
+                    <div class="switch on" id="activeSwitch"></div>
+                    <span class="text- font-bold" id="activeText">Yes</span>
+                    <div class="hidden">{{ form.active }}</div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image aligned to right like screenshot -->
+    <div class="identity-image">
+        <div class="image-drop-zone" id="imageDropZone" onclick="document.getElementById('product-image-input').click()">
+            <div class="text-gray-400 mb-1"><i class="fas fa-image"></i></div>
+            <div class="text- font-semibold text-gray-700">Click to upload</div>
+            <div class="text- text-gray-500">PNG, JPG up to 2MB</div>
+
+            <div class="image-preview-wrapper {% if form.instance.prod_picture %}has-image{% endif %}" id="imagePreviewWrapper">
+                <img id="image-preview" src="{% if form.instance.prod_picture %}{{ form.instance.prod_picture.url }}{% endif %}">
+                <div class="image-actions" onclick="event.stopPropagation()">
+                    <button type="button" class="image-btn btn-remove" id="btnRemoveImage"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="delete_image" id="deleteImageFlag" value="false">
+        <input type="file" name="prod_picture" id="product-image-input" class="hidden" accept="image/*">
+    </div>
+</div>
+
+
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- General Information -->
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                    <div class="section-title text-blue-700">General Information</div>
+                    <div class="space-y-1">
+                        <div class="form-group-h">
+                            <label class="form-label-h">Alias</label>
+                            <div class="form-input-h">{{ form.alias_name }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Barcode</label>
+                            <div class="form-input-h">{{ form.barcode }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Manual BC</label>
+                            <div class="form-input-h">{{ form.manualbc }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Location</label>
+                            <div class="form-input-h">{{ form.product_location }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Expiry</label>
+                            <div class="form-input-h" style="max-width: 120px;">{{ form.expiry_date }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classification -->
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                    <div class="section-title text-emerald-700">Classification</div>
+                    <div class="space-y-1">
+                        <div class="form-group-h">
+                            <label class="form-label-h">Brand</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.brand }}
+                                <button type="button" id="addBrandBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Company</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.manufacturer }}
+                                <button type="button" id="addCompanyBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Category</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.category }}
+                                <button type="button" id="addCategoryBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Sub-Cat</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.subcategory }}
+                                <button type="button" id="addSubCategoryBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group-h">
+
+                            <label class="form-label-h">Min Stock</label>
+                            <div class="form-input-h" style="max-width: 80px;">{{ form.min_stock }}</div>
+                            <label class="form-label-h">Max Stock</label>
+                            <div class="form-input-h" style="max-width: 80px;">{{ form.max_stock }}</div>
+                        </div>
+
+                        <div class="form-group-h">
+                            <label class="form-label-h">Re-Order</label>
+                            <div class="form-input-h" style="max-width: 80px;">{{ form.reorder }}</div>
+                            <label class="form-label-h">Salesman Commission</label>
+                            <div class="form-input-h" style="max-width: 80px;">{{ form.salesman_commission }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing -->
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                    <div class="section-title text-orange-700">Pricing</div>
+                    <div class="space-y-1">
+                        <div class="form-group-h">
+                            <label class="form-label-h">Market Price</label>
+                            <div class="form-input-h">{{ form.market_price }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">WS Price</label>
+                            <div class="form-input-h">{{ form.ws_price }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">WS Disc %</label>
+                            <div class="form-input-h">{{ form.ws_disc_per }}</div>
+                        </div>
+
+
+
+
+                         {% if 'see_cost_in_reports' in user_perm_codes  %}
+                        <div class="form-group-h">
+                            <label class="form-label-h">Cost Price</label>
+                            <div class="form-input-h">{{ form.cost }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Last Pur</label>
+                            <div class="form-input-h">{{ form.last_pur_price }}</div>
+                        </div>
+                        {%endif%}
+
+
+
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unit Groups -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Base Unit -->
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                    <div class="section-title text-blue-600">
+                        <i class="fas fa-box"></i> Base Unit Details
+                    </div>
+                    <div class="space-y-1">
+                        <div class="form-group-h">
+                            <label class="form-label-h">UOM</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.base_uom }}
+                                <button type="button" id="addBaseUnitBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Price</label>
+                            <div class="form-input-h">{{ form.base_price }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Disc %</label>
+                            <div class="form-input-h">{{ form.base_disc_per }}</div>
+                        </div>
+                        <div class="form-group-h hidden">
+                            <label class="form-label-h">Min Sale Rate</label>
+                            <div class="form-input-h">{{ form.min_base_sale_price }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carton Unit -->
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                    <div class="section-title text-orange-600">
+                        <i class="fas fa-boxes"></i> Carton Unit Details
+                    </div>
+                    <div class="space-y-1">
+                        <div class="form-group-h">
+                            <label class="form-label-h">UOM</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.carton_uom }}
+                                <button type="button" id="addCartonUnitBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Qty/Ctn</label>
+                            <div class="form-input-h">{{ form.carton_qty }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Ctn Price</label>
+                            <div class="form-input-h">{{ form.carton_price }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Disc %</label>
+                            <div class="form-input-h">{{ form.carton_disc_per }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dozen Unit -->
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                    <div class="section-title text-emerald-600">
+                        <i class="fas fa-layer-group"></i> Dozen Unit Details
+                    </div>
+                    <div class="space-y-1">
+                        <div class="form-group-h">
+                            <label class="form-label-h">UOM</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.dzn_uom }}
+                                <button type="button" id="addDznUnitBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Qty/Dzn</label>
+                            <div class="form-input-h">{{ form.dzn_qty }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Dzn Price</label>
+                            <div class="form-input-h">{{ form.dzn_price }}</div>
+                        </div>
+                        <div class="form-group-h">
+                            <label class="form-label-h">Disc %</label>
+                            <div class="form-input-h">{{ form.dzn_disc_per }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+{% comment %} 
+            <!-- Image Upload Section -->
+            <div class="surface p-4 rounded-lg border border-[var(--border-color)] col-span-1 md:col-span-3 lg:col-span-4 mt-4">
+                <div class="section-title text-indigo-600">
+                    <i class="fas fa-image"></i> Product Image
+                </div>
+                
+                <div class="image-drop-zone mt-2" id="imageDropZone" onclick="document.getElementById('product-image-input').click()">
+                    <div class="text-gray-400 mb-2">
+                        <i class="fas fa-cloud-upload-alt text-3xl"></i>
+                    </div>
+                    <div class="text-sm font-semibold text-gray-700">Click to upload or drag and drop</div>
+                    <div class="text-xs text-gray-500 mt-1">SVG, PNG, JPG or WEBP (max. 2MB)</div>
+                    
+                    <div class="image-preview-wrapper {% if form.instance.prod_picture %}has-image{% endif %}" id="imagePreviewWrapper">
+                        <img id="image-preview" src="{% if form.instance.prod_picture %}{{ form.instance.prod_picture.url }}{% endif %}">
+                        <div class="image-actions" onclick="event.stopPropagation()">
+                            <button type="button" class="image-btn" onclick="document.getElementById('product-image-input').click()">
+                                <i class="fas fa-edit"></i> Change
+                            </button>
+                            <button type="button" class="image-btn btn-remove" id="btnRemoveImage">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="hidden" name="delete_image" id="deleteImageFlag" value="false">
+                <input type="file" name="prod_picture" id="product-image-input" class="hidden" accept="image/*">
+            </div>
+             {% endcomment %}
+
+
+
+
+             <!-- FOOTER OPERATIONS - RESPONSIVE -->
+<div class="footer-operations">
+    <div class="footer-grid">
+        <div class="footer-actions-left">
+            <button type="button" class="btn-action btn-clear" onclick="window.location.reload()">
+                <i class="fas fa-redo"></i> New
+            </button>
+            <button type="button" class="btn-action btn-list" id='viewListBtn'>
+                <i class="fas fa-list"></i> List
+            </button>
+            <button type="button" class="btn-action btn-list" id='copySameItemBtn'>
+                <i class="fas fa-copy"></i> Copy
+            </button>
+            <button type="button" class="btn-action btn-delete" id='delete_inventory_item'>
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+        <div class="footer-actions-right">
+            <button type="button" class="btn-action btn-clear!hidden md:!flex" onclick="window.history.back()">
+                Cancel
+            </button>
+            <button type="submit" class="btn-action btn-save" id='inventory_save_btn'>
+                <i class="fas fa-save"></i> SAVE ITEM (F2)
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+        </form>
+    </div>
+
+    <!-- Right Panel: Actions -->
+    <div class="panel-right p-6 space-y-4">
+        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 mb-6">
+            Operations</h3>
+
+        <div class=" hidden space-y-2">
+            <button class="btn-action btn-save shadow-lg" type="submit" form="inventoryForm" id='inventory_save_btn'>
+                <i class="fas fa-save text-[10px]"></i> SAVE ITEM (F2)
+            </button>
+            <!-- <button id="searchInventoryBtn" class="btn-action btn-list" type="button">
+                <i class="fas fa-search text-[10px]"></i> FIND PRODUCT (F3)
+            </button> -->
+            <button class="btn-action btn-clear" type="button" onclick="window.location.reload()">
+                <i class="fas fa-redo text-[10px]"></i> NEW / CLEAR
+            </button>
+            <button class="btn-action btn-list" id='viewListBtn'>
+                <i class="fas fa-list text-[10px]"></i> VIEW LIST
+            </button>
+            <button class="btn-action btn-list" id='copySameItemBtn'>
+                <i class="fas fa-copy text-[10px]"></i> COPY SAME ITEM</button>
+            <!-- <div class="h-6"></div> -->
+            <button class="btn-action btn-delete" id='delete_inventory_item'>
+                <i class="fas fa-trash text-[10px]"></i> DELETE ITEM
+            </button>
+        </div>
+
+
+
+
+        <!-- Inline Search Widget -->
+        <div class="isw-panel" id="iswContainer">
+            <div class="isw-header">
+                <i class="fas fa-search isw-header-icon"></i>
+                <span class="isw-header-title">Quick Find</span>
+                <input type="text" id="iswSearchInput" placeholder="Search products..." autocomplete="off">
+            </div>
+            <div class="isw-body" id="iswResults">
+                <!-- Rendered by InlineSearchWidget -->
+            </div>
+            <div class="isw-footer">
+                <span class="isw-count" id="iswCount"></span>
+                <span class="isw-kbd">
+                    <kbd>↑↓</kbd> Nav
+                    <kbd>Enter</kbd> Select
+                    <kbd>DblClick</kbd> Open
+                </span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Include Global Modal -->
+{% include 'myglobal/include/global_inline_modal.html' %}
+
+<!-- Include Global Search Modal -->
+{% include 'mysearch/global_search_modal.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+
+
+
+<script>
+
+    const activeCheckbox = document.querySelector('[name="active"]');
+    const activeSwitch = document.getElementById('activeSwitch');
+    const activeText = document.getElementById('activeText');
+
+    function syncActive(){
+        const isOn = activeCheckbox.checked;
+        activeSwitch.classList.toggle('on', isOn);
+        activeText.textContent = isOn? 'Yes' : 'No';
+        activeText.className = isOn? 'text-[11px] font-bold text-emerald-700' : 'text-[11px] font-bold text-slate-500';
+    }
+
+    if(activeCheckbox){
+        // FORCE DEFAULT TRUE if new item
+        const isEditMode = document.getElementById('id_inv_id')?.value!== '';
+        if(!isEditMode &&!activeCheckbox.hasAttribute('data-initialized')){
+            activeCheckbox.checked = true;
+        }
+        activeCheckbox.setAttribute('data-initialized','true');
+
+        activeCheckbox.addEventListener('change', syncActive);
+        syncActive();
+
+        document.getElementById('activeToggleLabel').addEventListener('click', (e)=>{
+            if(e.target!== activeCheckbox){
+                e.preventDefault();
+                activeCheckbox.checked =!activeCheckbox.checked;
+                activeCheckbox.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    const dropZone = document.getElementById('imageDropZone');
+    const fileInput = document.getElementById('product-image-input');
+    const previewWrapper = document.getElementById('imagePreviewWrapper');
+    const previewImg = document.getElementById('image-preview');
+    const deleteFlag = document.getElementById('deleteImageFlag');
+    const btnRemove = document.getElementById('btnRemoveImage');
+
+    if (dropZone) {
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelection(fileInput.files[0]);
+            }
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+    }
+
+    function handleFileSelection(file) {
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Maximum file size is 2MB");
+            fileInput.value = "";
+            return;
+        }
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+        if (!validTypes.includes(file.type)) {
+            alert("Only JPG, PNG, WEBP, and SVG formats are allowed.");
+            fileInput.value = "";
+            return;
+        }
+        
+        deleteFlag.value = "false";
+        previewImg.src = URL.createObjectURL(file);
+        previewWrapper.classList.add('has-image');
+    }
+
+    if (btnRemove) {
+        btnRemove.addEventListener('click', e => {
+            e.stopPropagation();
+            fileInput.value = "";
+            previewImg.src = "";
+            previewWrapper.classList.remove('has-image');
+            deleteFlag.value = "true";
+        });
+    }
+</script>
+
+
+
+<script type='module' src="{% static inventory_js %}"></script>
+<script type='module' src="{% static global_inline_modal_inventory_config_js %}"></script>
+<script type='module' src="{% static global_search_modal_inventory_config_js %}"></script>
+{% endblock %}

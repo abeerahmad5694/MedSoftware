@@ -1,0 +1,744 @@
+[image] [image] [image] [image] [image]  this ss are of another companies erp already in market for medicine erp for small to medium business in pakistan... 
+
+i want to create more advance and user frendly or speedy pos but want to rewise logic for medicine , i already have made erp for electric store but not for meidcine 
+i will give you my modals then according to these ss guide me what iam missing and howi make it more effecient and professional 
+
+my current erp is 
+from django.db import models
+
+# Create your models here.
+
+
+class ItemBrand(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    dateent = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.name
+
+
+class ItemCompany(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    dateent = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.name
+
+
+class ItemCategory(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    dateent = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.name
+
+class ItemSubCategory(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    dateent = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.name
+
+class ItemType(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    dateent = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.name
+
+class Unit(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    dateent = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.name
+
+
+
+
+def product_image_path(instance, filename):
+    ext = filename.split('.')[-1].lower()
+    # company/branch sharding to avoid 10k files in one folder
+    return f"items/{instance.company_id}/{instance.branch_id}/{instance.inv_id}.{ext}"
+
+
+
+class Inventory(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE, default=None)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE, default=None)
+
+    inv_id = models.AutoField(primary_key=True)
+
+    prod_name = models.CharField(max_length=255, default=None)
+    prod_name_ur = models.CharField(
+        max_length=500, null=True, blank=True, default=None,
+        verbose_name="Urdu Item Name",
+        help_text="آئٹم کا اردو نام — Nastaleeq font will be used in Urdu/Bilingual invoices.",
+    )
+    alias_name = models.CharField(max_length=255, null=True, blank=True, default=None)
+
+    # prod_picture = models.ImageField(upload_to='item_list/images/', null=True, blank=True, default=None)
+
+
+    prod_picture = models.ImageField(upload_to=product_image_path, null=True, blank=True, max_length=500)
+    prod_picture_thumb = models.ImageField(upload_to=product_image_path, null=True, blank=True, max_length=500,
+                                           help_text="Auto generated 150x150 webp")
+    image_updated_at = models.DateTimeField(null=True, blank=True)
+
+
+
+
+
+    ws_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+    ws_disc_per = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=None)
+
+    market_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+    last_pur_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+    cost = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+
+    base_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+    base_uom = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='base_inv')
+    base_disc_per = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=None)
+    min_base_sale_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+
+    carton_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+    carton_uom = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='carton_inv')
+    carton_qty = models.IntegerField(null=True, blank=True, default=None)
+    carton_disc_per = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=None)
+
+    dzn_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=None)
+    dzn_uom = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='dzn_inv')
+    dzn_qty = models.IntegerField(null=True, blank=True, default=None)
+    dzn_disc_per = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=None)
+
+    date = models.DateField(null=True, blank=True, default=None)
+    dateent = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    user = models.CharField(max_length=100, null=True, blank=True, default=None)
+    updated_by = models.CharField(max_length=100, null=True, blank=True, default=None)
+
+    barcode = models.CharField(max_length=255, null=True, blank=True, default=None)
+    manualbc = models.CharField(max_length=255, null=True, blank=True, default=None)
+    barcode2 = models.CharField(max_length=255, null=True, blank=True, default=None)
+
+    manufacturer = models.ForeignKey(ItemCompany, on_delete=models.CASCADE ,null=True,blank=True,default=None)
+    brand = models.ForeignKey(ItemBrand, on_delete=models.CASCADE ,null=True,blank=True,default=None)
+    category = models.ForeignKey(ItemCategory, on_delete=models.CASCADE ,null=True,blank=True,default=None)
+    subcategory = models.ForeignKey(ItemSubCategory, on_delete=models.CASCADE ,null=True,blank=True,default=None)
+
+    active = models.BooleanField(null=True, blank=True, default=True)
+    is_deleted = models.BooleanField(null=True, blank=True, default=False)
+
+
+    min_stock = models.IntegerField(null=True, blank=True, default=None)
+    max_stock = models.IntegerField(null=True, blank=True, default=None)
+    reorder = models.IntegerField(null=True, blank=True, default=None)
+
+    product_location = models.CharField(max_length=255, null=True, blank=True, default=None)
+
+    expiry_date = models.DateField(null=True, blank=True, default=None)
+
+    remaining_qty = models.IntegerField(null=True, blank=True, default=None)
+
+    bal_qty = models.IntegerField(null=True, blank=True, default=0)
+    # last_pur_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=0)
+
+    sold_qty = models.IntegerField(null=True, blank=True, default=None)
+    sold_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=0)
+
+    purchase_qty = models.IntegerField(null=True, blank=True, default=None)
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, default=0)
+
+    salesman_commission = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+
+    def __str__(self):
+        return self.prod_name or f"Product {self.inv_id}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['company', 'barcode'], name='idx_inv_comp_bar'),
+            models.Index(fields=['company', 'manualbc'], name='idx_inv_comp_mbc'),
+            models.Index(fields=['company', 'barcode2'], name='idx_inv_comp_b2'),
+            models.Index(fields=['company', 'inv_id'], name='idx_inv_comp_invid'),
+            models.Index(fields=['company', 'alias_name'], name='idx_inv_comp_alias'),
+            models.Index(fields=['company', 'prod_name'], name='idx_inv_comp_prod'),
+        ]
+
+
+
+
+# -- Add this once in mysql for full text index in mysql
+# ALTER TABLE inventory_inventory ADD FULLTEXT(prod_name, alias_name);
+
+from django.db import models
+
+# Create your models here.
+
+
+
+
+
+
+class Purchase(models.Model):
+    # === PK ===
+    id = models.BigAutoField(primary_key=True)
+
+    # === Bill grouping (essential — NOT nullable) ===
+    bill_no = models.IntegerField(db_index=True)
+    # row_no = models.PositiveSmallIntegerField()
+    is_header = models.BooleanField(default=False, db_index=True)
+
+    # === Row-level fields ===
+    header_edit_count = models.PositiveIntegerField(default=0, null=True, blank=True)
+    header_acc_code = models.IntegerField(default = 112000001, null=True, blank=True)
+    inv_id = models.IntegerField(null=True, blank=True)
+    prod_name = models.CharField(max_length=255, blank=True, default='')
+    category = models.CharField(max_length=100, blank=True, default='',null = True)
+    qty = models.DecimalField(max_digits=12, decimal_places=3, default=0, null=True, blank=True)
+    rate = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    uom = models.CharField(max_length=20, blank=True, default='',null = True)
+    packing_mode = models.PositiveSmallIntegerField(default=1, null=True, blank=True,
+        db_comment='1=base 2=ctrn 3=dzn 4=wholesale')
+    
+    pack_qty = models.DecimalField(max_digits=12, decimal_places=3, default=0, null=True, blank=True,
+        db_comment='crtn_qty if packing mode=2, dzn_qty if packing mode=3')
+    row_discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+    row_discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    row_net_total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    row_notes = models.TextField(blank=True, default='',null = True)
+
+    # === Header-only fields ===
+    date = models.DateField(null=True, blank=True, db_index=True)
+    dateent = models.DateTimeField(null=True, blank=True)
+    dateedit = models.DateTimeField(null=True, blank=True)
+    user = models.CharField(max_length=150, blank=True, default='',null = True)
+    edit_by = models.CharField(max_length=150, blank=True, default='',null = True)
+    salesman = models.CharField(max_length=150, blank=True, default='',null = True)
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE, null=True, blank=True)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE, null=True, blank=True)
+    posterminal = models.ForeignKey('configuration.POSTerminal', on_delete=models.CASCADE, null=True, blank=True)
+
+    # === Header totals ===
+    header_total_items = models.PositiveSmallIntegerField(default=0, null=True, blank=True)
+    header_item_total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+    header_discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_delivery_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_gst_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+    header_gst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_msc_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_net_total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True, db_index=True)
+    header_remarks = models.TextField(blank=True, default='',null = True)
+
+    # === Payment fields ===
+    header_payment_mode = models.IntegerField(default=112000001, null=True, blank=True,
+        db_comment='112000001=cash , any other = card')
+    header_cash_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_bank_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_card_last4 = models.CharField(max_length=4, blank=True, default='',null = True)
+    header_total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_change_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+
+    #======== Purchae Specific===========
+
+    header_labour_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_freight_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_unload_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+
+    header_freight_acc_code = models.IntegerField(default = 0, null=True, blank=True)
+    header_labour_acc_code = models.IntegerField(default = 0, null=True, blank=True)
+    header_unload_acc_code = models.IntegerField(default = 0, null=True, blank=True)
+    
+    # === Supplier Bill Reference - HEADER ONLY ===
+    header_supl_inv_no = models.CharField(max_length=35, blank=True, default='', null=True, 
+        help_text="Supplier invoice number")
+    header_supl_inv_date = models.DateField(null=True, blank=True, 
+        help_text="Supplier invoice date")
+
+                        # Internal Ref - HEADER LEVEL ===
+    header_our_ref = models.CharField(max_length=25, blank=True, default='', null=True,
+        help_text="Our PO reference, When did we order this inovice")
+    header_our_ref_date = models.DateField(null=True, blank=True)
+    
+    # === Foreign Currency - HEADER ONLY for most cases ===
+    fc_currency = models.CharField(max_length=3, default='PKR', blank=True, null=True,
+        help_text="USD, AED, CNY. PKR if local purchase")
+    fc_rate = models.DecimalField(max_digits=11, decimal_places=4, default=0, null=True, blank=True,
+        help_text="Exchange rate on bill date. 0 if PKR")
+    fc_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, null=True, blank=True,
+        help_text="Total invoice value in foreign currency")
+
+    # If item-wise FC needed - ROW LEVEL
+    row_fc_rate = models.DecimalField(max_digits=11, decimal_places=4, default=0, null=True, blank=True)
+    row_fc_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, null=True, blank=True)
+
+
+
+    # === Landed Cost - ROW LEVEL ===
+    row_total_cost_per_base_unit = models.DecimalField(max_digits=18, decimal_places=4, default=0, null=True, blank=True,
+        help_text="Landed cost per unit after freight/unload/shortage")
+    row_batch_no = models.CharField(max_length=15, blank=True, default='', null=True)
+    row_batch_qty = models.PositiveIntegerField(default=0, null=True, blank=True)
+    row_expiry_dt = models.DateField(null=True, blank=True)
+    row_pack_qty_rcvd = models.PositiveIntegerField(default=0, null=True, blank=True,
+        help_text="Actually received vs pack_qty ordered")
+
+    # === Tax - HEADER LEVEL ===
+    header_wht_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True, help_text='Example: You buy goods Rs. 100,000 from an unregistered supplier. FBR rate = 4.5% WHT.header_wht_percent = 4.5header_wht_amount = 4500You pay supplier 95,500. You deposit 4,500 to FBR via CPR.')
+    header_wht_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_advtax_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+
+    header_advtax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_gst_after_discount = models.BooleanField(default=True, 
+        help_text="If False, calc GST before discount")
+
+
+
+    # === Freight/Builty - HEADER LEVEL ===
+    header_builty_no = models.CharField(max_length=15, blank=True, default='', null=True,help_text='Related to transporter')
+    header_builty_date = models.DateField(null=True, blank=True)
+    header_delivery_person = models.CharField(max_length=150, blank=True, default='', null=True)
+    header_weight = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_shortaccess = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True,
+        help_text="Shortage/Access amount")
+
+    # === Store + Status - HEADER LEVEL ===
+    # store = models.ForeignKey('configuration.Store', on_delete=models.CASCADE, null=True, blank=True)
+    status = models.CharField(max_length=20, default='posted', choices=[('pending','Pending'),('received','Received'),('posted','Posted')])
+
+
+        # === Pricing - ROW LEVEL ===
+    row_trade_price = models.DecimalField(max_digits=12, decimal_places=4, default=0, null=True, blank=True,
+        help_text="Trade Price,What you sell")
+    row_actual_retail_price = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True,
+        help_text="Retail Price") 
+    row_oldcost = models.DecimalField(max_digits=18, decimal_places=4, default=0, null=True, blank=True,
+        help_text="Previous cost for profit calc")
+
+    # === Extra Discounts - ROW LEVEL ===
+    row_discount_percent2 = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+    row_discount_amount2 = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    row_bonus = models.DecimalField(max_digits=12, decimal_places=3, default=0, null=True, blank=True,
+        help_text="Free bonus qty")
+    row_bonus_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+
+    
+    
+    class Meta:
+        managed = True
+        db_table = 'purchase'
+        indexes = [
+            models.Index(fields=['bill_no'], name='purchase_bill_no_idx'),
+            models.Index(fields=['is_header'], name='purchase_is_header_idx'),
+            models.Index(fields=['date', 'is_header'], name='purchase_date_is_header_idx'),
+            models.Index(fields=['date'], name='purchase_date_idx'),
+            # models.Index(fields=['is_header', 'header_net_total'], name='purchase_is_header_net_total_idx'),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(is_header=True, header_total_items__gte=0) |
+                    models.Q(is_header=False, header_total_items=0)
+                ),
+                name='purchase_total_items_only_on_header',
+            ),
+        ]
+        # unique_together = ['bill_no', 'row_no']
+
+ 
+from django.db import models
+from django.db.models import IntegerField, FloatField, CharField, TextField,DateTimeField, DateField
+
+# Create your models here.
+
+class Gledg(models.Model):
+
+    GLEDG_ID = models.AutoField(primary_key=True, db_column="gledg_id")
+
+    ACC_CODE = models.IntegerField(db_column="acc_code", null=True, blank=True)
+    REF_ACC_CODE = models.IntegerField(db_column="ref_acc_code")
+    ACC_HEAD = models.CharField(max_length=200, db_column="acc_head", null=True, blank=True)
+
+    V_TYPE = models.CharField(db_column="v_type", max_length=2, null=True, blank=True)
+    VNO = models.IntegerField(db_column="vno", null=True, blank=True)
+
+    DATE = models.DateField(db_column="date", null=True, blank=True)
+
+    DESCRIPTION = models.CharField(db_column="desc", max_length=60, null=True, blank=True)
+    REMARKS = models.CharField(db_column="remarks", max_length=60, null=True, blank=True)
+
+    AMOUNT = models.DecimalField(db_column="amount", max_digits=12, decimal_places=2, null=True, blank=True)
+    AMT_TYPE = models.CharField(db_column="amt_type", max_length=2, null=True, blank=True)
+
+    CHQNO = models.CharField(db_column="chqno", max_length=15, null=True, blank=True)
+
+    PUR_INV = models.CharField(
+        db_column="Pur_Inv",
+        max_length=1,
+        default='I',
+        null=True,
+        blank=True,
+        help_text="R = Production, P = Purchase, I = Invoice"
+    )
+
+    DATEENT = models.DateTimeField(db_column="dateent", null=True, blank=True)
+    DATEEDIT = models.DateTimeField(db_column="dateedit", null=True, blank=True)
+
+    USER = models.CharField(db_column="user", max_length=10, null=True, blank=True)
+    EDITBY = models.CharField(db_column="editby", max_length=10, null=True, blank=True)
+
+
+    RECEIPTNO = models.IntegerField(db_column="receiptno", null=True, blank=True)
+    INVOICE_ID = models.IntegerField(db_column="inv_id", null=True, blank=True)
+
+    SHIFT = models.CharField(db_column="shift", max_length=1, null=True, blank=True)
+
+    CHEQUE_DATE = models.DateField(db_column="cheque_date", null=True, blank=True)
+
+    DRAWN_BRANCH = models.CharField(db_column="drawn_branch", max_length=35, null=True, blank=True)
+
+    PAYMENTMETHOD = models.CharField(db_column="paymentmethod", max_length=12, null=True, blank=True)
+
+    SHOW_IN_SALE_RPT = models.CharField(
+        db_column="show_in_sale_rpt",
+        max_length=1,
+        default='N'
+    )
+
+    BANK_RECONCILE = models.CharField(db_column="bank_reconcile", max_length=1, null=True, blank=True)
+
+    ISPOSTED = models.CharField(db_column="isposted", max_length=1, null=True, blank=True)
+
+    SALES_MAN = models.CharField(db_column="sales_man", max_length=15, null=True, blank=True)
+
+    BRANCH = models.ForeignKey('configuration.Branch',db_column="branch", null=True, blank=True, on_delete=models.CASCADE)
+    POSTERMINAL = models.ForeignKey('configuration.POSTerminal',db_column="terminal", null=True, blank=True, on_delete=models.CASCADE)
+    COMPANY = models.ForeignKey('configuration.Company',db_column="company", null=True, blank=True, on_delete=models.CASCADE)
+
+    DEPT = models.CharField(db_column="dept", max_length=25, null=True, blank=True)
+
+    def save(self):
+
+        for field in self._meta.fields:
+            if isinstance(field, (CharField, TextField)):
+                if getattr(self, field.attname) is None or getattr(self, field.attname) == '':
+                    setattr(self, field.attname, " ")
+            if isinstance(field, (IntegerField, FloatField)):
+                if getattr(self, field.attname) is None or getattr(self, field.attname) == '':
+                    setattr(self, field.attname, 0)
+            if isinstance(field, (DateField ,DateTimeField)):
+                if getattr(self, field.attname) is None or getattr(self, field.attname) == '':
+                    setattr(self, field.attname, '1900-01-01')    
+        super().save()
+        
+    # class Meta:
+    #     db_table = "gledg"
+    #     # managed = False 
+
+    #     indexes = [
+    #     models.Index(fields=["V_TYPE", "VNO"]),
+    #     models.Index(fields=["ACC_CODE"]),
+    #     models.Index(fields=["DATE"]),
+    #     models.Index(fields=["AMT_TYPE"]),
+    # ]
+
+    class Meta:
+        db_table = "gledg"
+
+        indexes = [
+            models.Index(
+                fields=["DATE", "DATEENT", "GLEDG_ID"],
+                name="gledg_daybook_idx"
+            ),
+
+            models.Index(
+                fields=["V_TYPE", "VNO"],
+                name="gledg_vtype_vno_idx"
+            ),
+
+            models.Index(
+                fields=["ACC_CODE"],
+                name="gledg_acc_code_idx"
+            ),
+
+            models.Index(
+                fields=["AMT_TYPE"],
+                name="gledg_amt_type_idx"
+            ),
+        ]
+
+
+    def __str__(self):
+        return f"{self.GLEDG_ID} - {self.ACC_CODE}"
+
+
+
+
+
+
+
+
+
+class Vchno(models.Model):
+    id = models.AutoField(db_column="id", primary_key=True)
+
+    TYPE = models.CharField(
+        db_column="type",
+        max_length=6,
+        unique=True,
+    )
+
+    VCHNO = models.IntegerField(
+        db_column="vchno",
+        default=0
+    )
+
+    REMARKS = models.CharField(
+        db_column="remarks",
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    JAN = models.IntegerField(db_column="jan", default=0)
+    FEB = models.IntegerField(db_column="feb", default=0)
+    MAR = models.IntegerField(db_column="mar", default=0)
+    APR = models.IntegerField(db_column="apr", default=0)
+    MAY = models.IntegerField(db_column="may", default=0)
+    JUN = models.IntegerField(db_column="jun", default=0)
+    JUL = models.IntegerField(db_column="jul", default=0)
+    AUG = models.IntegerField(db_column="aug", default=0)
+    SEP = models.IntegerField(db_column="sep", default=0)
+    OCT = models.IntegerField(db_column="oct", default=0)
+    NOV = models.IntegerField(db_column="nov", default=0)
+    DECE = models.IntegerField(db_column="dece", default=0)
+
+    class Meta:
+        db_table = "vchno"
+        # managed = True
+
+    def __str__(self):
+        return f"{self.TYPE} - {self.REMARKS}"
+
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+import pytz # type:ignore  
+
+# karachi_tz = pytz.timezone('Asia/Karachi')
+
+# def karachi_now():
+#     return timezone.now().astimezone(karachi_tz)
+
+
+
+
+# class Vchno(models.Model):
+#     type = models.CharField(max_length=3, blank=True, null=True)
+#     vchno = models.IntegerField(blank=True, null=True)
+#     remarks = models.CharField(max_length=50, blank=True, null=True)
+#     jan = models.IntegerField(blank=True, null=True)
+#     feb = models.IntegerField(blank=True, null=True)
+#     mar = models.IntegerField(blank=True, null=True)
+#     apr = models.IntegerField(blank=True, null=True)
+#     may = models.IntegerField(blank=True, null=True)
+#     jun = models.IntegerField(blank=True, null=True)
+#     jul = models.IntegerField(blank=True, null=True)
+#     aug = models.IntegerField(blank=True, null=True)
+#     sep = models.IntegerField(blank=True, null=True)
+#     oct = models.IntegerField(blank=True, null=True)
+#     nov = models.IntegerField(blank=True, null=True)
+#     dece = models.IntegerField(blank=True, null=True)
+
+#     class Meta:
+#         managed = False
+#         db_table = 'vchno'
+
+
+        
+
+from simple_history.models import HistoricalRecords
+
+
+class Invoice(models.Model):
+    # === PK ===
+    id = models.BigAutoField(primary_key=True)
+
+    # === Bill grouping (essential — NOT nullable) ===
+    bill_no = models.IntegerField(db_index=True)
+    # row_no = models.PositiveSmallIntegerField()
+    is_header = models.BooleanField(default=False, db_index=True)
+
+    # === Row-level fields ===
+    header_edit_count = models.PositiveIntegerField(default=0, null=True, blank=True)
+    header_acc_code = models.IntegerField(default = 112000001, null=True, blank=True)
+    inv_id = models.IntegerField(null=True, blank=True)
+    prod_name = models.CharField(max_length=255, blank=True, default='')
+    category = models.CharField(max_length=100, blank=True, default='',null = True)
+    qty = models.DecimalField(max_digits=12, decimal_places=3, default=0, null=True, blank=True)
+    rate = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    uom = models.CharField(max_length=20, blank=True, default='',null = True)
+    packing_mode = models.PositiveSmallIntegerField(default=1, null=True, blank=True,
+        db_comment='1=base 2=ctrn 3=dzn 4=wholesale')
+    
+    pack_qty = models.DecimalField(max_digits=12, decimal_places=3, default=0, null=True, blank=True,
+        db_comment='crtn_qty if packing mode=2, dzn_qty if packing mode=3')
+    row_discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+    row_discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    row_net_total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+
+    row_net_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    row_rate_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    
+    row_notes = models.TextField(blank=True, default='',null = True)
+
+    # === Header-only fields ===
+    date = models.DateField(null=True, blank=True, db_index=True)
+    dateent = models.DateTimeField(null=True, blank=True)
+    dateedit = models.DateTimeField(null=True, blank=True)
+    user = models.CharField(max_length=150, blank=True, default='',null = True)
+    edit_by = models.CharField(max_length=150, blank=True, default='',null = True)
+    salesman = models.CharField(max_length=150, blank=True, default='',null = True)
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE, null=True, blank=True)
+    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE, null=True, blank=True)
+    posterminal = models.ForeignKey('configuration.POSTerminal', on_delete=models.CASCADE, null=True, blank=True)
+
+
+    # quotation converted logic header
+    header_quo_con_by = models.CharField(max_length=150, blank=True, default='',null = True)
+    header_quo_con_no = models.IntegerField(null=True, blank=True)
+
+    # === Header totals ===
+    header_total_items = models.PositiveSmallIntegerField(default=0, null=True, blank=True)
+    header_item_total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+    header_discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_delivery_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_gst_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, null=True, blank=True)
+    header_gst_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_msc_charges = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_net_total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True, db_index=True)
+    header_remarks = models.TextField(blank=True, default='',null = True)
+
+    # === Payment fields ===
+    header_payment_mode = models.PositiveSmallIntegerField(default=1, null=True, blank=True,
+        db_comment='1=cash 2=bank 3=dual')
+    header_cash_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_bank_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_card_last4 = models.CharField(max_length=4, blank=True, default='',null = True)
+    header_total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    header_change_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        managed = True
+        db_table = 'invoice'
+        indexes = [
+            models.Index(fields=['bill_no']),
+            models.Index(fields=['header_quo_con_no']),
+            models.Index(fields=['is_header']),
+            models.Index(fields=['date', 'is_header']),
+            models.Index(fields=['posterminal', 'date']),
+            models.Index(fields=['is_header', 'header_net_total']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(header_payment_mode__in=[1, 2, 3]),
+                name='valid_payment_mode'
+            ),
+            models.CheckConstraint(
+                condition=models.Q(is_header=True, header_total_items__gte=0) |
+                    models.Q(is_header=False, header_total_items=0),
+                name='total_items_only_on_header'
+            ),
+        ]
+        # unique_together = ['bill_no', 'row_no']
+
+
+
+# class Gledg(models.Model):
+#     gledg_id = models.AutoField(primary_key=True)
+#     acc_code = models.IntegerField(blank=True, null=True)
+#     ref_acc_code = models.IntegerField()
+#     v_type = models.CharField(max_length=2, blank=True, null=True)
+#     vno = models.IntegerField(blank=True, null=True)
+#     date = models.DateField(blank=True, null=True)
+#     desc = models.CharField(max_length=250, db_collation='latin1_general_ci', blank=True, null=True)
+#     remarks = models.CharField(max_length=60, blank=True, null=True)
+#     amount = models.FloatField(blank=True, null=True)
+#     amt_type = models.CharField(max_length=2, blank=True, null=True)
+#     chqno = models.CharField(max_length=15, blank=True, null=True)
+#     ref_no = models.IntegerField(blank=True, null=True, db_comment='computer_do_no')
+#     dateent = models.DateTimeField(blank=True, null=True)
+#     dateedit = models.DateTimeField(blank=True, null=True)
+#     user = models.CharField(max_length=10, db_collation='latin1_general_ci', blank=True, null=True)
+#     editby = models.CharField(max_length=10, blank=True, null=True)
+#     branchid = models.IntegerField(blank=True, null=True)
+#     receiptno = models.IntegerField(blank=True, null=True)
+#     shift = models.CharField(max_length=1, blank=True, null=True)
+#     cheque_date = models.DateField()
+#     drawn_branch = models.CharField(max_length=35)
+#     paymentmethod = models.CharField(max_length=12)
+#     upload = models.CharField(max_length=1)
+#     show_in_sale_rpt = models.CharField(max_length=1, blank=True, null=True)
+#     isposted = models.CharField(max_length=1)
+#     inv_yes_no = models.CharField(max_length=1)
+#     bank_reconcile = models.CharField(max_length=1)
+#     actual_installment = models.IntegerField()
+#     pur_inv = models.CharField(db_column='Pur_Inv', max_length=1)  # Field name made lowercase.
+#     station = models.CharField(max_length=5, db_collation='latin1_general_ci')
+#     prod_categ = models.CharField(max_length=25, db_collation='latin1_general_ci')
+
+#     class Meta:
+#         managed = False
+#         db_table = 'gledg'
+
+
+
+
+
+
+class BarcodConfig(models.Model):
+    user = models.CharField(max_length=10, blank=True, null=True)
+    price_base = models.CharField(max_length=1,choices=[('N','Normal'),('P','Pice Embeded')])
+    total_bc_digits = models.PositiveSmallIntegerField(default=13)
+    left_delete = models.PositiveSmallIntegerField(default = 2)
+    right_delete =models.PositiveSmallIntegerField(default = 1)
+    item_bc = models.PositiveSmallIntegerField(default=5)
+    kg= models.PositiveSmallIntegerField(default=2)
+    grm= models.PositiveSmallIntegerField(default=3)
+
+
+    class Meta:
+        managed = True
+        db_table = 'ab_BarcodConfig'
+
+    def __str__(self):
+        return f'This is barcode configration of {self.user}'
+    
+
+
+
+class Features(models.Model):
+    user = models.CharField(max_length=50,default="All Features")
+    pos_discount_per_item = models.BooleanField(default=True)
+    pos_load_prv_bill = models.BooleanField(default=True)
+    pos_disc_flat_limit = models.FloatField(null=True,blank=True)
+
+
+     
+

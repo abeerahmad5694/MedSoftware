@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Django
+
+media/
+
+**dist/
+dist/
+*dist/
+
+
+*software.exe
+software.exe
+**software.exe
+
+
+# Environment variables
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Tailwind standalone executable
+mysite/tailwindcss.exe
+
+tailwindcss.exe 
+mysite/tailwindcss1.exe
+mysite/tailwindcss1.exe

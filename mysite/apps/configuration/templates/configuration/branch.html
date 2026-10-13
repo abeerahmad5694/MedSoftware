@@ -1,0 +1,243 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>#id_logo { display: none; }</style>
+{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 custom-scroll">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-xl md:text-2xl font-bold text-[var(--text-main)] tracking-tight">Branch Configuration</h1>
+            <p class="text-xs md:text-sm text-[var(--text-muted)] mt-0.5">Full control - Create, Update, Delete</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="space-y-2">
+        {% for message in messages %}
+            <div class="p-3 text-xs rounded-lg border flex items-center gap-2 {% if message.tags == 'success' %}text-emerald-700 bg-emerald-50 border-emerald-200{% else %}text-red-700 bg-red-50 border-red-200{% endif %} shadow-sm">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7">
+            <div class="surface rounded-xl p-6 md:p-8 shadow-sm border border-[var(--border-color)]">
+                <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg bg-blue-100 text-blue-600"><i class="fas fa-code-branch"></i></div>
+                        <div>
+                            <h3 class="font-semibold text-base text-[var(--text-main)]" id="form-title">Add New Branch</h3>
+                            <span class="text-xs text-[var(--text-muted)]" id="form-subtitle">Configure details for branch operations</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetForm()" class="text-xs text-blue-600 hover:underline hidden" id="reset-btn">Add New Instead</button>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="space-y-5" id="branch-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="branch_id" id="branch_id">
+                    <input type="hidden" name="action" id="form_action" value="save">
+                    <input type="hidden" name="delete_logo" id="delete_logo" value="0">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {% for field in form %}
+                            {% if field.name == 'logo' %}
+                                <div class="md:col-span-2 bg-slate-50/70 p-4 rounded-xl border border-[var(--border-color)]">
+                                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-wider">{{ field.label }}</label>
+                                    <div class="flex flex-col sm:flex-row items-start gap-5">
+                                        <div class="w-28 h-28 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden bg-white shrink-0 relative">
+                                            <img id="logoPreview" src="" class="w-full h-full object-contain p-1 hidden" alt="Logo">
+                                            <span id="noLogoText" class="text-slate-400 text-center text-xs">No Logo</span>
+                                            <button type="button" id="removeLogoBtn" onclick="removeLogo()" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text- hover:bg-red-600 hidden"><i class="fas fa-times"></i></button>
+                                        </div>
+                                        <div class="flex-1 w-full">
+                                            {{ field }}
+                                            <p class="text-[0.625rem] text-[var(--text-muted)] mt-2">PNG, JPG up to 2MB. Instant preview.</p>
+                                            <div class="flex gap-2 mt-3">
+                                                <button type="button" onclick="document.getElementById('id_logo').click()" class="text- px-3 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-medium"><i class="fas fa-upload mr-1"></i> Change Logo</button>
+                                                <button type="button" id="deleteLogoBtn" onclick="removeLogo()" class="text- px-3 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg hover:bg-red-100 font-medium hidden"><i class="fas fa-trash mr-1"></i> Remove Logo</button>
+                                            </div>
+                                            <div class="text-red-500 text-[0.625rem] mt-1">{{ field.errors }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if field.name == 'address' %}
+                                <div class="md:col-span-2">
+                                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">{{ field.label }} {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                                    {{ field }}
+                                    <div class="text-red-500 text-[0.625rem] mt-1">{{ field.errors }}</div>
+                                </div>
+                            {% endif %}
+
+                            {% if field.name != 'logo' and field.name != 'address' %}
+                                <div>
+                                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">{{ field.label }} {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}</label>
+                                    {{ field }}
+                                    <div class="text-red-500 text-[0.625rem] mt-1">{{ field.errors }}</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div class="border-t border-[var(--border-color)] pt-5 mt-2 flex justify-between items-center">
+                        <button type="button" id="deleteBranchBtn" onclick="deleteCurrentBranch()" class="hidden text- px-4 py-2 bg-red-50 border border-red-200 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition"><i class="fas fa-trash mr-1"></i> Delete Branch</button>
+                        <div class="flex gap-3 ml-auto">
+                            <button type="button" onclick="resetForm()" class="px-8 py-2 text-sm bg-white border border-slate-200 rounded-lg">Cancel</button>
+                            <button type="submit" class="px-8 py-2 text-sm bg-blue-600 text-black rounded-lg hover:bg-blue-700" id="submit-btn"><i class="fas fa-save text- mr-1"></i> Save Branch</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5">
+            <div class="surface rounded-xl shadow-sm overflow-hidden flex flex-col h-full border border-[var(--border-color)]">
+                <div class="p-4 border-b bg-slate-50 flex items-center justify-between">
+                    <h3 class="font-semibold text-sm flex items-center gap-2"><i class="fas fa-list-ul text-blue-500"></i> Existing Branches</h3>
+                    <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text- font-bold">{{ branches.count }}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-3" style="max-height: 700px;">
+                    {% if branches %}
+                        <div class="space-y-3">
+                            {% for branch in branches %}
+                                <div class="p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 bg-white transition-all">
+                                    <div class="flex justify-between items-start gap-3">
+                                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                                            {% if branch.logo %}
+                                                <img src="{{ branch.logo.url }}" class="w-12 h-12 rounded-xl object-contain bg-white border border-slate-200 p-1 shrink-0">
+                                            {% else %}
+                                                <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0"><i class="fas fa-store text-slate-400 text-sm"></i></div>
+                                            {% endif %}
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="font-bold text-sm text-slate-800 truncate">{{ branch.name }}</h4>
+                                                <p class="text- text-slate-500 truncate">{{ branch.address|default:"No address" }}</p>
+                                                <div class="flex gap-2 mt-1.5">
+                                                    {% if branch.phone1 %}<span class="text- bg-slate-100 px-1.5 py-0.5 rounded">{{ branch.phone1 }}</span>{% endif %}
+                                                    {% if branch.license_no %}<span class="text- bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">{{ branch.license_no }}</span>{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-1.5">
+                                            <button type="button" onclick="editBranch(this)" data-id="{{ branch.id }}" data-name="{{ branch.name }}" data-company="{{ branch.company.id }}" data-address="{{ branch.address|escapejs }}" data-phone1="{{ branch.phone1|default:'' }}" data-phone2="{{ branch.phone2|default:'' }}" data-email="{{ branch.email|default:'' }}" data-license_no="{{ branch.license_no|default:'' }}" data-logo="{% if branch.logo %}{{ branch.logo.url }}{% endif %}" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition flex items-center justify-center shadow-sm"><i class="fas fa-edit text-"></i></button>
+                                            <button type="button" onclick="confirmDeleteBranch('{{ branch.id }}','{{ branch.name|escapejs }}')" class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shadow-sm"><i class="fas fa-trash text-"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="flex flex-col items-center justify-center py-16 text-slate-400"><i class="fas fa-store-slash text-4xl mb-3 opacity-20"></i><p class="text-sm">No branches found</p></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 class="font-bold text-slate-800">Delete Branch?</h3>
+            <p class="text-xs text-slate-500 mt-1" id="deleteModalText">This action cannot be undone.</p>
+            <form method="POST" class="mt-5 flex gap-3 justify-end">
+                {% csrf_token %}
+                <input type="hidden" name="branch_id" id="modal_branch_id">
+                <input type="hidden" name="action" value="delete">
+                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 text-xs bg-white border border-slate-200 rounded-lg">Cancel</button>
+                <button type="submit" class="px-5 py-2 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700">Yes, Delete</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+function updateButtons(){
+    const preview=document.getElementById('logoPreview');
+    const hasLogo=preview.src &&!preview.classList.contains('hidden') && preview.src!==window.location.href;
+    document.getElementById('removeLogoBtn').classList.toggle('hidden',!hasLogo);
+    document.getElementById('deleteLogoBtn').classList.toggle('hidden',!hasLogo);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+    const logoInput=document.getElementById('id_logo');
+    const preview=document.getElementById('logoPreview');
+    const noLogoText=document.getElementById('noLogoText');
+    const deleteInput=document.getElementById('delete_logo');
+    updateButtons();
+    logoInput.addEventListener('change',e=>{
+        const file=e.target.files[0]; if(!file) return;
+        const reader=new FileReader();
+        reader.onload=ev=>{
+            preview.src=ev.target.result;
+            preview.classList.remove('hidden');
+            noLogoText.classList.add('hidden');
+            deleteInput.value="0";
+            updateButtons();
+        };
+        reader.readAsDataURL(file);
+    });
+});
+function removeLogo(){
+    document.getElementById('logoPreview').src="";
+    document.getElementById('logoPreview').classList.add('hidden');
+    document.getElementById('noLogoText').classList.remove('hidden');
+    document.getElementById('id_logo').value="";
+    document.getElementById('delete_logo').value="1";
+    updateButtons();
+}
+function editBranch(btn){
+    const d=btn.dataset;
+    document.getElementById('branch_id').value=d.id;
+    document.getElementById('form_action').value="save";
+    document.getElementById('id_name').value=d.name;
+    document.getElementById('id_company').value=d.company;
+    document.getElementById('id_address').value=d.address;
+    document.getElementById('id_phone1').value=d.phone1;
+    document.getElementById('id_phone2').value=d.phone2;
+    document.getElementById('id_email').value=d.email;
+    document.getElementById('id_license_no').value=d.license_no;
+    document.getElementById('delete_logo').value="0";
+    document.getElementById('id_logo').value="";
+    const preview=document.getElementById('logoPreview');
+    const noLogoText=document.getElementById('noLogoText');
+    if(d.logo){ preview.src=d.logo; preview.classList.remove('hidden'); noLogoText.classList.add('hidden'); }
+    else{ preview.src=""; preview.classList.add('hidden'); noLogoText.classList.remove('hidden'); }
+    updateButtons();
+    document.getElementById('form-title').innerText='Edit Branch: '+d.name;
+    document.getElementById('form-subtitle').innerText='Updating existing branch';
+    document.getElementById('submit-btn').innerHTML='<i class="fas fa-sync-alt text- mr-1"></i> Update Branch';
+    document.getElementById('reset-btn').classList.remove('hidden');
+    document.getElementById('deleteBranchBtn').classList.remove('hidden');
+    document.getElementById('branch-form').scrollIntoView({behavior:'smooth'});
+}
+function resetForm(){
+    document.getElementById('branch-form').reset();
+    document.getElementById('branch_id').value='';
+    document.getElementById('form_action').value='save';
+    document.getElementById('delete_logo').value='0';
+    document.getElementById('form-title').innerText='Add New Branch';
+    document.getElementById('form-subtitle').innerText='Configure details for branch operations';
+    document.getElementById('submit-btn').innerHTML='<i class="fas fa-save text- mr-1"></i> Save Branch';
+    document.getElementById('reset-btn').classList.add('hidden');
+    document.getElementById('deleteBranchBtn').classList.add('hidden');
+    document.getElementById('logoPreview').src="";
+    document.getElementById('logoPreview').classList.add('hidden');
+    document.getElementById('noLogoText').classList.remove('hidden');
+    updateButtons();
+}
+function deleteCurrentBranch(){ const id=document.getElementById('branch_id').value; const name=document.getElementById('id_name').value; if(id) confirmDeleteBranch(id,name); }
+function confirmDeleteBranch(id,name){
+    document.getElementById('modal_branch_id').value=id;
+    document.getElementById('deleteModalText').innerText=`Are you sure you want to delete "${name}"? This will permanently delete the branch and its logo.`;
+    document.getElementById('deleteModal').classList.remove('hidden');
+    document.getElementById('deleteModal').classList.add('flex');
+}
+function closeDeleteModal(){ document.getElementById('deleteModal').classList.add('hidden'); document.getElementById('deleteModal').classList.remove('flex'); }
+</script>
+</main>
+{% endblock %}

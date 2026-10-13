@@ -1,0 +1,469 @@
+{% extends "main.html" %} {% load static %} {% block extra_css %}
+<link href="{% static 'quotation/css/sale_page.css' %}" rel="stylesheet" />
+<!-- <link href="{% static 'sale/css/search_product_modal.css' %}" rel="stylesheet" /> -->
+
+
+{% endblock extra_css %} {% block content %}
+<div id="loader">
+  <div class="loader-box">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading bill…</div>
+  </div>
+</div>
+<!-- 
+
+<div class="title-bar">
+  <div class="title-text">
+    <div class="title-icon"></div>
+    <span
+      > Logged-in : {{user}} on Date/Time {{date}} :
+      </span
+    >
+  </div>
+  <div class="title-buttons">
+    <button class="title-btn-close" onclick="window.location.href='/'">
+      ✕
+    </button>
+  </div>
+</div> -->
+
+<div class="container">
+  
+  <div class="left-panel">
+    
+    <div style="height: 50px; align-items: center;" class="quotation_label">Quotation</div>
+    <!-- <div style="height: 100px;"></div> -->
+
+    <input type="hidden" id = 'old_bill_no'>
+    <input type="hidden" id = 'acc_code'>
+    {# Search form (top-left) #}
+    <div class="code-section" style="background-color:var(--color-secondary);">
+      <label class="code-label" id = 'enter-code-label' >Enter Code:</label>
+      <input
+        type="text"
+        name="search"
+        id="product-search"
+        class="code-input"
+        placeholder="Enter item code or name"
+        tabindex="1"
+        autocomplete="off"
+
+        style="background-color:var(--color-primary);color: white; font-size: 1.5rem;"
+      />
+      <div class="item-buttons">
+        <button type="button" id="btn-search" class="btn" tabindex="4">
+          search
+        </button>
+  
+      </div>
+      <div id="search-results" hidden style="display: none"></div>
+    </div>
+
+    {% comment %} <div class="bill-info">
+      
+      <span>Last Bill:</span>
+      <button type="button" id = 'btn-final-receipt' class="btn">Final Receipt</button>
+    </div> {% endcomment %}
+
+    <form method="post" id="cart-form" action="{% url 'sale:save_bill' %}">
+      {% csrf_token %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <!-- <th style="width: 30px">#</th> -->
+              <th style="width: 300px">Item Name</th>
+              <th style="width: 40px">Qty /</th>
+              <th style="width: 30px">PMode</th>
+              <th style="width: 100px">Rate //</th>
+
+              {% if config.pos.row_discount_allowed %}
+              <th style="width: 50px">Disc-per *</th>
+              <th style="width: 70px">Discount</th>
+              {% endif %}
+
+              <th style="width: 100px">Amount =</th>
+              <th style="width: 20px">▲</th>
+            </tr>
+          </thead>
+
+          <tbody id="cart-body">
+       
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Hidden fields for bill totals -->
+      <input
+        type="hidden"
+        name="discount_percent"
+        id="hidden_discount_percent"
+      />
+      <input
+        type="hidden"
+        name="delivery_charges"
+        id="hidden_delivery_charges"
+      />
+      <input type="hidden" name="received_amount" id="hidden_received_amount" />
+      <input type="hidden" name="payment_mode" id="hidden_payment_mode" />
+      <input type="hidden" name="remarks" id="hidden_remarks" />
+    </form>
+  </div>
+
+  <div class="right-panel">
+    <div class="right-section">
+      <div class="bill-amount-header" id = 'last-bill-amount'>Last Bill Amount = {{last_bill_amount}}</div>
+
+      <div class="totals-section">
+        <div class="total-row">
+          <span class="total-label">Item Total:</span>
+          <div class="total-value" id="item-total">0.00</div>
+        </div>
+
+        <div class="total-row discount-row">
+          <span class="total-label">Discount% (**) </span>
+          <input
+            type="number"
+            id="discount-percent"
+            name="discount_percent"
+            class="discount-input"
+            value="0"
+            step="0.01"
+            tabindex="5"
+          />
+          <input class="total-value total-discount-amount" id="discount-amount">
+        </div>
+
+        {% if features.pos_discount_per_item %}
+        {% endif %}
+
+        <div class="total-row" id="delivery-charges-row" {% if not config.pos.delivery_charges_allowed %}style="display: none;"{% endif %}>
+          <span class="total-label">Delivery <small>(Ctrl+D)</small></span>
+
+          <input
+            type="number"
+            id="delivery-charges"
+            name="delivery_charges"
+            class="discount-input total-value"
+            value="0"
+            step="0.01"
+          />
+          <div class="total-value" id="delivery-charges-display" style="display: none;">0.00</div>
+        </div>
+
+        <div class="total-row" id="tax-charges-row" {% if not config.pos.tax_charges_allowed %}style="display: none;"{% endif %}>
+          <span class="total-label">Tax / GST %</span>
+          <input type="number" id="tax-percent" name="tax_percent" class="discount-input" value="0" step="0.01" style="width: 70px;" />
+          <input class="total-value total-discount-amount" id="tax-amount" readonly value="0.00">
+        </div>
+
+        <div class="total-row" id="msc-charges-row" {% if not config.pos.msc_charges_allowed %}style="display: none;"{% endif %}>
+          <span class="total-label">Misc Charges</span>
+          <input type="number" id="msc-charges" name="msc_charges" class="discount-input total-value" value="0" step="0.01" />
+        </div>
+
+        <div class="total-row">
+          <span class="total-label">Net Total:</span>
+          <div class="total-value net-total" id="net-total">0.00</div>
+        </div>
+      </div>
+
+      <div class="payment-section" style="display: none;">
+        <div class="payment-row">
+          <span class="total-label" id = 'received-amount-label'>Received Cash Amount (+)</span>
+          <input
+            type="number"
+            id="received-amount"
+            class="received-input"
+            value="0"
+            step="0.01"
+            tabindex="6"
+          />
+        </div>
+
+        <div class="payment-row">
+          <span class="total-label" id = 'change-amount-label'>Change Amount</span>
+          <div class="total-value change-display" id="change-amount">0.00</div>
+        </div>
+
+        <div class="payment-mode">
+          <span class="total-label">Payment Mode</span>
+          <select
+            name="payment_mode"
+            class="payment-select"
+            id="payment-mode"
+            tabindex="7"
+          >
+            <option value="cash">Cash</option>
+            <option value="card">Card</option>
+            <option value="dual">Dual(Card + Cash)</option>
+          </select>
+        </div>
+      </div>
+
+
+
+      <button
+    type="button"
+    id="btn-convert-to-bill"
+    class="bottom-btn primary convert-to-bill-display"
+    tabindex="8"
+    data-shortcut="ctrl+q"
+  >
+    Convert Into Bill (Ctrl+Q)
+  </button>
+
+
+
+
+  
+
+      <div id="cash-amount" style="display:none; margin-top:8px;">
+        <label for="cash-amount">Cash Amount</label>
+        <input type="text" id="cash-amount" placeholder="Enter cash amount" class="input-box" />
+      </div>
+
+      <div id="bank-amount" style="display:none; margin-top:8px;">
+        <label for="bank-amount">Bank Amount</label>
+        <input type="text" id="bank-amount-input" placeholder="Enter bank amount" class="input-box" />
+      </div>
+      
+      <div id="card-details" style="display:none; margin-top:8px;">
+        <label for="card-number">Card Number</label>
+        <input type="text" id="card-number" placeholder="Enter card number" class="input-box" />
+      </div>
+
+      <div class="remarks-section">
+        <div class="remarks-label">Remarks</div>
+        <input
+          type="text"
+          id="remarks-input"
+          name="remarks"
+          class="remarks-input"
+        />
+
+        
+        {% comment %} <div class="checkboxes">
+          <div class="checkbox-row">
+            <input
+              type="checkbox"
+              id="direct-printing"
+              name="direct_printing"
+            />
+            <label for="direct-printing">Direct Printing</label>
+            <label for="direct-printing">    </label>
+
+            <input
+              type="checkbox"
+              id="multi-line"
+              name="MultiLine"
+              />
+              <label for="multi-line">MultiLine</label>
+
+            
+          </div>
+
+
+        </div> {% endcomment %}
+
+        <div class="checkboxes">
+            <label class="check-item">
+              <input type="checkbox" id="direct-printing" name="direct_printing">
+              Direct Printing
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" id="multi-line" name="multi_line">
+              Multi Line
+            </label>
+
+
+
+            <label class="check-item">
+              <input type="checkbox" id="barcode-scan" name="barcode_scan">
+              Barcode Scan
+            </label>
+
+            {% comment %} <label class="check-item">
+              <input type="checkbox" name="check_three">
+              Check Three
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" name="check_four">
+              Check Four
+            </label> {% endcomment %}
+          </div>
+
+          
+        <div class="sales-man">
+          <span class="total-label">Sales Man</span>
+          <select
+            name="payment_mode"
+            class="payment-select"
+            id="sales-man"
+            tabindex="7"
+          >
+            <option value="salesman1" selected>Salsman1</option>
+            <option value="salesman2">Salesman2</option>
+
+          </select>
+        </div>
+
+
+
+         <div class="invoice-info">
+          {% comment %} <span>Date: <strong>{{date}}</strong></span> {% endcomment %}
+          <div>
+            <span>Inv No.</span>
+            <input
+              type="text"
+              name="invoice_number"
+              id="invoice-number"
+              class="invoice-input"
+            />
+          </div>
+          {% if features.pos_load_prv_bill%}
+          <div>
+            <span>Load Bill</span>
+            <input
+              type="text"
+              name="Load_bill"
+              id="Load-bill"
+              class="invoice-input"
+            />
+          </div>
+          {% endif %}
+          
+        </div> 
+      </div>
+
+      <!-- <div class="user-info">
+        <div class="user-row">
+          <span><strong>User ID:</strong> {{user}} </span>
+        </div>
+      </div> -->
+    </div>
+  </div>
+</div>
+
+<div class="bottom-buttons">
+  <button
+    type="button"
+    id="btn-save-bill"
+    class="bottom-btn primary"
+    tabindex="8"
+    data-shortcut="ctrl+s"
+  >
+    Save(Ctrl+S)
+  </button>
+  <button type="button" id="btn-new-bill" class="bottom-btn" tabindex="9">
+    New Bill(Ctrl+N)
+  </button>
+
+  
+  <button
+    type="button"
+    id="btnDeleteBill"
+    class="bottom-btn danger"
+    tabindex="8"
+    data-shortcut="ctrl+s"
+  >
+    Delete
+  </button>
+
+
+
+
+
+  <button
+    type="button"
+    id="btn-select-client"
+    class="bottom-btn primary"
+    tabindex="8"
+    data-shortcut="alt+c"
+  >
+    Select Client(Alt+C)
+  </button>
+  
+  <button
+    type="button"
+    id="btn-convert-to-wholesale"
+    class="bottom-btn secondary"
+    tabindex="8"
+    data-shortcut="alt+w"
+  >
+    Convert to Wholesale(Alt+W)
+  </button>
+
+
+  <button
+    type="button"
+    id="btn-cash-pay"
+    class="bottom-btn secondary hide-it"
+    tabindex="8"
+    data-shortcut="ctrl+w"
+  >
+    Cash Pay
+  </button>
+
+  <button
+    type="button"
+    id="btn-cash-receive"
+    class="bottom-btn secondary hide-it"
+    tabindex="8"
+    data-shortcut="ctrl+w"
+  >
+    Cash Receipt
+  </button>
+
+  <!-- <button class  = 'bottom-btn' id="zoomOutBtn" hidden>−</button>
+  <button class  = 'bottom-btn' id="zoomInBtn" hidden >+</button> -->
+  
+  <div class="checkboxes">
+   <label class="check-item">
+    <input type="radio" id="pos_base_price" name="price_mode" value="base" checked>
+    Base Mode
+  </label>
+
+  <label class="check-item">
+    <input type="radio" id="pos_wholesale_price" name="price_mode" value="wholesale">
+    WholeSale Mode
+  </label>
+
+  <label class="check-item">
+    <input type="radio" id="pos_carton_price" name="price_mode" value="carton">
+    Carton Mode
+  </label>
+
+  <label class="check-item">
+    <input type="radio" id="pos_dzn_price" name="price_mode" value="dzn">
+    Dzn Mode
+  </label>
+
+  </div>
+
+
+
+</div>
+{% include 'myledger/modals/dynamic_voucher_modal.html' with mode='modal' %}
+{% include "quotation/receipt_modal.html" %}
+
+<!-- Include Global Search Modal -->
+{% include 'mysearch/global_search_modal.html' %}
+
+{% comment %} <script type="module" src="{% static 'sale/js/main_pos.js' %}"></script> {% endcomment %}
+{% comment %} <script type="module" src="{% static 'sale/js/helper_func.js' %}"></script> {% endcomment %}
+
+<script src = "{% static "sale/js/vendor/qz/qz_tray.js" %}" ></script>
+{% comment %}<script type="module" src = "{% static "sale/js/waste/recept_modal.js" %}"></script>{% endcomment %}
+
+{% endblock content %} 
+
+
+
+{% block extra_js %}
+<script src="{% static 'invoice_designer/js/document_printer.js' %}?v=3"></script> 
+<script type="module" src="{% static 'quotation/js/sale.js' %}" ></script>
+<script type='module' src="{% static 'quotation/js/config/global_search_modal.js' %}"></script>
+{% endblock extra_js %}

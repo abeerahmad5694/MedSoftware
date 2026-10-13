@@ -1,0 +1,305 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div
+    class="dash-wrapper"
+    id="dashboardRoot"
+    data-stats-url="{% url 'dashboard_stats' %}"
+    data-default-period="{{ dashboard_default_period }}"
+    data-currency-symbol="{{ currency_symbol|default:'Rs'|escape }}"
+>
+    <header class="dash-header">
+        <div class="dash-heading">
+            <span class="dash-eyebrow">BUSINESS OVERVIEW</span>
+            <h1>Dashboard</h1>
+            <p class="dash-date-line">
+                <span id="dash-date">{{ dashboard_company|default:'Your business' }}{% if dashboard_branch %} · {{ dashboard_branch }}{% endif %}</span>
+                <span class="dash-date-separator" aria-hidden="true">·</span>
+                <span id="dash-today">Loading today’s date…</span>
+            </p>
+        </div>
+
+        <div class="dash-header-controls">
+            <div class="dash-period-control" role="group" aria-label="Dashboard period">
+                <button type="button" class="dash-period-button" data-period="today" aria-pressed="{% if dashboard_default_period == 'today' %}true{% else %}false{% endif %}">Today</button>
+                <button type="button" class="dash-period-button" data-period="7_days" aria-pressed="{% if dashboard_default_period == '7_days' %}true{% else %}false{% endif %}">7 days</button>
+                <button type="button" class="dash-period-button" data-period="this_month" aria-pressed="{% if dashboard_default_period == 'this_month' %}true{% else %}false{% endif %}">This month</button>
+            </div>
+            <button type="button" class="dash-refresh-button" id="refreshDashboard" aria-label="Refresh dashboard">
+                <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                <span>Refresh</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="dash-status" id="dash-status" role="status" aria-live="polite">
+        <span class="dash-status-dot" aria-hidden="true"></span>
+        Loading your latest figures…
+    </div>
+
+    {% if 'create_invoice' in user_perm_codes or 'create_vouchers' in user_perm_codes %}
+    <section class="dash-quick-actions hidden" aria-label="Quick actions">
+        <div class="dash-quick-copy">
+            <span class="dash-section-kicker">QUICK ACTIONS</span>
+            <strong>Keep business moving</strong>
+        </div>
+        <div class="dash-action-buttons">
+            {% if 'create_invoice' in user_perm_codes %}
+            <a class="dash-action-button dash-action-primary" href="{% url 'sale:main_sale' %}">
+                <i class="fa-solid fa-cash-register" aria-hidden="true"></i>
+                <span>Open POS</span>
+                <i class="fa-solid fa-arrow-up-right-from-square dash-action-arrow" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+            {% if 'create_vouchers' in user_perm_codes %}
+            <a class="dash-action-button" href="{% url 'dynamic_voucher_page_vtype' 'CP' %}">
+                <i class="fa-solid fa-money-bill-transfer" aria-hidden="true"></i>
+                <span>Cash payment</span>
+            </a>
+            <a class="dash-action-button" href="{% url 'dynamic_voucher_page_vtype' 'BP' %}">
+                <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+                <span>Bank payment</span>
+            </a>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="dash-kpi-grid" aria-label="Business totals">
+        <article class="dash-kpi-card dash-kpi-sales">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-label">Total sales</span>
+                <span class="dash-icon-bubble"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i></span>
+            </div>
+            <strong class="dash-kpi-value" id="kpi-sales">—</strong>
+            <span class="dash-kpi-note"><span id="kpi-sales-bills">—</span> sales bills in <span class="js-period-label">this period</span></span>
+        </article>
+
+        <article class="dash-kpi-card dash-kpi-purchases">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-label">Purchases</span>
+                <span class="dash-icon-bubble"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i></span>
+            </div>
+            <strong class="dash-kpi-value" id="kpi-purchases">—</strong>
+            <span class="dash-kpi-note"><span id="kpi-purchase-bills">—</span> purchase bills · paid <span id="kpi-purchase-paid">—</span></span>
+        </article>
+
+        <article class="dash-kpi-card dash-kpi-expenses">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-label">Ledger expenses</span>
+                <span class="dash-icon-bubble"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span>
+            </div>
+            <strong class="dash-kpi-value" id="kpi-expenses">—</strong>
+            <span class="dash-kpi-note"><span id="kpi-expense-entries">—</span> ledger entries in <span class="js-period-label">this period</span></span>
+        </article>
+
+        <article class="dash-kpi-card dash-kpi-stock">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-label">Stock to review</span>
+                <span class="dash-icon-bubble"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+            </div>
+            <strong class="dash-kpi-value" id="kpi-low-stock">—</strong>
+            <span class="dash-kpi-note">Items at or below reorder level</span>
+        </article>
+    </section>
+
+
+
+ {% if 'see_reports' in user_perm_codes%}
+    <section class="dash-panel dash-profit-panel" aria-labelledby="profit-heading">
+        <div class="dash-panel-heading">
+            <div>
+                <span class="dash-section-kicker">FINANCIAL REPORT</span>
+                <h2 id="profit-heading">Item-wise profit &amp; loss</h2>
+            </div>
+                <p class="dash-panel-caption">Uses the ERP’s item-cost formula; ledger expense postings are shown separately.</p>
+        </div>
+        <div class="dash-profit-grid">
+            <div class="dash-profit-metric dash-positive">
+                <span class="dash-profit-label">Profit on items</span>
+                <strong id="pnl-profit">—</strong>
+                <small><span id="pnl-profit-count">—</span> profitable items</small>
+            </div>
+            <div class="dash-profit-metric dash-negative">
+                <span class="dash-profit-label">Loss on items</span>
+                <strong id="pnl-loss">—</strong>
+                <small><span id="pnl-loss-count">—</span> items below cost</small>
+            </div>
+            <div class="dash-profit-metric dash-neutral">
+                <span class="dash-profit-label">Cost to cost</span>
+                <strong id="pnl-cost-to-cost">—</strong>
+                <small><span id="pnl-cost-count">—</span> break-even items</small>
+            </div>
+        </div>
+    </section>
+
+{%endif%}
+
+
+
+
+
+    <section class="dash-primary-grid" aria-label="Sales and cash flow">
+        <article class="dash-panel dash-chart-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">PERFORMANCE</span>
+                    <h2>Sales &amp; purchases</h2>
+                </div>
+                <span class="dash-period-tag" id="chart-period-label">Selected period</span>
+            </div>
+            <div class="dash-chart-wrap">
+                <svg id="weekChart" class="dash-chart-svg" viewBox="0 0 760 250" preserveAspectRatio="none" role="img" aria-label="Sales and purchases trend for the selected period"></svg>
+                <p class="dash-chart-empty" id="chart-empty" hidden>No sales or purchases in this period.</p>
+            </div>
+            <div class="dash-chart-legend" aria-hidden="true">
+                <span><i class="dash-legend-dot dash-legend-sales"></i>Sales</span>
+                <span><i class="dash-legend-dot dash-legend-purchases"></i>Purchases</span>
+            </div>
+        </article>
+
+        <article class="dash-panel dash-cash-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">MONEY MOVEMENT</span>
+                    <h2>Cash &amp; bank</h2>
+                </div>
+                <span class="dash-period-tag" id="cash-period-label">Selected period</span>
+            </div>
+            <div class="dash-cash-grid">
+                <div class="dash-cash-item">
+                    <span class="dash-cash-label"><i class="fa-solid fa-wallet" aria-hidden="true"></i> Cash received</span>
+                    <strong id="flow-cash-received">—</strong>
+                </div>
+                <div class="dash-cash-item">
+                    <span class="dash-cash-label"><i class="fa-solid fa-wallet" aria-hidden="true"></i> Cash paid</span>
+                    <strong id="flow-cash-paid">—</strong>
+                </div>
+                <div class="dash-cash-item">
+                    <span class="dash-cash-label"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Bank received</span>
+                    <strong id="flow-bank-received">—</strong>
+                </div>
+                <div class="dash-cash-item">
+                    <span class="dash-cash-label"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Bank paid</span>
+                    <strong id="flow-bank-paid">—</strong>
+                </div>
+            </div>
+            <p class="dash-footnote">Ledger movements in the selected period, using your configured cash and bank accounts.</p>
+        </article>
+    </section>
+
+    <section class="dash-balance-grid" aria-label="Outstanding balances">
+        <article class="dash-panel dash-balance-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">CUSTOMERS</span>
+                    <h2>Accounts receivable</h2>
+                </div>
+                <span class="dash-period-tag">Outstanding</span>
+            </div>
+            <div class="dash-balance-total">
+                <strong id="balance-receivable-total">—</strong>
+                <span><span id="balance-receivable-count">—</span> customer balances · as of today</span>
+            </div>
+            <ul class="dash-simple-list" id="receivables-list" aria-label="Largest receivable balances">
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+            </ul>
+        </article>
+
+        <article class="dash-panel dash-balance-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">SUPPLIERS</span>
+                    <h2>Accounts payable</h2>
+                </div>
+                <span class="dash-period-tag">Outstanding</span>
+            </div>
+            <div class="dash-balance-total">
+                <strong id="balance-payable-total">—</strong>
+                <span><span id="balance-payable-count">—</span> supplier balances · as of today</span>
+            </div>
+            <ul class="dash-simple-list" id="payables-list" aria-label="Largest payable balances">
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+            </ul>
+        </article>
+    </section>
+
+    <section class="dash-lists-grid" aria-label="Products and reminders">
+        <article class="dash-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">BEST SELLERS</span>
+                    <h2>Top-selling products</h2>
+                </div>
+                <span class="dash-period-tag js-period-label">Selected period</span>
+            </div>
+            <ol class="dash-ranked-list" id="top-products-list" aria-label="Top products by sales">
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+            </ol>
+        </article>
+
+        <article class="dash-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">PAYABLE REMINDERS</span>
+                    <h2>Payables to follow up</h2>
+                </div>
+                <span class="dash-period-tag">Outstanding</span>
+            </div>
+            <p class="dash-panel-caption dash-reminder-caption">Largest supplier balances to review. Due dates are not available in the account balance data.</p>
+            <ul class="dash-reminder-list" id="payable-reminders-list" aria-label="Supplier balances to follow up">
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+            </ul>
+        </article>
+    </section>
+
+    <section class="dash-lists-grid dash-last-grid" aria-label="Stock alerts and recent vouchers">
+        <article class="dash-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">INVENTORY</span>
+                    <h2>Stock alerts</h2>
+                </div>
+                <span class="dash-period-tag" id="stock-count-label">— items</span>
+            </div>
+            <ul class="dash-stock-list" id="low-stock-list" aria-label="Items at or below reorder level">
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+            </ul>
+        </article>
+
+        <article class="dash-panel">
+            <div class="dash-panel-heading">
+                <div>
+                    <span class="dash-section-kicker">LATEST ACTIVITY</span>
+                    <h2>Recent vouchers</h2>
+                </div>
+                <span class="dash-period-tag js-period-label">Selected period</span>
+            </div>
+            <ul class="dash-voucher-list" id="recent-vouchers-list" aria-label="Recent ledger vouchers">
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+                <li class="dash-loading-row"><span class="dash-skeleton"></span><span class="dash-skeleton dash-skeleton-short"></span></li>
+            </ul>
+        </article>
+    </section>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script defer src="{% static 'dashboard/dashboard.js' %}"></script>
+{% endblock %}

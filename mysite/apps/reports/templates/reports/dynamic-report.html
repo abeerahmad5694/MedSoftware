@@ -1,0 +1,449 @@
+{% extends "main.html" %}
+{% load static %}
+{% load extra_filters %}
+
+{% block extra_css %}
+<link rel='stylesheet' href="{% static 'reports/css/daybook.css' %}">
+<style>
+    /* Override global main-content padding to allow full-width "fixed" layout like Ledger */
+    .main-content {
+        padding: 0 !important;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="daybook-wrapper">
+    <!-- Header Section -->
+    <div class="daybook-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="header-info">
+                <h1 class="header-title">Day Book</h1>
+                <p class="header-subtitle">Daily transactions summary</p>
+            </div>
+        </div>
+        <form method="POST" class="toolbar-form" id="daybookForm">
+            {% csrf_token %}
+            <div class="toolbar-left">
+                <div class="date-range-group">
+
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-filter"></i>
+                            Vocher Type
+                        </label>
+                        <select class="form-input" id="reportType" name="v_type">
+
+                            <option value="" {% if v_type == "" %}selected{% endif %}>
+                                All
+                            </option>
+
+                            <option value="INV" {% if v_type == "INV" %}selected{% endif %}>
+                                INVOICE
+                            </option>
+
+                            <option value="PUR" {% if v_type == "PUR" %}selected{% endif %}>
+                                PURCHASE
+                            </option>
+
+                            <option value="CR" {% if v_type == "CR" %}selected{% endif %}>
+                                CASH RECEIVE
+                            </option>
+
+                            <option value="CP" {% if v_type == "CP" %}selected{% endif %}>
+                                CASH PAYMENT
+                            </option>
+
+                            <option value="BR" {% if v_type == "BR" %}selected{% endif %}>
+                                BANK RECEIVE
+                            </option>
+
+                            <option value="BP" {% if v_type == "BP" %}selected{% endif %}>
+                                BANK PAYMENT
+                            </option>
+
+                            <option value="JV" {% if v_type == "JV" %}selected{% endif %}>
+                                JOURNAL VOUCHER
+                            </option>
+
+                        </select>
+                    </div>
+
+
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            From
+                        </label>
+                        <input type="date" name="date_from" id="date_from" class="form-input" value="{{ date_from }}">
+                    </div>
+                    <div class="date-separator">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            To
+                        </label>
+                        <input type="date" name="date_to" id="date_to" class="form-input" value="{{ date_to }}">
+                    </div>
+                    <button type="submit" id="generate" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i>
+                        Generate
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="header-right">
+            <div class="current-date">
+                <i class="fas fa-calendar-day"></i>
+                <span id="currentDate">{{ date_from|default:"Select Date" }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% comment %}
+    <!-- Toolbar Section -->
+    <div class="daybook-toolbar">
+
+
+
+        <form method="POST" class="toolbar-form" id="daybookForm">
+            {% csrf_token %}
+            <div class="toolbar-left">
+                <div class="date-range-group">
+
+
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            Vocher Type
+                        </label>
+                        <select class="form-input" id="reportType">
+                            <option value="">All </option>
+                            <option value="INV">INVOICE</option>
+                            <option value="PUR">PURCHASE</option>
+                            <option value="CR">CASH RECIVE</option>
+                            <option value="CP">CASH PAYMENT</option>
+                            <option value="BR">BANK RECIVE</option>
+                            <option value="BP">BANK PAYMENT</option>
+                            <option value="JV">JOURNAL VOUCHER</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            From
+                        </label>
+                        <input type="date" name="date_from" id="date_from" class="form-input" value="{{ date_from }}">
+                    </div>
+                    <div class="date-separator">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            To
+                        </label>
+                        <input type="date" name="date_to" id="date_to" class="form-input" value="{{ date_to }}">
+                    </div>
+                    <button type="submit" id="generate" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i>
+                        Generate
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endcomment %}
+
+    {% comment %} <!-- Filter Bar -->
+    <div class="daybook-filters">
+        <div class="filter-group">
+            <label class="filter-label">Report Type</label>
+            <select class="form-input" id="reportType">
+                <option value="detail">Detail Sale Station</option>
+                <option value="simple">Simple Sale Station</option>
+                <option value="summary">Sale & Exc. Report (Summary)</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">User</label>
+            <select class="form-input" id="userFilter">
+                <option value="">All Users</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Department</label>
+            <select class="form-input" id="deptFilter">
+                <option value="">All Departments</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Amount</label>
+            <select class="form-input" id="amtFilter">
+                <option value="">All</option>
+                <option value="cash">Cash Only</option>
+                <option value="credit">Credit Only</option>
+            </select>
+        </div>
+        <button type="button" class="btn btn-ghost" onclick="resetFilters()">
+            <i class="fas fa-redo"></i>
+            Reset
+        </button>
+    </div> {% endcomment %}
+
+    <!-- Main Content -->
+    <div class="daybook-content">
+        <!-- Table Section -->
+        <div class="table-section">
+            <div class="table-header">
+                <div class="table-header-left">
+                    <h3 class="table-title">
+                        <i class="fas fa-list-alt"></i>
+                        Transaction Records
+                    </h3>
+                    <span class="record-badge" id="recordCount">
+                        {% if data %}{{ data|length }}{% else %}0{% endif %} Records
+                    </span>
+                </div>
+                <div class="table-header-right">
+                    <div class="table-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search transactions..." id="tableSearch">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                {% if data %}
+                {% include "reports/partials/global_table.html" %}
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <h3 class="empty-title">No Data Available</h3>
+                    <p class="empty-text">Select a date range and click "Generate" to view records</p>
+                    <div class="empty-hint">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Tip: Use today's date to see current transactions</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Sticky Summary Section -->
+    <div class="daybook-summary">
+
+        <!-- Cash Summary -->
+        <!-- <div class="summary-card cash-card">
+        <div class="summary-icon">
+            <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="summary-content">
+            <h4 class="summary-title">Cash Flow</h4>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="item-label">Opening</span>
+                    <span class="item-value">
+                        Rs {{ summary.opening_cash|default:"0.00" }}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="item-label">Closing</span>
+                    <span class="item-value">
+                        Rs {{ summary.closing_cash|default:"0.00" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+        <!-- Sales Summary (KEEP AS IS) -->
+        <div class="summary-card sales-card">
+            <div class="summary-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">OPENING/CLOSING</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="item-label">OP-CASH</span>
+                        <span class="item-value highlight" id="qtySold">{{summary.opening_cash|default:"0.00" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">OP-BANK</span>
+                        <span class="item-value" id="salesAmount">{{summary.opening_bank|default:"0.00" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">CL-CASH</span>
+                        <span class="item-value text-danger" id="returns">{{summary.closing_cash|default:"0.00" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">CL-BANK</span>
+                        <span class="item-value text-danger" id="returns">{{summary.closing_bank|default:"0.00" }}</span>
+                    </div>
+                    <!-- <div class="summary-item total">
+                    <span class="item-label">Net Sales</span>
+                    <span class="item-value" id="netSales">{{summary.total_sales|default:"0.00" }}</span>
+                </div>
+                <div class="summary-item total">
+                    <span class="item-label">Net Sales</span>
+                    <span class="item-value" id="netSales">{{summary.total_sales|default:"0.00" }}</span>
+                </div> -->
+                </div>
+            </div>
+        </div>
+        <div class="summary-card sales-card">
+            <div class="summary-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">Sales</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="item-label">Total Sales</span>
+                        <span class="item-value highlight" id="qtySold">{{summary.total_sales|default:"0.00" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Total Purchase</span>
+                        <span class="item-value" id="salesAmount">{{summary.total_purchase|default:"0.00" }}</span>
+                    </div>
+                    <!-- <div class="summary-item">
+                    <span class="item-label">Returns</span>
+                    <span class="item-value text-danger" id="returns">{{summary.total_sales|default:"0.00" }}</span>
+                </div>
+                <div class="summary-item total">
+                    <span class="item-label">Net Sales</span>
+                    <span class="item-value" id="netSales">{{summary.total_sales|default:"0.00" }}</span>
+                </div> -->
+                </div>
+            </div>
+        </div>
+        {% comment %}
+        <!-- Discount Summary (KEEP AS IS) -->
+        <div class="summary-card discount-card">
+            <div class="summary-icon">
+                <i class="fas fa-percent"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">Discounts</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="item-label">Invoice Disc.</span>
+                        <span class="item-value">Rs 20</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Item Disc.</span>
+                        <span class="item-value">Rs 0</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span class="item-label">Total Disc.</span>
+                        <span class="item-value text-warning">Rs 20</span>
+                    </div>
+                </div>
+            </div>
+        </div> {% endcomment %}
+
+        <!-- Payments Summary -->
+        <div class="summary-card payment-card">
+            <div class="summary-icon">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">Payments</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="item-label">Cash Rcvd</span>
+                        <span class="item-value text-success">
+                            Rs {{ summary.cash_received|default:"0.00" }}
+                        </span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Cash Paid</span>
+                        <span class="item-value text-danger">
+                            Rs {{ summary.cash_paid|default:"0.00" }}
+                        </span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Bank Rcvd</span>
+                        <span class="item-value">
+                            Rs {{ summary.bank_received|default:"0.00" }}
+                        </span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Bank Paid</span>
+                        <span class="item-value">
+                            Rs {{ summary.bank_paid|default:"0.00" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grand Total -->
+        {% comment %} <div class="summary-card total-card">
+            <div class="summary-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">Net Movement</h4>
+                <div class="grand-total">
+                    <span class="total-value">
+                        Rs {{ summary.net_movement|default:"0.00" }}
+                    </span>
+                    <span class="total-label">Total Collection</span>
+                </div>
+            </div>
+        </div> {% endcomment %}
+
+
+
+    </div>
+
+    <button class="summary-toggle-btn" id="summaryToggle" title="Toggle Summary">
+        <i class="fas fa-chart-bar"></i>
+    </button>
+</div>
+
+
+{% endblock content %}
+
+{% block extra_js %}
+<script type="module" src="{% static 'reports/js/daybook.js' %}"></script>
+
+<script>
+    // Table search
+    document.getElementById('tableSearch')?.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('.table-container tbody tr').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    });
+
+    // Mobile Summary Toggle
+    document.getElementById('summaryToggle')?.addEventListener('click', function () {
+        const summary = document.querySelector('.daybook-summary');
+        const icon = this.querySelector('i');
+
+        summary?.classList.toggle('show-mobile');
+        this.classList.toggle('active');
+
+        if (summary?.classList.contains('show-mobile')) {
+            icon?.classList.replace('fa-chart-bar', 'fa-times');
+        } else {
+            icon?.classList.replace('fa-times', 'fa-chart-bar');
+        }
+    });
+</script>
+{% endblock extra_js %}

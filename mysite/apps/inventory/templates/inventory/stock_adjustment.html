@@ -1,0 +1,1060 @@
+{% extends 'main.html' %} {% load static %} {% block extra_css %}
+<style>
+  :root {
+    --adj-blue: #1e40af;
+    --adj-blue-light: #3b82f6;
+    --adj-border: #e2e8f0;
+    --adj-muted: #64748b;
+    --adj-ink: #0f172a;
+    --adj-soft: #f8fafc;
+    --adj-yellow: #f59e0b;
+  }
+
+  /* ─── Layout ─── */
+  .adj-wrap {
+    padding: clamp(14px, 2vw, 26px);
+    max-width: 1700px;
+    margin: 10px;
+  }
+
+
+  /* ─── Page Header ─── */
+  .adj-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, #fff 0%, #f0f6ff 100%);
+    border: 1px solid var(--adj-border);
+    border-radius: 14px;
+    box-shadow: 0 2px 16px rgba(15, 23, 42, 0.06);
+  }
+  .adj-head-left h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 3px;
+    color: var(--adj-ink);
+    letter-spacing: -0.02em;
+  }
+  .adj-head-left p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--adj-muted);
+  }
+  .adj-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: 8px;
+    font: 600 13px/1 inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--adj-blue);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.25);
+  }
+  .btn-primary:hover {
+    background: #1e3a8a;
+  }
+  .btn-secondary {
+    background: #475569;
+    color: #fff;
+  }
+  .btn-secondary:hover {
+    background: #334155;
+  }
+  .btn-outline {
+    background: #fff;
+    color: #475569;
+    border: 1px solid var(--adj-border);
+  }
+  .btn-outline:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+  }
+  .btn-apply {
+    background: #d97706;
+    color: #fff;
+  }
+  .btn-apply:hover {
+    background: #b45309;
+  }
+
+  /* ─── Toolbar (Global Apply + Valuation) ─── */
+  .adj-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .adj-toolbar-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #92400e;
+    white-space: nowrap;
+  }
+
+  /* ─── Filter Bar ─── */
+  .adj-filters {
+    display: grid;
+    grid-template-columns: 1fr minmax(140px, 0.7fr) minmax(140px, 0.7fr) minmax(
+        140px,
+        0.7fr
+      );
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 768px) {
+    .adj-filters {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .filter-group {
+    position: relative;
+  }
+  .filter-group .fi {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 12px;
+    pointer-events: none;
+  }
+  .filter-group input,
+  .filter-group select {
+    width: 100%;
+    padding: 9px 10px 9px 30px;
+    border: 1px solid var(--adj-border);
+    border-radius: 8px;
+    font: 13px/1.4 inherit;
+    color: var(--adj-ink);
+    background: #fff;
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+    box-sizing: border-box;
+  }
+  .filter-group input:focus,
+  .filter-group select:focus {
+    border-color: var(--adj-blue-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
+
+  /* ─── Table ─── */
+  .adj-table-wrap {
+    overflow: auto;
+    background: #fff;
+    border: 1px solid var(--adj-border);
+    border-radius: 12px;
+    max-height: 65vh;
+    box-shadow: 0 2px 14px rgba(15, 23, 42, 0.05);
+  }
+  .adj-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 900px;
+    font-size: 13px;
+  }
+  .adj-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .adj-table th {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 10px 10px;
+    border-bottom: 2px solid var(--adj-border);
+    text-align: left;
+  }
+  .adj-table th.num,
+  .adj-table td.num {
+    text-align: right;
+  }
+  .adj-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+  .adj-table tbody tr:hover {
+    background: #f8fafc;
+  }
+  .adj-table tbody tr.has-qty {
+    background: #fffbe6;
+  }
+  .adj-table tbody tr.has-qty:hover {
+    background: #fef9c3;
+  }
+
+  /* ─── Inline Inputs ─── */
+  .adj-table input.i-qty,
+  .adj-table input.i-cost,
+  .adj-table input.i-reason {
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 5px 7px;
+    font: 13px/1 inherit;
+    background: #fff;
+    transition:
+      border-color 0.12s,
+      background 0.12s;
+  }
+  .adj-table input.i-qty {
+    width: 76px;
+    text-align: right;
+    font-weight: 700;
+  }
+  .adj-table input.i-cost {
+    width: 80px;
+    text-align: right;
+  }
+  .adj-table input.i-reason {
+    width: 150px;
+  }
+  .adj-table input.i-qty:focus,
+  .adj-table input.i-cost:focus,
+  .adj-table input.i-reason:focus {
+    border-color: var(--adj-blue-light);
+    background: #eff6ff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  }
+  /* Cost field — amber accent for opening */
+  .adj-table input.i-cost {
+    background: #fffbeb;
+    border-color: #fcd34d;
+  }
+  .adj-table input.i-cost:focus {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-blue {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  .badge-red {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  .badge-yellow {
+    background: #fef9c3;
+    color: #713f12;
+  }
+  .badge-green {
+    background: #dcfce7;
+    color: #166534;
+  }
+  .badge-purple {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+  .badge-gray {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  /* ─── Status bar ─── */
+  .adj-statusbar {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    background: #f8fafc;
+    border: 1px solid var(--adj-border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--adj-muted);
+  }
+  .adj-statusbar strong {
+    color: var(--adj-ink);
+  }
+
+  /* ─── Print Modal ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.hidden {
+    display: none;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.22);
+    width: min(460px, 96vw);
+    overflow: hidden;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--adj-border);
+    background: linear-gradient(135deg, #f8fafc, #fff);
+  }
+  .modal-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--adj-ink);
+  }
+  .modal-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    cursor: pointer;
+    background: #f1f5f9;
+    border-radius: 6px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+  .modal-close:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+  .modal-body {
+    padding: 20px;
+  }
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--adj-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .col-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--adj-border);
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12.5px;
+    transition:
+      background 0.12s,
+      border-color 0.12s;
+    user-select: none;
+  }
+  .col-check:hover {
+    background: #f0f6ff;
+    border-color: var(--adj-blue-light);
+  }
+  .col-check input[type="checkbox"] {
+    accent-color: var(--adj-blue);
+    width: 14px;
+    height: 14px;
+  }
+  .col-check.checked {
+    background: #eff6ff;
+    border-color: var(--adj-blue-light);
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="adj-wrap">
+  <!-- ── Page Header ── -->
+  <div class="adj-head">
+    <div class="adj-head-left">
+      <h1>
+        <i class="fas fa-sliders-h mr-2 text-blue-600"></i>Stock Adjustment
+      </h1>
+      {% comment %} <p>
+        Adjust inventory balances. pack_qty = 1 (base unit). All rows share one
+        voucher number.
+      </p> {% endcomment %}
+    </div>
+
+
+
+    <div class="adj-actions">
+
+
+      {% comment %} <select
+        id="valuationMethod"
+        class="btn btn-outline"
+        style="font-weight: 600"
+      >
+        <option value="NORMAL">📊 Normal (Avg Cost)</option>
+        <option value="FIFO">🔢 FIFO</option>
+        <option value="FEFO">📅 FEFO</option>
+      </select> {% endcomment %}
+
+
+
+      <button class="btn btn-outline" onclick="openPrintModal()">
+        <i class="fas fa-print"></i> Print
+      </button>
+      <button id="saveBtn" class="btn btn-primary" onclick="saveAdjustment()">
+        <i class="fas fa-save"></i> Save Adjustment
+      </button>
+    </div>
+
+
+
+ 
+
+  </div>
+
+  <!-- ── Global Apply Toolbar ── -->
+  <div class="adj-toolbar">
+    <span class="adj-toolbar-label"
+      ><i class="fas fa-magic mr-1"></i> Select Adjustment type:</span
+    >
+    <select
+      id="globalAdjType"
+      class="btn btn-outline"
+      style="height: 34px; padding: 4px 10px"
+      onchange="applyGlobalSettings()"
+    >
+      <option value="" selected>Select Adjustment type</option>
+      <option value="OPENING">Opening Stock</option>
+      <option value="CORRECTION">Correction</option>
+      {% comment %} <option value="DESTROYED_EXPIRED">Destroyed / Expired</option>
+      <option value="SAMPLE_GIVEN">Sample Given</option>
+      <option value="THEFT_SHORTAGE">Theft / Shortage</option>
+      <option value="EXCESS_FOUND">Excess Found</option> {% endcomment %}
+    </select>
+
+
+
+
+
+    <div class="hidden input-group">
+    <input
+      type="text"
+      id="globalAccCode"
+      placeholder="Acc Code (e.g. 100001)"
+      style="
+        height: 34px;
+        padding: 4px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font: 13px inherit;
+        width: 160px;
+      "
+    />
+    <button class="btn btn-apply" id="btn-select-account">
+      <i class="fas fa-search"></i>
+    </button>
+    <button
+      class="hidden btn btn-apply"
+      id="applyCodeToRows"
+      onclick="applyGlobalSettings()"
+    >
+      <i class="fas fa-check-double"></i> Apply
+    </button>
+
+    </div>
+
+
+    <div style="margin-left: auto; color: #92400e; font-size: 12px">
+      <i class="fas fa-info-circle mr-1"></i>
+      Enter cost for <strong>Opening Stock</strong> rows.
+    </div>
+  </div>
+
+  <!-- ── Filter Bar ── -->
+  <div class="adj-filters">
+    <div class="filter-group">
+      <i class="fas fa-search fi"></i>
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Search product name, barcode, alias…"
+        oninput="filterItems()"
+      />
+    </div>
+    <div class="filter-group">
+      <i class="fas fa-tag fi"></i>
+      <select id="catFilter" onchange="filterItems()">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}">{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <i class="fas fa-tags fi"></i>
+      <select id="subcatFilter" onchange="filterItems()">
+        <option value="">All Subcategories</option>
+        {% for sub in subcategories %}
+        <option value="{{ sub.id }}">{{ sub.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <i class="fas fa-map-marker-alt fi"></i>
+      <input
+        type="search"
+        id="locationFilter"
+        placeholder="Filter by location…"
+        oninput="filterItems()"
+      />
+    </div>
+  </div>
+
+  <!-- ── Status Bar ── -->
+  <div class="adj-statusbar" id="statusBar">
+    <span
+      >Showing <strong id="visibleCount">0</strong> /
+      <strong id="totalCount">0</strong> items</span
+    >
+    <span>·</span>
+    <span>Items with qty: <strong id="qtyCount">0</strong></span>
+    <span>·</span>
+    <span>Total net cost: <strong id="netCostTotal">0.00</strong></span>
+  </div>
+
+  <!-- ── Table ── -->
+  <div class="adj-table-wrap">
+    <table class="adj-table" id="adjTable">
+      <thead>
+        <tr>
+          <th style="width: 52px">ID</th>
+          <th>Product</th>
+          <th>Location</th>
+          <th class="num" style="width: 70px">Sys Qty</th>
+          <th class="num" style="width: 86px">Adj Qty</th>
+          <th style="width: 90px" title="Shown only for Opening Stock">
+            Cost/Unit
+          </th>
+          <th style="width: 120px" hidden>Adj Type</th>
+          <th style="width: 110px" hidden>Acc Code</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody id="adjTbody">
+        <tr>
+          <td
+            colspan="7"
+            style="text-align: center; padding: 40px; height: 100vh; color: #94a3b8"
+          >
+            <i
+              class="fas fa-circle-notch fa-spin"
+              style="font-size: 20px; display: block; margin-bottom: 10px"
+            ></i>
+            Loading inventory…
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Print Modal ── -->
+<div id="printModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>
+        <i class="fas fa-print mr-2 text-blue-600"></i>Print Stock Adjustment
+      </h3>
+      <button class="modal-close" onclick="closePrintModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size: 12.5px; color: #64748b; margin-bottom: 12px">
+        Select columns to include in the printout. Only
+        <strong>visible (filtered) rows</strong> will be printed.
+      </div>
+      <label
+        style="
+          font-size: 12px;
+          font-weight: 700;
+          color: #334155;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        "
+        >Columns</label
+      >
+      <div class="col-grid" id="colGrid">
+        <label class="col-check checked"
+          ><input type="checkbox" class="print-col-cb" value="id" checked />
+          ID</label
+        >
+        <label class="col-check checked"
+          ><input
+            type="checkbox"
+            class="print-col-cb"
+            value="product"
+            checked
+          />
+          Product Name</label
+        >
+        <label class="col-check checked"
+          ><input
+            type="checkbox"
+            class="print-col-cb"
+            value="location"
+            checked
+          />
+          Location</label
+        >
+        <label class="col-check checked"
+          ><input
+            type="checkbox"
+            class="print-col-cb"
+            value="sys_qty"
+            checked
+          />
+          System Qty</label
+        >
+        <label class="col-check checked"
+          ><input
+            type="checkbox"
+            class="print-col-cb"
+            value="adj_qty"
+            checked
+          />
+          Adj Qty</label
+        >
+        <label class="col-check checked"
+          ><input type="checkbox" class="print-col-cb" value="type" checked />
+          Adj Type</label
+        >
+        <label class="col-check"
+          ><input type="checkbox" class="print-col-cb" value="cost" />
+          Cost/Unit</label
+        >
+        <label class="col-check"
+          ><input type="checkbox" class="print-col-cb" value="acc_code" /> Acc
+          Code</label
+        >
+        <label class="col-check checked"
+          ><input type="checkbox" class="print-col-cb" value="reason" checked />
+          Reason</label
+        >
+      </div>
+      <div
+        style="
+          margin-top: 14px;
+          padding: 10px 12px;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 7px;
+          font-size: 12px;
+          color: #166534;
+        "
+      >
+        <i class="fas fa-check-circle mr-1"></i>
+        <strong id="printRowCount">0</strong> rows will be printed.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closePrintModal()">
+        Cancel
+      </button>
+      <button class="btn btn-primary" onclick="executePrint()">
+        <i class="fas fa-print"></i> Print Now
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Include Global Search Modal -->
+{% include 'mysearch/global_search_modal.html' %}
+
+<script
+  type="module"
+  src="/static/inventory/js/config/global_search_modal_stock_adj.js"
+></script>
+
+<script>
+  {% autoescape off %}
+  const ADJ_TYPES = {
+    'OPENING':           'Opening Stock',
+    'CORRECTION':        'Correction',
+    'DESTROYED_EXPIRED': 'Destroyed/Expired',
+    'SAMPLE_GIVEN':      'Sample Given',
+    'THEFT_SHORTAGE':    'Theft/Shortage',
+    'EXCESS_FOUND':      'Excess Found',
+  };
+  const ADJ_BADGE = {
+    'OPENING':           'badge-blue',
+    'CORRECTION':        'badge-gray',
+    'DESTROYED_EXPIRED': 'badge-red',
+    'SAMPLE_GIVEN':      'badge-purple',
+    'THEFT_SHORTAGE':    'badge-red',
+    'EXCESS_FOUND':      'badge-green',
+  };
+  {% endautoescape %}
+
+  let items = [];
+  let filteredItems = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+      fetchItems();
+      {% comment %} applyGlobalSettings(); {% endcomment %}
+      // Toggle check style on col checkboxes
+      document.querySelectorAll('.print-col-cb').forEach(cb => {
+          cb.addEventListener('change', () => {
+              cb.closest('.col-check').classList.toggle('checked', cb.checked);
+          });
+      });
+  });
+
+  /* ─────────────── FETCH ─────────────── */
+  async function fetchItems() {
+      try {
+          const res = await fetch('/inventory/api/stock-adjustment/items/');
+          const data = await res.json();
+          if (data.success) {
+              items = data.items.map(item => ({
+                  ...item,
+                  adj_qty: '',
+                  adj_type: '',
+                  acc_code: '',
+                  cost_override: '',   // user-entered cost (OPENING only)
+                  reason: ''
+              }));
+              filteredItems = [...items];
+              renderTable();
+              updateStatus();
+          }
+      } catch (e) {
+          showError('Failed to load inventory. Check network.');
+      }
+  }
+
+  /* ─────────────── FILTER ─────────────── */
+  function filterItems() {
+      const term = document.getElementById('searchInput').value.toLowerCase().trim();
+      const cat  = document.getElementById('catFilter').value;
+      const sub  = document.getElementById('subcatFilter').value;
+      const loc  = document.getElementById('locationFilter').value.toLowerCase().trim();
+
+      filteredItems = items.filter(i => {
+          if (cat && String(i.category_id)    !== cat)  return false;
+          if (sub && String(i.subcategory_id) !== sub)  return false;
+          if (loc && !(i.product_location || '').toLowerCase().includes(loc)) return false;
+          if (term) {
+              const s = `${i.prod_name} ${i.barcode || ''} ${i.alias_name || ''}`.toLowerCase();
+              if (!s.includes(term)) return false;
+          }
+          return true;
+      });
+      renderTable();
+      updateStatus();
+  }
+
+  /* ─────────────── GLOBAL APPLY ─────────────── */
+  function applyGlobalSettings() {
+      const gType = document.getElementById('globalAdjType').value;
+      const gAcc  = document.getElementById('globalAccCode').value.trim();
+      if (!gType && !gAcc) { showError('Select a type or enter an account code to apply.'); return; }
+      filteredItems.forEach(item => {
+          if (gType) item.adj_type = gType;
+          if (gAcc)  item.acc_code = gAcc;
+      });
+      renderTable();
+      updateStatus();
+  }
+
+  /* ─────────────── HANDLE INPUT ─────────────── */
+  function handleInput(inv_id, field, value) {
+      const item = items.find(i => i.inv_id === inv_id);
+      if (!item) return;
+      item[field] = value;
+      updateStatus();
+      // Highlight row
+      const row = document.querySelector(`tr[data-id="${inv_id}"]`);
+      if (row) {
+          row.classList.toggle('has-qty', value !== '' && Number(value) !== 0);
+      }
+      // If adj_type changed, re-render just that row for cost visibility
+      if (field === 'adj_type') {
+          const idx = filteredItems.findIndex(i => i.inv_id === inv_id);
+          if (idx !== -1) rerenderRow(idx);
+      }
+  }
+
+  function handleKeydown(e, index) {
+      if (e.key === 'Enter' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          focusQty(index + 1);
+      } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          focusQty(index - 1);
+      }
+  }
+  function focusQty(idx) {
+      const el = document.getElementById(`qty_${idx}`);
+      if (el) { el.focus(); el.select(); }
+  }
+
+  /* ─────────────── RENDER ─────────────── */
+  function renderTable() {
+      const tbody = document.getElementById('adjTbody');
+      if (!filteredItems.length) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">No items match your filters.</td></tr>`;
+          return;
+      }
+      const limit = Math.min(filteredItems.length, 200);
+      let html = '';
+      for (let i = 0; i < limit; i++) {
+          html += buildRow(filteredItems[i], i);
+      }
+      tbody.innerHTML = html;
+  }
+
+  function buildRow(item, i) {
+      const isOpening = item.adj_type === 'OPENING';
+      const hasQty    = item.adj_qty !== '' && Number(item.adj_qty) !== 0;
+      const rowClass  = hasQty ? 'has-qty' : '';
+      const badge     = item.adj_type
+          ? `<span class="badge ${ADJ_BADGE[item.adj_type] || 'badge-gray'}">${ADJ_TYPES[item.adj_type] || item.adj_type}</span>`
+          : '';
+
+      return `
+      <tr class="${rowClass}" data-id="${item.inv_id}">
+        <td style="color:#94a3b8;font-size:11px;">${item.inv_id}</td>
+        <td>
+          <div style="font-weight:700;font-size:13px;">${item.prod_name}</div>
+          <div style="font-size:10px;color:#94a3b8;">${item.barcode || ''}</div>
+        </td>
+        <td style="font-size:12px;color:#64748b;">${item.product_location || ''}</td>
+        <td class="num" style="font-size:13px;">${item.bal_qty != null ? item.bal_qty : 0}</td>
+        <td class="num">
+          <input type="number" id="qty_${i}" class="i-qty" value="${item.adj_qty}"
+                 step="any" min="0"
+                 oninput="handleInput(${item.inv_id}, 'adj_qty', this.value)"
+                 onkeydown="handleKeydown(event, ${i})"
+                 onfocus="this.select()">
+        </td>
+        <td>
+          ${isOpening
+            ? `<input type="number" class="i-cost" value="${item.cost_override || ''}" min="0" step="0.01"
+                      placeholder="${item.cost || '0.00'}"
+                      oninput="handleInput(${item.inv_id}, 'cost_override', this.value)"
+                      title="Enter cost/unit for opening. Updates last purchase price.">`
+            : `<span style="font-size:11px;color:#94a3b8;">—</span>`}
+        </td>
+        <td hidden>
+          <select style="width:130px;padding:4px 6px;border:1px solid #e2e8f0;border-radius:5px;font-size:12px;"
+                  onchange="handleInput(${item.inv_id}, 'adj_type', this.value)">
+            <option value="">— Select —</option>
+            ${Object.entries(ADJ_TYPES).map(([v,l]) =>
+              `<option value="${v}" ${item.adj_type===v?'selected':''}>${l}</option>`
+            ).join('')}
+          </select>
+        </td>
+        <td hidden>
+          <input type="text" class="i-reason" style="width:90px;" value="${item.acc_code}"
+                 placeholder="Acc Code"
+                 oninput="handleInput(${item.inv_id}, 'acc_code', this.value)">
+        </td>
+        <td>
+          <input type="text" class="i-reason" value="${item.reason}"
+                 placeholder="Reason (optional)"
+                 oninput="handleInput(${item.inv_id}, 'reason', this.value)">
+        </td>
+      </tr>`;
+  }
+
+  function rerenderRow(idx) {
+      const row = document.querySelector(`tr[data-id="${filteredItems[idx].inv_id}"]`);
+      if (row) row.outerHTML = buildRow(filteredItems[idx], idx);
+  }
+
+  /* ─────────────── STATUS BAR ─────────────── */
+  function updateStatus() {
+      document.getElementById('visibleCount').textContent = filteredItems.length;
+      document.getElementById('totalCount').textContent   = items.length;
+      const withQty  = items.filter(i => i.adj_qty !== '' && Number(i.adj_qty) !== 0);
+      const netCost  = withQty.reduce((s, i) => {
+          const q   = Number(i.adj_qty) || 0;
+          const c   = Number(i.cost_override || i.cost || 0);
+          return s + q * c;
+      }, 0);
+      document.getElementById('qtyCount').textContent  = withQty.length;
+      document.getElementById('netCostTotal').textContent = netCost.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+      const el = document.getElementById('printRowCount');
+      if (el) el.textContent = filteredItems.length;
+  }
+
+  /* ─────────────── SAVE ─────────────── */
+  async function saveAdjustment() {
+      const toSave = items.filter(i => i.adj_qty !== '' && Number(i.adj_qty) !== 0 && i.adj_type);
+      if (!toSave.length) {
+          showError('No valid items. Enter Adj Qty and select Adj Type for at least one item.');
+          return;
+      }
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+      const payload = {
+          items: toSave.map(i => ({
+              item_id:       i.inv_id,
+              qty:           Number(i.adj_qty),
+              adj_type:      i.adj_type,
+              acc_code:      i.acc_code  || null,
+              reason:        i.reason    || '',
+              cost_override: i.adj_type === 'OPENING' && i.cost_override ? Number(i.cost_override) : null,
+          }))
+      };
+
+      try {
+          const res = await fetch('/inventory/api/stock-adjustment/save/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': getCsrf()
+              },
+              body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data.success) {
+              showSuccess(data.message);
+              setTimeout(() => window.location.reload(), 1500);
+          } else {
+              showError('Error: ' + data.message);
+              btn.disabled = false;
+              btn.innerHTML = '<i class="fas fa-save"></i> Save Adjustment';
+          }
+      } catch (e) {
+          showError('Network error. Please try again.');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-save"></i> Save Adjustment';
+      }
+  }
+
+  /* ─────────────── PRINT ─────────────── */
+  function openPrintModal() {
+      document.getElementById('printRowCount').textContent = filteredItems.length;
+      document.getElementById('printModal').classList.remove('hidden');
+  }
+  function closePrintModal() {
+      document.getElementById('printModal').classList.add('hidden');
+  }
+
+  function executePrint() {
+      const cols = Array.from(document.querySelectorAll('.print-col-cb:checked')).map(c => c.value);
+      closePrintModal();
+
+      const colHeaders = {
+          id: 'ID', product: 'Product Name', location: 'Location',
+          sys_qty: 'Sys Qty', adj_qty: 'Adj Qty', type: 'Adj Type',
+          cost: 'Cost/Unit', acc_code: 'Acc Code', reason: 'Reason'
+      };
+      const thHtml = cols.map(c => `<th>${colHeaders[c]||c}</th>`).join('');
+
+      let rows = '';
+      filteredItems.forEach(item => {
+          const tds = cols.map(c => {
+              switch (c) {
+                  case 'id':       return `<td>${item.inv_id}</td>`;
+                  case 'product':  return `<td>${item.prod_name}</td>`;
+                  case 'location': return `<td>${item.product_location||''}</td>`;
+                  case 'sys_qty':  return `<td style="text-align:right">${item.bal_qty||0}</td>`;
+                  case 'adj_qty':  return `<td style="text-align:right">${item.adj_qty||''}</td>`;
+                  case 'type':     return `<td>${ADJ_TYPES[item.adj_type]||item.adj_type||''}</td>`;
+                  case 'cost':     return `<td style="text-align:right">${item.cost_override||item.cost||''}</td>`;
+                  case 'acc_code': return `<td>${item.acc_code||''}</td>`;
+                  case 'reason':   return `<td>${item.reason||''}</td>`;
+                  default:         return '<td></td>';
+              }
+          }).join('');
+          rows += `<tr>${tds}</tr>`;
+      });
+
+      const html = `<!DOCTYPE html><html><head><title>Stock Adjustment</title>
+      <style>
+        * { box-sizing: border-box; }
+        body { font: 12px 'Segoe UI', sans-serif; margin: 20px; color: #0f172a; }
+        h2 { margin: 0 0 4px; font-size: 18px; }
+        p.sub { margin: 0 0 14px; font-size: 11px; color: #64748b; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; color: #334155; font-size: 10px; text-transform: uppercase; padding: 7px 8px; border: 1px solid #e2e8f0; }
+        td { padding: 6px 8px; border: 1px solid #e2e8f0; font-size: 11.5px; }
+        tr:nth-child(even) { background: #f8fafc; }
+      </style></head><body>
+      <h2>Stock Adjustment Report</h2>
+      <p class="sub">Printed: ${new Date().toLocaleString()} · ${filteredItems.length} items</p>
+      <table><thead><tr>${thHtml}</tr></thead><tbody>${rows}</tbody></table>
+      </body></html>`;
+
+      const win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); win.close(); }, 350);
+  }
+
+  /* ─────────────── HELPERS ─────────────── */
+  function getCsrf() {
+      return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+             document.querySelector('meta[name="csrf-token"]')?.content || '';
+  }
+  function showError(msg) {
+      const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:340px;';
+      d.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i>${msg}`;
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 4500);
+  }
+  function showSuccess(msg) {
+      const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:10px;padding:12px 18px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:340px;';
+      d.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${msg}`;
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 4000);
+  }
+</script>
+{% endblock %}

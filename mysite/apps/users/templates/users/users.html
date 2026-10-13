@@ -1,0 +1,395 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 custom-scroll">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-xl md:text-2xl font-bold text-[var(--text-main)] tracking-tight">User Management</h1>
+            <p class="text-xs md:text-sm text-[var(--text-muted)] mt-0.5">Create and manage user accounts</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="space-y-2">
+        {% for message in messages %}
+            <div class="p-3 text-xs rounded-lg border flex items-center gap-2 {% if message.tags == 'success' %}text-emerald-700 bg-emerald-50 border-emerald-200{% else %}text-red-700 bg-red-50 border-red-200{% endif %} shadow-sm">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5">
+        <!-- User Form (Left Side / Top on mobile) -->
+        <div class="surface rounded-xl p-4 md:p-5 h-fit shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background: rgba(var(--color-primary-rgb),0.1); color: var(--color-primary);">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h3 id="formTitle" class="font-semibold text-sm text-[var(--text-main)]">Add New User</h3>
+            </div>
+            
+            <!-- Edit Mode Indicator -->
+            <div class="hidden items-center gap-2 p-2 mb-4 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg border border-amber-200" id="editModeIndicator">
+                <i class="fas fa-edit"></i>
+                <span>Editing user: <strong id="editingUsername" class="font-bold"></strong></span>
+            </div>
+
+            <form method="POST" id="userForm" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" id="userId" value="">
+
+                <div>
+                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">
+                        Username <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="username" id="username" placeholder="Enter username" required
+                        class="w-full border border-[var(--border-color)] rounded-lg px-3 py-2 bg-transparent text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition">
+                </div>
+
+                <div>
+                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">
+                        Email <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" name="email" id="email" placeholder="Enter email address" 
+                        class="w-full border border-[var(--border-color)] rounded-lg px-3 py-2 bg-transparent text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition">
+                </div>
+
+                <div>
+                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">
+                        Password <span class="text-red-500" id="passwordRequired">*</span>
+                    </label>
+                    <input type="password" name="password" id="password" placeholder="Enter password" required
+                        class="w-full border border-[var(--border-color)] rounded-lg px-3 py-2 bg-transparent text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition">
+                    <p class="text-[0.625rem] text-[var(--text-muted)] mt-1" id="passwordHint">Minimum 6 characters</p>
+                </div>
+                <div>
+                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">
+                        Branch
+                    </label>
+                    <select name="branch" id="branch" onchange="filterTerminals()"
+                        class="w-full border border-[var(--border-color)] rounded-lg px-3 py-2 bg-transparent text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition">
+                        <option value="">Select Branch (Optional)</option>
+                        {% for b in branches %}
+                            <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-1 uppercase tracking-wider">
+                        Terminal
+                    </label>
+                    <select name="terminal" id="terminal"
+                        class="w-full border border-[var(--border-color)] rounded-lg px-3 py-2 bg-transparent text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition">
+                        <option value="">Select Terminal (Optional)</option>
+                        {% for t in terminals %}
+                            <option value="{{ t.id }}" data-branch="{{ t.branch.id }}">{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[0.625rem] font-bold text-[var(--text-muted)] mb-2 uppercase tracking-wider">
+                        Role <span class="text-red-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {% for role in roles %}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="role" value="{{ role.id }}" required class="peer sr-only">
+                            <div class="border border-[var(--border-color)] rounded-lg py-2 flex flex-col items-center justify-center gap-1 text-[var(--text-muted)] peer-checked:bg-[var(--color-primary-light)] peer-checked:border-[var(--color-primary)] peer-checked:text-[var(--color-primary)] hover:bg-[var(--bg-canvas)] transition h-full text-center">
+                                <i class="fas {% if role.name|lower == 'admin' %}fa-shield-alt{% elif role.name|lower == 'manager' %}fa-user-tie{% else %}fa-user{% endif %} text-xs"></i>
+                                <span class="text-[0.5625rem] font-bold tracking-wide uppercase">{{ role.name }}</span>
+                            </div>
+                        </label>
+                        {% empty %}
+                        <p class="text-[0.625rem] text-red-500 col-span-3">No roles found. Create roles in Permissions first.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" class="btn btn-secondary flex-1" onclick="resetForm()">
+                        <i class="fas fa-times text-[10px]"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1" id="submitBtn">
+                        <i class="fas fa-plus text-[10px]" id="submitIcon"></i> <span id="submitText">Create User</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- User List (Right Side / Bottom on mobile) -->
+        <div class="surface rounded-xl lg:col-span-2 overflow-hidden flex flex-col min-h-[400px] shadow-sm">
+            <div class="px-4 md:px-5 py-4 border-b border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--bg-canvas)]/30">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-emerald-100 text-emerald-600">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-sm text-[var(--text-main)]">All Users</h3>
+                        <span class="text-[0.625rem] font-bold text-[var(--text-muted)] uppercase tracking-wider">{{ users|length }} Total</span>
+                    </div>
+                </div>
+                <!-- Search input -->
+                <div class="relative w-full sm:w-64">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-[0.625rem]"></i>
+                    <input type="text" placeholder="Search users..." id="searchInput" onkeyup="searchUsers()" 
+                        class="w-full pl-8 pr-3 py-1.5 border border-[var(--border-color)] rounded-md bg-[var(--bg-surface)] text-xs text-[var(--text-main)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] transition">
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 custom-scroll" id="userList">
+                {% if users %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pb-8">
+                    {% for user in users %}
+                        <!-- Modern User Card Item -->
+                        <div class="user-item p-3 border border-[var(--border-color)] rounded-lg hover:border-[var(--color-primary)] hover:shadow-sm transition flex flex-col gap-3"
+                             id="user-{{ user.pk }}"
+                             data-pk="{{ user.pk }}"
+                             data-username="{{ user.username }}"
+                             data-email="{{ user.email }}"
+                             data-role-id="{{ user.userprofile.role.id }}"
+                             data-role="{{ user.custom_role }}"
+                             data-branch-id="{{ user.branch_id }}"
+                             data-terminal-id="{{ user.terminal_id }}">
+                            
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm
+                                        {% if user.role_code == 'admin' %}bg-purple-600{% elif user.role_code == 'manager' %}bg-blue-500{% else %}bg-slate-400{% endif %}">
+                                        {{ user.username|slice:":2"|upper }}
+                                    </div>
+                                    <div class="min-w-0 pr-2">
+                                        <div class="text-sm font-bold text-[var(--text-main)] truncate">{{ user.username }}</div>
+                                        <div class="text-xs text-[var(--text-muted)] truncate">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                                
+                                <span class="px-2 py-0.5 text-[0.625rem] rounded-full font-semibold border shrink-0
+                                    {% if user.role_code == 'admin' %}bg-purple-50 text-purple-700 border-purple-200
+                                    {% elif user.role_code == 'manager' %}bg-blue-50 text-blue-700 border-blue-200
+                                    {% else %}bg-slate-50 text-slate-700 border-slate-200{% endif %} capitalize">
+                                    {{ user.custom_role }}
+                                </span>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex items-center gap-2 justify-end mt-auto pt-2 border-t border-[var(--border-color)]/50">
+                                <button type="button" class="btn btn-secondary !py-1 !px-2 text-[10px]" onclick="editUser('{{ user.pk }}')" title="Edit">
+                                    <i class="fas fa-pen"></i> Edit
+                                </button>
+                                <button type="button" class="btn btn-secondary !py-1 !px-2 text-[10px] !text-red-500 hover:!bg-red-50 hover:!border-red-200 hover:!text-red-700" onclick="confirmDelete('{{ user.pk }}', '{{ user.username }}')" title="Delete">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="h-full flex flex-col items-center justify-center text-center text-[var(--text-muted)] py-12">
+                        <div class="w-12 h-12 rounded-full bg-[var(--bg-canvas)] flex items-center justify-center mb-3">
+                            <i class="fas fa-users text-xl opacity-50"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-[var(--text-main)] mb-1">No Users Found</h4>
+                        <p class="text-xs max-w-[200px]">Create your first user using the form on the left.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black/40 z-[9999] hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+    <div class="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+        <button class="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-canvas)] transition cursor-pointer" onclick="closeDeleteModal()">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+            <i class="fas fa-trash text-xl text-red-600"></i>
+        </div>
+        <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">Delete User?</h3>
+        <p class="text-xs text-[var(--text-muted)] mb-6">
+            Are you sure you want to delete <strong id="deleteUsername" class="text-[var(--text-main)]"></strong>? This cannot be undone.
+        </p>
+        <div class="flex gap-3">
+            <button class="btn btn-secondary flex-1" onclick="closeDeleteModal()">Cancel</button>
+            <form method="POST" class="flex-1" id="deleteForm">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" id="deleteUserIdInput">
+                <input type="hidden" name="action" value="delete"> 
+                <button type="submit" class="btn btn-primary w-full !bg-red-600 hover:!bg-red-700 !shadow-red-600/30">
+                    <i class="fas fa-trash text-[10px]"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentEditingId = null;
+
+    // Edit user - populate form with user data
+    function editUser(pk) {
+        const userItem = document.getElementById('user-' + pk);
+        // const roleId = userItem.dataset.roleId;
+        
+        const username = userItem.dataset.username;
+        const email = userItem.dataset.email;
+        const roleId = userItem.dataset.roleId;
+
+
+        // Set form values
+        document.getElementById('userId').value = pk;
+        document.getElementById('username').value = username;
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = '';
+        
+        // Set role
+        const roleInput = document.querySelector(`input[name="role"][value="${roleId}"]`);
+        if(roleInput) roleInput.checked = true;
+        
+        // Set Branch and Terminal
+        document.getElementById('branch').value = userItem.dataset.branchId;
+        filterTerminals(); // Update terminal options
+        document.getElementById('terminal').value = userItem.dataset.terminalId;
+
+        // Update form UI
+        document.getElementById('formTitle').textContent = 'Update User';
+        document.getElementById('submitText').textContent = 'Update User';
+        document.getElementById('submitIcon').className = 'fas fa-save text-[10px]';
+        document.getElementById('passwordRequired').style.display = 'none';
+        document.getElementById('passwordHint').textContent = 'Leave blank to keep current password';
+        document.getElementById('password').removeAttribute('required');
+
+        // Show edit mode indicator
+        const editIndicator = document.getElementById('editModeIndicator');
+        editIndicator.classList.remove('hidden');
+        editIndicator.classList.add('flex');
+        document.getElementById('editingUsername').textContent = username;
+
+        // Highlight the user being edited
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.classList.remove('ring-2', 'ring-[var(--color-primary)]', 'bg-[var(--color-primary-light)]');
+        });
+        userItem.classList.add('ring-2', 'ring-[var(--color-primary)]', 'bg-[var(--color-primary-light)]');
+
+        currentEditingId = pk;
+
+        // Scroll to form on mobile
+        document.getElementById('userForm').closest('.surface').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Reset form to create mode
+    function resetForm() {
+        document.getElementById('userForm').reset();
+        document.getElementById('userId').value = '';
+        document.getElementById('formTitle').textContent = 'Add New User';
+        document.getElementById('submitText').textContent = 'Create User';
+        document.getElementById('submitIcon').className = 'fas fa-plus text-[10px]';
+        document.getElementById('passwordRequired').style.display = 'inline';
+        document.getElementById('passwordHint').textContent = 'Minimum 6 characters';
+        document.getElementById('password').setAttribute('required', 'required');
+        
+        const editIndicator = document.getElementById('editModeIndicator');
+        editIndicator.classList.remove('flex');
+        editIndicator.classList.add('hidden');
+
+        // Remove editing highlight
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.classList.remove('ring-2', 'ring-[var(--color-primary)]', 'bg-[var(--color-primary-light)]');
+        });
+
+        // Reset roles
+        document.querySelectorAll('input[name="role"]').forEach(input => input.checked = false);
+
+        // Reset branch and terminal
+        document.getElementById('branch').value = '';
+        filterTerminals();
+        document.getElementById('terminal').value = '';
+
+        currentEditingId = null;
+    }
+
+    // Filter terminals based on selected branch
+
+    function filterTerminals() {
+        const branchId = document.getElementById('branch').value;
+        const terminalSelect = document.getElementById('terminal');
+        const options = terminalSelect.querySelectorAll('option');
+
+        options.forEach(option => {
+            if (option.value === "") {
+                option.style.display = "block";
+                return;
+            }
+            
+            if (branchId === "" || option.dataset.branch === branchId) {
+                option.style.display = "block";
+            } else {
+                option.style.display = "none";
+                if (terminalSelect.value === option.value) {
+                    terminalSelect.value = "";
+                }
+            }
+        });
+    }
+
+    // Search users
+    function searchUsers() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const userItems = document.querySelectorAll('.user-item');
+
+        userItems.forEach(item => {
+            const username = item.dataset.username.toLowerCase();
+            const email = item.dataset.email.toLowerCase();
+            const role = (item.dataset.role || "").toLowerCase();
+
+            if (username.includes(query) || email.includes(query) || role.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+
+    // Delete confirmation
+    function confirmDelete(pk, username) {
+        document.getElementById('deleteUserIdInput').value = pk;
+        document.getElementById('deleteUsername').textContent = username;
+        
+        const modal = document.getElementById('deleteModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }
+
+    // Close modal on outside click
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+        }
+    });
+</script>
+{% endblock %}

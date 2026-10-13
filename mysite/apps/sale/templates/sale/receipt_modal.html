@@ -1,0 +1,19 @@
+{% load static %}
+<link rel="stylesheet" href="{% static "sale/css/receipt_modal.css" %}">
+
+<div id="receipt-modal">
+        <div class="modal-content-container">
+            <!-- Close button -->
+            <span class="close" id="receipt-close-btn">&times;</span>
+
+            <div class="receipt-container" id="receipt-modal-content">
+                <!-- Receipt content will be injected here by receipt_modal.js -->
+            </div>
+            
+            <div class="modal-actions">
+                <!-- This is the button that your original code snippet interacts with -->
+                <button id="confirmPrint" class="action-button">Confirm & Print</button>
+            </div>
+            <div id="receipt-message" style="margin-top: 10px; color: red;"></div>
+        </div>
+</div>

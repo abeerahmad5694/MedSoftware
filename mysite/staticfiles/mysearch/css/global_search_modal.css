@@ -1,0 +1,701 @@
+/* ============================================
+   GLOBAL SEARCH MODAL — Professional ERP Theme
+   ============================================ */
+
+/* --------------------
+   CSS Custom Properties (local fallbacks)
+   -------------------- */
+:root {
+    --gsm-primary: #2563eb;
+    --gsm-primary-dark: #1d4ed8;
+    --gsm-primary-light: #93c5fd;
+    --gsm-primary-bg: #eff6ff;
+    --gsm-primary-dim: rgba(37, 99, 235, 0.12);
+    --gsm-highlight-bg: #1e40af;
+    --gsm-highlight-text: #ffffff;
+    --gsm-row-even: #f8fafc;
+    --gsm-row-odd: #ffffff;
+    --gsm-row-hover: #dbeafe;
+    --gsm-gray-50: #f8fafc;
+    --gsm-gray-100: #f1f5f9;
+    --gsm-gray-200: #e2e8f0;
+    --gsm-gray-300: #cbd5e1;
+    --gsm-gray-400: #94a3b8;
+    --gsm-gray-500: #64748b;
+    --gsm-gray-600: #475569;
+    --gsm-gray-700: #334155;
+    --gsm-gray-800: #1e293b;
+    --gsm-gray-900: #0f172a;
+    --gsm-white: #ffffff;
+    --gsm-danger: #dc2626;
+    --gsm-danger-bg: #fee2e2;
+    --gsm-radius: 6px;
+    --gsm-radius-lg: 10px;
+    --gsm-radius-xl: 14px;
+    --gsm-shadow-sm: 0 1px 3px rgba(0, 0, 0, .10);
+    --gsm-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+    --gsm-shadow-xl: 0 20px 60px rgba(0, 0, 0, .22);
+    --gsm-transition: all .18s ease;
+}
+
+/* --------------------
+   1. Modal Overlay & Container
+   -------------------- */
+.product-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(10, 15, 30, 0.72);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Always on top of every other modal */
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    padding: 16px;
+}
+
+.product-modal-overlay[aria-hidden="false"] {
+    opacity: 1;
+    visibility: visible;
+}
+
+.product-modal {
+    background-color: var(--gsm-white);
+    border-radius: var(--gsm-radius-xl);
+    box-shadow: var(--gsm-shadow-xl), 0 0 0 1px rgba(0, 0, 0, .06);
+    width: 100%;
+    max-width: 960px;
+    height: 82vh;
+    max-height: 740px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.96) translateY(14px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.25s ease;
+}
+
+.product-modal-overlay[aria-hidden="false"] .product-modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* --------------------
+   2. Header & Controls
+   -------------------- */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--gsm-primary);
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    flex-shrink: 0;
+    gap: 12px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--gsm-white);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+}
+
+.modal-header h3::before {
+    content: '🔍';
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.modal-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+/* --- Search Input --- */
+#gsm-search-input {
+    width: 320px;
+    padding: 8px 14px 8px 38px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--gsm-radius);
+    font-size: 0.92rem;
+    color: var(--gsm-gray-900);
+    background-color: var(--gsm-white);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%232563eb'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    background-size: 16px;
+    transition: var(--gsm-transition);
+    box-shadow: var(--gsm-shadow-sm);
+}
+
+#gsm-search-input::placeholder {
+    color: var(--gsm-gray-400);
+}
+
+#gsm-search-input:focus {
+    border-color: var(--gsm-primary-light);
+    box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.5);
+    outline: none;
+}
+
+/* --- Control Buttons (Clear, Close) --- */
+.modal-controls button {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--gsm-white);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    padding: 8px 16px;
+    border-radius: var(--gsm-radius);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--gsm-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.modal-controls button:hover {
+    background-color: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Close Button */
+#gsm-close-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--gsm-radius);
+    font-size: 1.1rem;
+    line-height: 1;
+    flex-shrink: 0;
+    background-color: rgba(220, 38, 38, 0.20);
+    border: 1px solid rgba(220, 38, 38, 0.40);
+    color: #fca5a5;
+}
+
+#gsm-close-btn:hover {
+    background-color: var(--gsm-danger);
+    color: var(--gsm-white);
+    border-color: var(--gsm-danger);
+}
+
+/* --------------------
+   3. Body & Results Table
+   -------------------- */
+.modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0;
+    background: var(--gsm-white);
+}
+
+/* Custom scrollbar */
+.modal-body::-webkit-scrollbar {
+    width: 7px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--gsm-gray-50);
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--gsm-gray-300);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--gsm-gray-400);
+}
+
+/* --- Table --- */
+.modal-results {
+    width: 100%;
+}
+
+.modal-results table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.modal-results th {
+    /* background: linear-gradient(180deg, #1e3a8a, #1e40af); */
+    color: #000000 !important;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 10px 16px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 2px solid #1d4ed8;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.modal-results th:first-child {
+    border-radius: 0;
+}
+
+.modal-results th,
+.modal-results td {
+    text-align: left;
+}
+
+/* Even / Odd row alternating colors */
+.modal-results tbody tr:nth-child(odd) {
+    background-color: var(--gsm-row-odd);
+}
+
+.modal-results tbody tr:nth-child(even) {
+    background-color: var(--gsm-row-even);
+}
+
+.modal-results tbody tr {
+    border-bottom: 1px solid var(--gsm-gray-100);
+    transition: background-color 0.12s ease;
+    cursor: pointer;
+}
+
+.modal-results tbody tr:last-child {
+    border-bottom: none;
+}
+
+.modal-results tbody tr:hover {
+    background-color: var(--gsm-row-hover) !important;
+}
+
+.modal-results td {
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    color: var(--gsm-gray-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+    vertical-align: middle;
+}
+
+.modal-results td:first-child,
+.modal-results th:first-child {
+    max-width: 110px;
+    font-weight: 600;
+    color: var(--gsm-gray-800);
+}
+
+.modal-results td:last-child,
+.modal-results th:last-child {
+    max-width: 140px;
+}
+
+/* --- Highlighted/Selected Row (keyboard navigation) --- */
+.result-row.highlight {
+    background-color: var(--gsm-highlight-bg) !important;
+    outline: none;
+}
+
+.result-row.highlight td {
+    color: var(--gsm-highlight-text) !important;
+    font-weight: 600;
+}
+
+/* highlight text inside mark tags when row is selected */
+.result-row.highlight mark {
+    background-color: rgba(255, 255, 255, 0.35);
+    color: var(--gsm-white);
+}
+
+/* --------------------
+   4. Loading & No Results States
+   -------------------- */
+.loading-state,
+.no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+    text-align: center;
+    color: var(--gsm-gray-400);
+    gap: 10px;
+    padding: 40px 20px;
+}
+
+.loading-state p,
+.no-results p {
+    font-size: 0.92rem;
+    color: var(--gsm-gray-500);
+    margin: 0;
+}
+
+.no-results p {
+    font-weight: 500;
+}
+
+.loading-spinner {
+    border: 3.5px solid var(--gsm-gray-200);
+    border-top: 3.5px solid var(--gsm-primary);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    animation: gsm-spin 0.75s linear infinite;
+}
+
+@keyframes gsm-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* --------------------
+   5. Footer & Pagination
+   -------------------- */
+.modal-footer {
+    padding: 10px 20px;
+    border-top: 1px solid var(--gsm-gray-200);
+    background: linear-gradient(180deg, var(--gsm-gray-50) 0%, var(--gsm-gray-100) 100%);
+    flex-shrink: 0;
+}
+
+.gsm-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.gsm-result-count {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--gsm-gray-500);
+    white-space: nowrap;
+    min-width: 90px;
+    letter-spacing: 0.2px;
+}
+
+.modal-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.modal-pagination button {
+    border: 1px solid var(--gsm-gray-200);
+    padding: 5px 12px;
+    border-radius: var(--gsm-radius);
+    background: var(--gsm-white);
+    color: var(--gsm-gray-700);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--gsm-transition);
+    min-width: 34px;
+    text-align: center;
+}
+
+.modal-pagination button:hover {
+    background: var(--gsm-gray-100);
+    border-color: var(--gsm-gray-300);
+}
+
+.modal-pagination button.active {
+    background: var(--gsm-primary);
+    color: var(--gsm-white);
+    border-color: var(--gsm-primary);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+}
+
+.modal-pagination button:disabled {
+    background: var(--gsm-gray-100);
+    color: var(--gsm-gray-400);
+    border-color: var(--gsm-gray-200);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* --- Keyboard Hints --- */
+.gsm-kbd-hints {
+    font-size: 0.70rem;
+    color: var(--gsm-gray-400);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gsm-kbd-hints kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 0.65rem;
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--gsm-gray-600);
+    background: var(--gsm-white);
+    border: 1px solid var(--gsm-gray-300);
+    border-radius: 4px;
+    box-shadow: 0 1px 0 var(--gsm-gray-300);
+}
+
+/* --- Fuzzy Match Highlight --- */
+.modal-results mark {
+    background-color: rgba(253, 224, 71, 0.55);
+    color: var(--gsm-gray-900);
+    padding: 0 1px;
+    border-radius: 2px;
+    font-weight: 700;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* --- TABLET (768px and below) --- */
+@media (max-width: 768px) {
+    .product-modal {
+        max-height: 90vh;
+        border-radius: var(--gsm-radius-lg);
+    }
+
+    .modal-header {
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .modal-header h3 {
+        font-size: 1rem;
+    }
+
+    .modal-controls {
+        width: 100%;
+    }
+
+    #gsm-search-input {
+        flex-grow: 1;
+        width: initial;
+        min-width: 0;
+    }
+
+    .modal-body {
+        padding: 0;
+    }
+
+    .modal-results th {
+        padding: 9px 12px;
+        font-size: 0.68rem;
+    }
+
+    .modal-results td {
+        padding: 10px 12px;
+        font-size: 0.83rem;
+        max-width: 150px;
+    }
+
+    .modal-footer {
+        padding: 10px 14px;
+    }
+
+    .modal-controls button {
+        padding: 8px 14px;
+        font-size: 0.82rem;
+    }
+}
+
+/* --- MOBILE (480px and below) --- */
+@media (max-width: 480px) {
+    .product-modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .product-modal {
+        height: 95vh;
+        max-height: 100%;
+        border-radius: var(--gsm-radius-xl) var(--gsm-radius-xl) 0 0;
+    }
+
+    .modal-header {
+        padding: 14px 16px;
+    }
+
+    .modal-header h3 {
+        font-size: 0.95rem;
+    }
+
+    .modal-controls {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #gsm-search-input {
+        width: 100%;
+        order: -1;
+    }
+
+    .modal-controls button {
+        flex: 1;
+        justify-content: center;
+    }
+
+    #gsm-close-btn {
+        flex: 0;
+        order: 10;
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+
+    .modal-header {
+        position: relative;
+        padding-right: 52px;
+    }
+
+    .modal-body {
+        padding: 0;
+    }
+
+    /* Card Layout */
+    .modal-results thead {
+        display: none;
+    }
+
+    .modal-results tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .modal-results tbody tr {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--gsm-gray-200);
+        border-radius: var(--gsm-radius-lg);
+        padding: 12px 14px;
+        background: var(--gsm-white);
+        box-shadow: var(--gsm-shadow-sm);
+    }
+
+    .modal-results tbody tr:nth-child(odd),
+    .modal-results tbody tr:nth-child(even) {
+        background: var(--gsm-white);
+    }
+
+    .modal-results tbody tr:hover {
+        border-color: var(--gsm-primary-light);
+        box-shadow: var(--gsm-shadow);
+    }
+
+    .result-row.highlight {
+        background-color: var(--gsm-highlight-bg) !important;
+        border-color: var(--gsm-primary) !important;
+    }
+
+    .modal-results td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--gsm-gray-100);
+        white-space: normal;
+        max-width: none;
+        width: 100%;
+        text-overflow: initial;
+        overflow: visible;
+        font-size: 0.86rem;
+    }
+
+    .modal-results td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .modal-results td:first-child {
+        padding-top: 0;
+        max-width: none;
+    }
+
+    .modal-results td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--gsm-gray-500);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        padding-right: 16px;
+        flex-shrink: 0;
+    }
+
+    .modal-pagination {
+        gap: 3px;
+    }
+
+    .modal-pagination button {
+        padding: 5px 9px;
+        font-size: 0.78rem;
+        min-width: 30px;
+    }
+}
+
+/* --- Very Small Screens --- */
+@media (max-width: 360px) {
+    .product-modal {
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .modal-header h3 {
+        font-size: 0.9rem;
+    }
+
+    .modal-results td {
+        font-size: 0.80rem;
+    }
+
+    .modal-results td::before {
+        font-size: 0.68rem;
+    }
+}
+
+
+gsm-table-head-row {
+    background-color: red !important;
+    background: red !important;
+    background-image: none !important;
+}
+/* .gsm-table{
+    background-color: red !important;
+    background: red !important;
+    background-image: none !important;
+    border-radius: 10px;
+    
+} */

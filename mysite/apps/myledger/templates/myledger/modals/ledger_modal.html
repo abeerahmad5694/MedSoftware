@@ -1,0 +1,370 @@
+{% load static %} {% csrf_token %}
+<link rel="stylesheet" href="{% static 'myledger/css/ledger_modal.css' %}" />
+{% if mode == 'modal' %}
+<div class="ledger-modal-overlay" id="ledgerModalOverlay" style="display: none">
+  <div class="ledger-panel" id="ledgerModalPanel">
+    {% else %}
+    <div class="ledger-page-wrapper" id="ledgerPageWrapper">
+      <div class="ledger-panel" id="ledgerPagePanel">
+        {% endif %}
+
+        <!-- Top bar -->
+        <div class="topbar">
+          <span class="topbar-title">📋 Ledger</span>
+          {% if mode == 'modal' %}
+          <button class="topbar-exit" id="lm_closebtn">⊠ Exit</button>
+          {% endif %}
+        </div>
+
+        <!-- Ledger Header (3 columns) -->
+        <div class="ledger-header-wrapper">
+          <!-- Left Column: Inputs -->
+          <div class="lh-left">
+            <!-- Row 1 -->
+            <div class="lh-row">
+              <div class="lh-field" style="width: 150px">
+                <label style="color: var(--primary-color); font-weight: bold"
+                  >Account Code</label
+                >
+                <input
+                  type="text"
+                  id="lm_ACC_CODE"
+                  value="0"
+                  style="text-align: right"
+                  autofocus
+                />
+              </div>
+              <div class="lh-field flex-1">
+                <label style="color: var(--primary-color); font-weight: bold"
+                  >Client Name</label
+                >
+                <input type="text" id="lm_ACC_NAME" placeholder="" />
+              </div>
+            </div>
+            <!-- Row 2 -->
+            <div class="hidden lh-row">
+              <div class="lh-field flex-1">
+                <label>Address</label>
+                <input type="text" id="lm_ADDRESS" placeholder="" />
+              </div>
+              <div class="lh-field" style="width: 220px">
+                <label>Mobile No.</label>
+                <input type="text" id="lm_MOBILE_NO" placeholder="" />
+              </div>
+            </div>
+            <!-- Row 3 -->
+            <div class="lh-row">
+              <div class="lh-field flex-1">
+                <label>Phone Office</label>
+                <input type="text" id="lm_PHONE_OFF" placeholder="" />
+              </div>
+              <div class="lh-field" style="width: 220px">
+                <label>City</label>
+                <input type="text" id="lm_CITY" placeholder="" />
+              </div>
+            </div>
+            <!-- Row 4 -->
+          </div>
+
+          <!-- Middle Column: Action Buttons -->
+          <div class="lh-middle">
+            <!-- <div class="lh-title">Ledger</div> -->
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="lm_SEARCH_ACC_CODE"
+            >
+              Find A/c
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="lm_ACCOUNT_PROFILE_BTN"
+            >
+              Account Profile
+            </button>
+            <!-- <button type="button" class="btn btn-secondary">Sale Rate on Bill</button>
+        <button type="button" class="btn btn-secondary">Purchase Rate on Bill</button> -->
+          </div>
+
+          <!-- Right Column: Dates & Reconcile -->
+          <div class="lh-right">
+            <!-- Top exit button is in the top bar, but the user image has it on top right, we leave it in topbar for consistency -->
+            <!-- Spacer to push box down -->
+            <div class="date-gen-box">
+              <div class="dg-row">
+                <label class="date-label"
+                  ><span class="green-text">From</span>
+                  <input type="date" value="2026-04-16" id="lm_DATE_FROM"
+                /></label>
+                <button class="btn btn-generate" id="lm_generateBtn">
+                  Generate Ledger
+                </button>
+              </div>
+              <div class="dg-row">
+                <label class="date-label"
+                  ><span class="green-text">To</span>
+                  <input type="date" value="2026-05-16" id="lm_DATE_TO"
+                /></label>
+                <button class="btn btn-print" id="lm_printBtn">
+                  Print Ledger
+                </button>
+              </div>
+            </div>
+
+            <div class="lh-row" style="margin-top: 4px">
+              <div class="lh-field" style="width: 130px">
+                <label>Voucher Type</label>
+                <select id="lm_voucher-type">
+                  <option value="">— All Types —</option>
+                  <option value="CR">Cash Receipt</option>
+                  <option value="CP">Cash Paid</option>
+                  <option value="BR">Bank Rcvd / Deposit</option>
+                  <option value="BP">Bank Payment / Draw</option>
+                  <option value="JV">Adj / Journal Voucher</option>
+                </select>
+              </div>
+              <div class="lh-field flex-1">
+                <label>Description Search</label>
+                <input
+                  type="text"
+                  class="desc-input"
+                  placeholder="Search Description..."
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          {% include "reports/partials/global_table.html" with tbody_id="lm_ledger-body" %}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-bar">
+          <div class="footer-actions">
+            <button class="fbtn" data-voucher-type="CR" id="lm_btn-cr">
+              <span class="fnum">1</span>Cash Receipt
+            </button>
+            <button class="fbtn" data-voucher-type="CP" id="lm_btn-cp">
+              <span class="fnum">2</span>Cash Paid
+            </button>
+            <button class="fbtn" data-voucher-type="BR" id="lm_btn-br">
+              <span class="fnum">3</span>Bank Rcvd / Deposit
+            </button>
+            <button class="fbtn" data-voucher-type="BP" id="lm_btn-bp">
+              <span class="fnum">4</span>Bank Payment / Draw
+            </button>
+            <button class="fbtn" data-voucher-type="ADJ" id="lm_btn-ADJ">
+              Less/Adj
+            </button>
+          </div>
+          <div class="footer-totals">
+            <!-- <span class="total-label">Total</span> -->
+            <div class="total-block">
+              <span class="tlabel">Debit</span>
+              <span class="tval dr-val">0.00</span>
+            </div>
+            <div class="total-block">
+              <span class="tlabel">Credit</span>
+              <span class="tval cr-val">0.00</span>
+            </div>
+            <div class="total-block">
+              <span class="tlabel">Balance</span>
+              <span class="tval bal-val">0.00 Dr</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'myaccounts/modals/global_account_form_modal.html' %} 
+    {% include 'myledger/modals/dynamic_voucher_modal.html' with mode='modal' %}
+    {% include 'myledger/modals/jv_voucher_modal.html' with mode='modal' %}
+
+    <!-- ========== PRINT AREA (hidden on screen, visible only on print) ========== -->
+    <div id="lm-print-area" style="display: none">
+      <div class="lm-print-header">
+        <div class="lm-print-logo" id="lm-print-logo-wrap"></div>
+        <div class="lm-print-firm" id="lm-print-firm-name"></div>
+      </div>
+      <div class="lm-print-client">
+        <table class="lm-print-client-table">
+          <tr>
+            <td><strong>Account:</strong></td>
+            <td id="lm-print-acc-name"></td>
+          </tr>
+          <tr>
+            <td><strong>Address:</strong></td>
+            <td id="lm-print-address"></td>
+          </tr>
+          <tr>
+            <td><strong>Phone:</strong></td>
+            <td id="lm-print-phone"></td>
+          </tr>
+          <tr>
+            <td><strong>Period:</strong></td>
+            <td id="lm-print-period"></td>
+          </tr>
+        </table>
+      </div>
+      <table class="lm-print-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Voucher No</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Debit</th>
+            <th>Credit</th>
+            <th>Balance</th>
+          </tr>
+        </thead>
+        <tbody id="lm-print-tbody"></tbody>
+        <tfoot>
+          <tr class="lm-print-total-row">
+            <td colspan="5"><strong>Summary</strong></td>
+            <td><strong id="lm-print-total-dr"></strong></td>
+            <td><strong id="lm-print-total-cr"></strong></td>
+            <td><strong id="lm-print-total-bal"></strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <style>
+      /* ---- Screen: hide print area ---- */
+      #lm-print-area {
+        display: none !important;
+      }
+
+      /* ---- Print: hide everything EXCEPT print area ---- */
+      @media print {
+        body > *:not(#lm-print-area),
+        .ledger-modal-overlay > *,
+        .ledger-page-wrapper > * {
+          display: none !important;
+        }
+
+        #lm-print-area {
+          display: block !important;
+          font-family: Arial, sans-serif;
+          font-size: 11px;
+          color: #000;
+          padding: 10px;
+        }
+
+        .lm-print-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border-bottom: 2px solid #000;
+          padding-bottom: 8px;
+          margin-bottom: 8px;
+        }
+
+        .lm-print-logo img {
+          max-height: 60px;
+        }
+
+        .lm-print-firm {
+          font-size: 18px;
+          font-weight: bold;
+        }
+
+        .lm-print-client {
+          margin-bottom: 10px;
+        }
+
+        .lm-print-client-table td {
+          padding: 2px 8px;
+          vertical-align: top;
+        }
+
+        .lm-print-client-table td:first-child {
+          width: 80px;
+          color: #444;
+        }
+
+        .lm-print-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 10px;
+        }
+
+        .lm-print-table th,
+        .lm-print-table td {
+          border: 1px solid #ccc;
+          padding: 3px 6px;
+          text-align: left;
+        }
+
+        .lm-print-table th {
+          background: #f0f0f0;
+          font-weight: bold;
+        }
+
+        .lm-print-table td:nth-child(5),
+        .lm-print-table td:nth-child(6),
+        .lm-print-table td:nth-child(7),
+        .lm-print-table td:nth-child(8) {
+          text-align: right;
+        }
+
+        .lm-print-total-row td {
+          border-top: 2px solid #000;
+          background: #f9f9f9;
+        }
+      }
+    </style>
+
+    {% comment %}
+    <script src="{% static 'invoice_designer/js/document_printer.js' %}?v=3"></script>
+    {% endcomment %}
+    <script
+      type="module"
+      src="{% static 'myledger/js/modals/ledger_modal.js' %}"
+    ></script>
+
+    <!-- 
+<script>
+  {% if mode == 'modal' %}
+  window.openLedgerModal = function(accCode) {
+      const overlay = document.getElementById('ledgerModalOverlay');
+      if (overlay) {
+          overlay.style.display = 'flex';
+          overlay.classList.add('active');
+          if (accCode) {
+              document.getElementById('lm_ACC_CODE').value = accCode;
+              // Here you would add logic to fetch ledger data based on accCode
+          }
+      }
+  }
+
+  window.closeLedgerModal = function() {
+      const overlay = document.getElementById('ledgerModalOverlay');
+      if (overlay) {
+          overlay.style.display = 'none';
+          overlay.classList.remove('active');
+      }
+  }
+
+  document.getElementById('ledgerModalOverlay')?.addEventListener('click', function(e) {
+      if (e.target === this) window.closeLedgerModal();
+  });
+
+  document.addEventListener('keydown', e => { 
+      if (e.key === 'Escape') {
+          const overlay = document.getElementById('ledgerModalOverlay');
+          if (overlay && overlay.style.display !== 'none') {
+              window.closeLedgerModal(); 
+          }
+      }
+  });
+  {% else %}
+  // Any specific JS for normal page mode
+  {% endif %}
+</script> -->
+  </div>
+</div>

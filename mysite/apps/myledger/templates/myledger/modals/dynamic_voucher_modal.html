@@ -1,0 +1,270 @@
+{% load static %} {% csrf_token %}
+<link
+  rel="stylesheet"
+  href="{% static 'myledger/css/dynamic_voucher_modal.css' %}"
+/>
+{% if mode == 'modal' %}
+<div
+  class="dv-modal-overlay"
+  id="dynamicVoucherModalOverlay"
+  style="display: none"
+>
+  <div class="dv-panel" id="dynamicVoucherModalPanel">
+    {% else %}
+    <div
+      class="dv-page-wrapper"
+      id="dynamicVoucherPageWrapper"
+      data-vtype="{{ voucher_type }}"
+      data-vno="{{ vno }}"
+    >
+      <div class="dv-panel" id="dynamicVoucherPagePanel">
+        {% endif %}
+
+        <!-- Header -->
+        <div class="dv-topbar">
+          <span class="dv-topbar-title" id="dvm_voucher_type"
+            >🔌 Cash Voucher</span
+          >
+          <div class="dv-topbar-controls">
+            {% if mode == 'modal' %}
+            <button class="dv-topbar-exit" id="dv_modal_close_button">
+              ✕ Close
+            </button>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="dv-body">
+          <input type="hidden" id="dvm_hidden_voucher_type_value" />
+
+          <!-- Top Section: 3 columns -->
+          <div class="dv-top-section">
+            <!-- Col 1: Voucher Info -->
+            <div class="dv-info-card">
+              <div class="dv-info-row">
+                <span class="dv-info-label">Vch.No.</span>
+                <div class="dv-info-value" id="dvm_vch_no">0</div>
+              </div>
+              <div class="dv-info-row">
+                <span class="dv-info-label" id="dvm_date_label">Date</span>
+                <div class="dv-info-value">
+                  <input type="date" id="dvm_vch_date" class="dv-date-input" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 2: Bank / Transaction Type -->
+            <div class="dv-config-card">
+              <div
+                class="dv-bank-section"
+                id="dvm_bank-section"
+                style="display: none"
+              >
+                <div class="dv-config-label">Bank:</div>
+                <div class="dv-config-input">
+                  <select name="bank" id="dvm_bank-select">
+                    <option value="">-- Select Bank --</option>
+                  </select>
+                </div>
+              </div>
+              <div
+                class="dv-transaction-section"
+                id="dvm_transaction_type"
+                style="display: none"
+              >
+                <div class="dv-config-label">Select Transaction Type</div>
+                <div class="dv-radio-group">
+                  <label class="dv-radio-box">
+                    <input
+                      type="radio"
+                      name="dvm_transaction_type"
+                      id="dvm_lessInSup"
+                    />
+                    <span>Less in Vendor Account</span>
+                  </label>
+                  <label class="dv-radio-box">
+                    <input
+                      type="radio"
+                      name="dvm_transaction_type"
+                      id="dvm_lessInCus"
+                    />
+                    <span>Less in Client Account</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 3: Action Buttons -->
+            <div class="dv-action-card">
+              <div class="dv-action-buttons">
+                <button
+                  type="button"
+                  class="dv-btn dv-btn-save"
+                  id="dvm_voucher_modal_save_button"
+                >
+                  💾 Save
+                </button>
+                <!-- <button class="dv-btn dv-btn-cancel">❌ Cancel</button> -->
+                <!-- <button class="dv-btn dv-btn-print">🖨️ Print</button> -->
+                <!-- <button class="dv-btn dv-btn-quick" id = 'dvm_quick_account_button'>⚡ Quick Account</button> -->
+                <button
+                  type="button"
+                  class="dv-btn dv-btn-search"
+                  id="dvm_btn-search-inVoucher"
+                >
+                  🔍 Find A/C
+                </button>
+                <button class="dv-btn dv-btn-delete" id="delete_voucher_button">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="dv-table-section">
+            <div class="dv-table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>A/c# (Tab)</th>
+                    <th>Account Detail</th>
+                    <th>Notes</th>
+                    <th>Amount</th>
+                    <th>Receipt#</th>
+                    <th>Chq#</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <div class="dvm-acc-code-cell">
+                        <button
+                          type="button"
+                          class="dvm-search-btn"
+                          title="Search Account (O)"
+                        >
+                          🔍</button
+                        ><input type="text" class="dvm_acc_code_in_modal" />
+                      </div>
+                    </td>
+                    <td><input type="text" class="dvm_head_in_modal" /></td>
+                    <td><input type="text" class="dvm_notes_in_modal" /></td>
+                    <td>
+                      <input
+                        type="text"
+                        class="dvm_amount_in_modal"
+                        value="0.00"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        class="dvm_receipt_no_in_modal"
+                        value="0"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        class="dvm_chq_no_in_modal"
+                        value="0"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="dvm-acc-code-cell">
+                        <button
+                          type="button"
+                          class="dvm-search-btn"
+                          title="Search Account (O)"
+                        >
+                          🔍</button
+                        ><input type="text" class="dvm_acc_code_in_modal" />
+                      </div>
+                    </td>
+                    <td><input type="text" class="dvm_head_in_modal" /></td>
+                    <td><input type="text" class="dvm_notes_in_modal" /></td>
+                    <td>
+                      <input
+                        type="text"
+                        class="dvm_amount_in_modal"
+                        value="0.00"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        class="dvm_receipt_no_in_modal"
+                        value="0"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        class="dvm_chq_no_in_modal"
+                        value="0"
+                      />
+                    </td>
+                  </tr>
+                  <!-- <tr>
+                    <td>
+                      <div class="dvm-acc-code-cell"><input type="text" class="dvm_acc_code_in_modal" /><button
+                          type="button" class="dvm-search-btn" title="Search Account (O)">🔍</button></div>
+                    </td>
+                    <td><input type="text" class="dvm_head_in_modal" /></td>
+                    <td><input type="text" class="dvm_notes_in_modal" /></td>
+                    <td><input type="text" class="dvm_receipt_no_in_modal" value="0" /></td>
+                    <td><input type="text" class="dvm_chq_no_in_modal" value="0" /></td>
+                    <td><input type="text" class="dvm_amount_in_modal" value="0.00" /></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <div class="dvm-acc-code-cell"><button type="button" class="dvm-search-btn"
+                          title="Search Account (O)">🔍</button><input type="text" class="dvm_acc_code_in_modal" />
+                      </div>
+                    </td>
+                    <td><input type="text" class="dvm_head_in_modal" /></td>
+                    <td><input type="text" class="dvm_notes_in_modal" /></td>
+                    <td><input type="text" class="dvm_receipt_no_in_modal" value="0" /></td>
+                    <td><input type="text" class="dvm_chq_no_in_modal" value="0" /></td>
+                    <td><input type="text" class="dvm_amount_in_modal" value="0.00" /></td>
+                  </tr> -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div class="dv-remarks-section">
+            <label class="dv-remarks-label">💬 Remarks</label>
+            <textarea
+              class="dv-remarks-input"
+              placeholder="Enter remarks here..."
+              id="dvm_remarks_in_modal"
+            ></textarea>
+          </div>
+
+          <!-- Total -->
+          <div class="dv-total-section" style="display: none">
+            <div class="dv-total-label" id="dvm_voucher_modal_total">
+              Total Amount
+            </div>
+            <div class="dv-total-amount">0.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include "mysearch/global_search_modal.html" %} 
+    {% comment %}
+    <script src="{% static 'invoice_designer/js/document_printer.js' %}?v=3"></script>
+    {% endcomment %}
+    <script
+      type="module"
+      src="{% static 'myledger/js/modals/dynamic_voucher_modal.js' %}"
+    ></script>
+  </div>
+</div>

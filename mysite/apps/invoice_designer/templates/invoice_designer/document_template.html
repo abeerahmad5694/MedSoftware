@@ -1,0 +1,272 @@
+<!-- {# All field/column/totals values, labels and inline styles are already
+   fully resolved in Python by DocumentRenderer before this template
+   runs (see services/renderer.py) — this template only ever loops,
+   it never computes a style or looks up a data path itself. That's
+   what keeps every preview refresh fast. #} -->
+{% load designer_extras %}
+
+{% if has_urdu %}
+{# ============================================================= URDU / BILINGUAL DOCUMENT #}
+<div class="printable-document{% if is_urdu %} urdu-doc{% endif %}{% if is_bilingual %} bilingual-doc{% endif %}"
+     data-page-type="{{ page_type }}"
+     data-document-type="{{ document_type }}"
+     {% if is_urdu %}dir="rtl" lang="ur"{% endif %}
+     style="width: {{ page.width_mm }}mm;
+            {% if page.height_mm %}min-height: {{ page.height_mm }}mm;{% endif %}
+            padding: {{ page.margin_top_mm }}mm {{ page.margin_right_mm }}mm {{ page.margin_bottom_mm }}mm {{ page.margin_left_mm }}mm;
+            font-family: {{ default_font_family }}, 'Noto Nastaliq Urdu', serif;
+            font-size: {{ default_font_size }}px;">
+
+    {# ---------------------------------------------------------------- HEADER — Urdu #}
+    {% if header_section.visible %}
+    <div class="doc-section doc-header{% if is_urdu %} urdu-section{% endif %}" data-section="header"
+         {% if is_urdu %}dir="rtl" lang="ur"{% endif %}>
+
+        {% if is_bilingual %}
+        {# Bilingual: two-column header — English left, Urdu right #}
+        <table class="bilingual-header-table" style="width:100%;border-collapse:collapse;">
+            <tr>
+                <td style="width:50%;vertical-align:top;padding-right:6px;">
+                    {% for field in header_section.fields %}
+                    {% if field.type == "image" %}
+                    {% if field.value %}
+                    <div class="doc-field" data-field="header:{{ field.field }}" style="{{ field.style_css }}">
+                        <img src="{{ field.value }}" alt="Logo" style="{% if field.logo_width %}width:{{ field.logo_width }};{% else %}max-width:100%;{% endif %}{% if field.logo_height %}height:{{ field.logo_height }};{% endif %}object-fit:contain;">
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="doc-field" data-field="header:{{ field.field }}" style="{{ field.style_css }}">{{ field.value }}</div>
+                    {% endif %}
+                    {% endfor %}
+                </td>
+                <td style="width:50%;vertical-align:top;text-align:right;padding-left:6px;" dir="rtl" lang="ur">
+                    {% for field in header_section.fields %}
+                    {% if field.type == "image" %}
+                    {# logo shown once only (left side) #}
+                    {% else %}
+                    {% with ur_label=field.field %}
+                    <div class="doc-field urdu-font" data-field="header:{{ field.field }}_ur" style="{{ field.style_css }}">
+                        {% if field.field == "company_name" %}{{ header_section.fields|dictsort:"field"|first }}{% endif %}
+                        {{ field.value_ur|default:field.value }}
+                    </div>
+                    {% endwith %}
+                    {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+        {% else %}
+        {# Pure Urdu: single-column RTL #}
+        {% for field in header_section.fields %}
+        {% if field.type == "image" %}
+        {% if field.value %}
+        <div class="doc-field" data-field="header:{{ field.field }}" style="{{ field.style_css }}">
+            <img src="{{ field.value }}" alt="Logo" style="{% if field.logo_width %}width:{{ field.logo_width }};{% else %}max-width:100%;{% endif %}{% if field.logo_height %}height:{{ field.logo_height }};{% endif %}object-fit:contain;">
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="doc-field urdu-font" data-field="header:{{ field.field }}" style="{{ field.style_css }}">{{ field.value_ur|default:field.value }}</div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {# ------------------------------------------------------------- CUSTOMER — Urdu #}
+    {% if customer_section.visible %}
+    <div class="doc-section doc-customer{% if is_urdu %} urdu-section{% endif %}" data-section="customer"
+         {% if is_urdu %}dir="rtl" lang="ur"{% endif %}>
+        {% for field in customer_section.fields %}
+        {% if is_bilingual %}
+        <div class="doc-field bilingual-customer-row" data-field="customer:{{ field.field }}" style="{{ field.style_css }}">
+            <span>{{ field.label }}{% if field.value %}: {{ field.value }}{% endif %}</span>
+            <span class="urdu-font" dir="rtl" lang="ur" style="float:left;">
+                {{ column_labels_ur|get_item:field.field|default:field.label }}{% if field.value_ur or field.value %}: {{ field.value_ur|default:field.value }}{% endif %}
+            </span>
+        </div>
+        {% else %}
+        <div class="doc-field urdu-font" data-field="customer:{{ field.field }}" style="{{ field.style_css }}">
+            {{ column_labels_ur|get_item:field.field|default:field.label }}{% if field.value_ur or field.value %}: {{ field.value_ur|default:field.value }}{% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ---------------------------------------------------------------- ITEMS — Urdu #}
+    {% if items_section.visible %}
+    <div class="doc-section doc-items{% if is_urdu %} urdu-section{% endif %}" data-section="items">
+        <table class="doc-item-table{% if items_section.table_borders %} has-borders{% endif %}" {% if is_urdu %}dir="rtl" lang="ur"{% endif %}>
+            <thead>
+                <tr>
+                    {% if is_bilingual %}
+                    {# Bilingual: show EN label / UR label stacked in header #}
+                    {% for column in items_section.columns %}
+                    <th data-field="items:column:{{ column.field }}" style="width: {{ column.width }}; {{ column.style_css }}">
+                        <span>{{ column.label }}</span><br>
+                        <span class="urdu-font" dir="rtl" lang="ur" style="font-size:0.85em;">
+                            {% if column.label != column.default_label %}{{ column.label }}{% else %}{{ column_labels_ur|get_item:column.field|default:column.label }}{% endif %}
+                        </span>
+                    </th>
+                    {% endfor %}
+                    {% else %}
+                    {# Pure Urdu: show only Urdu labels (unless overridden in designer) #}
+                    {% for column in items_section.columns %}
+                    <th data-field="items:column:{{ column.field }}" class="urdu-font" style="width: {{ column.width }}; {{ column.style_css }}">
+                        {% if column.label != column.default_label %}{{ column.label }}{% else %}{{ column_labels_ur|get_item:column.field|default:column.label }}{% endif %}
+                    </th>
+                    {% endfor %}
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row_data in items_section.rows_with_urdu %}
+                <tr>
+                    {% for cell in row_data.cells %}
+                    <td style="{{ cell.style_css }}">
+                        {% if is_bilingual and cell.field == 'product_name' %}
+                            <span>{{ cell.value|default:"" }}</span><br>
+                            {% if row_data.product_name_ur %}
+                                <span class="urdu-font" dir="rtl" lang="ur" style="font-size:0.85em; display:block; text-align:right;">{{ row_data.product_name_ur }}</span>
+                            {% else %}
+                                <span class="urdu-font" dir="rtl" lang="ur" style="font-size:0.85em; display:block; text-align:right;">{{ cell.value|default:"" }}</span>
+                            {% endif %}
+                        {% elif is_urdu and cell.field == 'product_name' %}
+                            {% if row_data.product_name_ur %}
+                                <span class="urdu-font" dir="rtl" lang="ur" style="display:block; text-align:right;">{{ row_data.product_name_ur }}</span>
+                            {% else %}
+                                <span class="urdu-font" dir="rtl" lang="ur" style="display:block; text-align:right;">{{ cell.value|default:"" }}</span>
+                            {% endif %}
+                        {% else %}
+                            {{ cell.value|default:"" }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr><td colspan="{{ items_section.columns|length }}" class="doc-empty-row urdu-font">کوئی آئٹم نہیں</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# --------------------------------------------------------------- TOTALS — Urdu #}
+    {% if totals_section.visible %}
+    <div class="doc-section doc-totals{% if is_urdu %} urdu-section{% endif %}" data-section="totals"
+         {% if is_urdu %}dir="rtl" lang="ur"{% endif %}>
+        {% for field in totals_section.fields %}
+        <div class="doc-field doc-total-row{% if is_urdu %} urdu-total-row{% endif %}" data-field="totals:{{ field.field }}" style="{{ field.style_css }}">
+            {% if is_bilingual %}
+            <span class="urdu-font" dir="rtl" lang="ur">{{ column_labels_ur|get_item:field.field|default:field.label }}</span>
+            <span>{{ field.value|default:"0" }}</span>
+            <span>{{ field.label }}</span>
+            {% elif is_urdu %}
+            <span class="urdu-font">{{ column_labels_ur|get_item:field.field|default:field.label }}</span>
+            <span>{{ field.value|default:"0" }}</span>
+            {% else %}
+            <span>{{ field.label }}</span><span>{{ field.value|default:"0" }}</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# --------------------------------------------------------------- FOOTER — Urdu #}
+    {% if footer_section.visible %}
+    <div class="doc-section doc-footer{% if is_urdu %} urdu-section{% endif %}" data-section="footer"
+         {% if is_urdu %}dir="rtl" lang="ur"{% endif %}>
+        {% for field in footer_section.fields %}
+        <div class="doc-field{% if is_urdu %} urdu-font{% endif %}" data-field="footer:{{ field.field }}" style="{{ field.style_css }}">
+            {{ column_labels_ur|get_item:field.field|default:field.value }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+{% else %}
+{# ============================================================= ENGLISH DOCUMENT (unchanged) #}
+<div class="printable-document"
+     data-page-type="{{ page_type }}"
+     data-document-type="{{ document_type }}"
+     style="width: {{ page.width_mm }}mm;
+            {% if page.height_mm %}min-height: {{ page.height_mm }}mm;{% endif %}
+            padding: {{ page.margin_top_mm }}mm {{ page.margin_right_mm }}mm {{ page.margin_bottom_mm }}mm {{ page.margin_left_mm }}mm;
+            font-family: {{ default_font_family }};
+            font-size: {{ default_font_size }}px;">
+
+    {# ---------------------------------------------------------------- HEADER #}
+    {% if header_section.visible %}
+    <div class="doc-section doc-header" data-section="header">
+        {% for field in header_section.fields %}
+        {% if field.type == "image" %}
+        {% if field.value %}
+        <div class="doc-field" data-field="header:{{ field.field }}" style="{{ field.style_css }}">
+            <img src="{{ field.value }}" alt="Logo" style="{% if field.logo_width %}width:{{ field.logo_width }};{% else %}max-width:100%;{% endif %}{% if field.logo_height %}height:{{ field.logo_height }};{% endif %}object-fit:contain;">
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="doc-field" data-field="header:{{ field.field }}" style="{{ field.style_css }}">{{ field.value }}</div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ------------------------------------------------------------- CUSTOMER #}
+    {% if customer_section.visible %}
+    <div class="doc-section doc-customer" data-section="customer">
+        {% for field in customer_section.fields %}
+        <div class="doc-field" data-field="customer:{{ field.field }}" style="{{ field.style_css }}">{{ field.label }}{% if field.value %}: {{ field.value }}{% endif %}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ---------------------------------------------------------------- ITEMS #}
+    {% if items_section.visible %}
+    <div class="doc-section doc-items" data-section="items">
+        <table class="doc-item-table{% if items_section.table_borders %} has-borders{% endif %}">
+            <thead>
+                <tr>
+                    {% for column in items_section.columns %}
+                    <th data-field="items:column:{{ column.field }}" style="width: {{ column.width }}; {{ column.style_css }}">{{ column.label }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in items_section.rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td style="{{ cell.style_css }}">{{ cell.value|default:"" }}</td>
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr><td colspan="{{ items_section.columns|length }}" class="doc-empty-row">No items</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {# --------------------------------------------------------------- TOTALS #}
+    {% if totals_section.visible %}
+    <div class="doc-section doc-totals" data-section="totals">
+        {% for field in totals_section.fields %}
+        <div class="doc-field doc-total-row" data-field="totals:{{ field.field }}" style="{{ field.style_css }}">
+            <span>{{ field.label }}</span><span>{{ field.value|default:"0" }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# --------------------------------------------------------------- FOOTER #}
+    {% if footer_section.visible %}
+    <div class="doc-section doc-footer" data-section="footer">
+        {% for field in footer_section.fields %}
+        <div class="doc-field" data-field="footer:{{ field.field }}" style="{{ field.style_css }}">{{ field.value }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,161 @@
+<!-- ========= LICENSE MODAL - INCLUDE FILE ========= -->
+<style>
+  #licenseModalOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px); z-index: 9998; display: none;
+  }
+  #licenseModalOverlay.open { display: block; }
+  #licenseModal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+    width: 95%; max-width: 480px; background: var(--bg-surface, #ffffff);
+    border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    z-index: 9999; display: none; opacity: 0; transition: all 0.2s ease;
+    border: 1px solid var(--border-color, #e5e7eb);
+  }
+  #licenseModal.open { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+ .license-input {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid var(--border-color, #d1d5db); background: var(--bg-input, #f9fafb);
+    font-size: 14px; outline: none; transition: 0.15s;
+    color: var(--text-main, #111);
+  }
+ .license-input:focus { border-color: var(--color-primary, #4f46e5); box-shadow: 0 0 0 3px var(--color-primary-light, #e0e7ff); }
+ .license-key-input { font-family: monospace; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+</style>
+
+<div id="licenseModalOverlay" onclick="closeLicenseModal()"></div>
+
+<div id="licenseModal">
+  <!-- Header -->
+  <div class="flex items-center justify-between p-5 border-b" style="border-color: var(--border-color, #e5e7eb);">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white" style="background: var(--accent-indicator, #4f46e5);">
+        <i class="fa-solid fa-key"></i>
+      </div>
+      <div>
+        <h3 class="text- font-bold" style="color: var(--text-main);">Activate License</h3>
+        <p class="text-" style="color: var(--text-muted);">Enter company license key</p>
+      </div>
+    </div>
+    <button onclick="closeLicenseModal()" class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100" style="color: var(--text-muted);">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="p-5 space-y-4">
+    <div id="licenseMessage" class="hidden p-3 rounded-xl text- font-medium"></div>
+
+
+
+    <div>
+      <label class="text- font-semibold mb-1.5 block" style="color: var(--text-main);">License Key <span class="text-red-500">*</span></label>
+      <div class="relative">
+        <input type="text" id="licenseKeyInput" class="license-input license-key-input pr-10" placeholder="XXXX-XXXX-XXXX-XXXX-XXX" autocomplete="off">
+        <button onclick="pasteFromClipboard()" class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-gray-100" title="Paste">
+          <i class="fa-regular fa-clipboard text-" style="color: var(--text-muted);"></i>
+        </button>
+      </div>
+    </div>
+
+   
+  </div>
+
+  <!-- Footer -->
+  <div class="p-4 flex gap-2.5 justify-end border-t" style="border-color: var(--border-color); background: var(--bg-subtle, #f9fafb); border-radius: 0 0 16px 16px;">
+    <button onclick="closeLicenseModal()" class="px-4 py-2 rounded-xl text- font-semibold border hover:bg-white transition" style="border-color: var(--border-color); color: var(--text-main);">Cancel</button>
+    <button id="licenseSubmitBtn" onclick="submitLicense()" class="px-5 py-2 rounded-xl text- font-semibold text-white shadow-sm transition hover:opacity-90 flex items-center gap-2" style="background: var(--accent-indicator, #4f46e5);">
+      <span id="licenseBtnText">Activate</span>
+      <i id="licenseBtnSpinner" class="fa-solid fa-spinner fa-spin hidden"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+  function getCsrfToken() {
+    let cookie = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+    return cookie? cookie.pop() : (document.querySelector('[name=csrfmiddlewaretoken]')?.value || '');
+  }
+
+  function openLicenseModal() {
+    document.getElementById('licenseModal').classList.add('open');
+    document.getElementById('licenseModalOverlay').classList.add('open');
+    // Auto-fill company name from page if available
+    // const companyField = document.getElementById('licenseCompanyName');
+    // if (!companyField.value) {
+    //   // Try to get from existing company input on page
+    //   const existing = document.querySelector('input[name="company_name"]');
+    //   if (existing) companyField.value = existing.value;
+    // }
+  }
+
+  function closeLicenseModal() {
+    document.getElementById('licenseModal').classList.remove('open');
+    document.getElementById('licenseModalOverlay').classList.remove('open');
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      document.getElementById('licenseKeyInput').value = text.trim().toUpperCase();
+    } catch (e) {
+      // fallback - user has to paste manually Ctrl+V
+    }
+  }
+
+  function showLicenseMessage(type, text) {
+    const el = document.getElementById('licenseMessage');
+    el.classList.remove('hidden');
+    if (type === 'success') {
+      el.style.background = '#dcfce7'; el.style.color = '#166534'; el.style.border = '1px solid #bbf7d0';
+    } else {
+      el.style.background = '#fee2e2'; el.style.color = '#991b1b'; el.style.border = '1px solid #fecaca';
+    }
+    el.textContent = text;
+  }
+
+  async function submitLicense() {
+    // const company = document.getElementById('licenseCompanyName').value.trim();
+    const key = document.getElementById('licenseKeyInput').value.trim().toUpperCase();
+    const btn = document.getElementById('licenseSubmitBtn');
+    const btnText = document.getElementById('licenseBtnText');
+    const spinner = document.getElementById('licenseBtnSpinner');
+
+    // if (!company) { showLicenseMessage('error', 'Plea/se enter company name.'); return; }
+    if (!key || key.length < 17) { showLicenseMessage('error', 'Please enter a valid license key.'); return; }
+
+    btn.disabled = true; btnText.textContent = 'Activating...'; spinner.classList.remove('hidden');
+
+    try {
+      const response = await fetch('/users/api/validate_license/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: JSON.stringify({license_key: key })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showLicenseMessage('success', data.message || 'License activated successfully!');
+        setTimeout(() => {
+          closeLicenseModal();
+          window.location.reload();
+        }, 1200);
+      } else {
+        // User-friendly message only - backend already hides expected/got
+        showLicenseMessage('error', data.message || 'Invalid license.');
+      }
+    } catch (err) {
+      showLicenseMessage('error', 'Server error. Please try again.');
+    } finally {
+      btn.disabled = false; btnText.textContent = 'Activate'; spinner.classList.add('hidden');
+    }
+  }
+
+  // ESC to close
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLicenseModal(); });
+</script>
+<!-- ========= END LICENSE MODAL ========= -->

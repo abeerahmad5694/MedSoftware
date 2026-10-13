@@ -1,0 +1,672 @@
+{% extends "main.html" %}
+{% load static %}
+{% load extra_filters %}
+
+{% block extra_css %}
+<link rel='stylesheet' href="{% static 'reports/css/daybook.css' %}">
+<style>
+    .main-content {
+        padding: 0 !important;
+    }
+    .comp-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 60px);
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+    
+    /* Top Reporting Criteria Box */
+    .criteria-card {
+        background: #e2e8f0;
+        border-bottom: 2px solid #cbd5e1;
+        padding: 10px 14px;
+        display: flex;
+        gap: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .shop-select-box {
+        width: 170px;
+        min-width: 150px;
+        background: #ffffff;
+        border: 1px solid #94a3b8;
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+    }
+    .shop-select-header {
+        background: #cbd5e1;
+        padding: 5px 8px;
+        font-weight: 700;
+        font-size: 12px;
+        border-bottom: 1px solid #94a3b8;
+        color: #0f172a;
+    }
+    .shop-select-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px 6px;
+        max-height: 95px;
+    }
+    .shop-select-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 4px;
+        font-size: 12px;
+        cursor: pointer;
+        color: #334155;
+        border-radius: 2px;
+    }
+    .shop-select-item:hover {
+        background: #e0f2fe;
+    }
+    
+    .criteria-controls {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .criteria-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .criteria-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .criteria-label {
+        font-weight: 700;
+        color: #1e293b;
+        white-space: nowrap;
+        font-size: 13px;
+        min-width: 60px;
+    }
+    .criteria-input {
+        background: #ffffff;
+        border: 1px solid #94a3b8;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 13px;
+        height: 32px;
+        outline: none;
+        color: #0f172a;
+        transition: border-color 0.15s;
+    }
+    .criteria-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    
+    /* Criteria Buttons */
+    .btn-pos {
+        background: #f8fafc;
+        border: 1px solid #94a3b8;
+        padding: 4px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.15s;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .btn-pos:hover {
+        background: #e2e8f0;
+        border-color: #64748b;
+    }
+    .btn-pos.active {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #1d4ed8;
+    }
+    .btn-pos-primary {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #1d4ed8;
+    }
+    .btn-pos-primary:hover {
+        background: #1d4ed8;
+    }
+    
+    /* Dedicated Table Header Section (matching daybook) */
+    .comp-table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px;
+        background: #ffffff;
+        border-bottom: 1px solid #cbd5e1;
+        flex-shrink: 0;
+        gap: 12px;
+    }
+    .comp-table-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+    }
+    .comp-table-title i {
+        color: #2563eb;
+    }
+    .comp-record-badge {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid #bae6fd;
+    }
+    .table-search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .table-search-box i {
+        position: absolute;
+        left: 10px;
+        color: #64748b;
+        font-size: 13px;
+        pointer-events: none;
+    }
+    .table-search-box input {
+        padding: 6px 12px 6px 30px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 13px;
+        width: 260px;
+        outline: none;
+        background: #f8fafc;
+        transition: all 0.15s;
+    }
+    .table-search-box input:focus {
+        border-color: #2563eb;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        width: 320px;
+    }
+    
+    /* Table Container */
+    .comp-table-container {
+        flex: 1;
+        overflow: auto;
+        background: #ffffff;
+    }
+    .comp-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        font-family: inherit;
+        min-width: 900px;
+    }
+    .comp-table thead th {
+        position: sticky;
+        top: 0;
+        background: #e2e8f0;
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 7px 10px;
+        border: 1px solid #cbd5e1;
+        white-space: nowrap;
+        z-index: 10;
+        user-select: none;
+    }
+    .comp-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .comp-table tbody tr:nth-child(even) {
+        background: #f8fafc;
+    }
+    .comp-table tbody tr:hover {
+        background: #e0f2fe;
+    }
+    .comp-table td {
+        padding: 6px 10px;
+        border: 1px solid #e2e8f0;
+        white-space: nowrap;
+        color: #1e293b;
+        font-size: 13px;
+    }
+    .cell-product {
+        color: #0369a1;
+        font-weight: 600;
+    }
+    .cell-receipt {
+        color: #2563eb;
+        font-weight: 700;
+        text-align: center;
+        cursor: pointer;
+    }
+    .cell-receipt:hover {
+        text-decoration: underline;
+        color: #1d4ed8;
+    }
+    .cell-shop {
+        color: #15803d;
+        font-weight: 600;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .text-negative {
+        color: #dc2626 !important;
+        font-weight: 700;
+    }
+    
+    /* Bottom Summary Bar */
+    .comp-summary-bar {
+        background: #cbd5e1;
+        border-top: 2px solid #94a3b8;
+        padding: 6px 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        flex-shrink: 0;
+        overflow-x: auto;
+    }
+    .summary-disc-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 13px;
+    }
+    .summary-disc-val {
+        background: #ffffff;
+        border: 1px solid #64748b;
+        border-radius: 4px;
+        padding: 3px 10px;
+        font-weight: 800;
+        font-size: 15px;
+        min-width: 80px;
+        text-align: right;
+        color: #000000;
+    }
+    .summary-pill-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+    }
+    .summary-pill {
+        display: flex;
+        align-items: center;
+        background: #000000;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #334155;
+    }
+    .summary-pill-label {
+        color: #ffffff;
+        padding: 4px 8px;
+        font-weight: 700;
+        font-size: 20px;
+        letter-spacing: 0.3px;
+    }
+    .summary-pill-val {
+        background: #000000;
+        color: #facc15;
+        padding: 4px 10px;
+        font-weight: 800;
+        font-size: 25px;
+        min-width: 55px;
+        text-align: right;
+        border-left: 1px solid #334155;
+    }
+    .summary-pill.return-pill .summary-pill-val {
+        color: #f87171;
+    }
+    .summary-pill.net-pill .summary-pill-val {
+        color: #4ade80;
+    }
+    
+    /* Responsive styling for Mobile and Tablets */
+    @media (max-width: 992px) {
+        .criteria-card {
+            flex-direction: column;
+            gap: 10px;
+        }
+        .shop-select-box {
+            width: 100%;
+        }
+        .shop-select-list {
+            max-height: 70px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .table-search-box input {
+            width: 200px;
+        }
+        .table-search-box input:focus {
+            width: 240px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .comp-wrapper {
+            height: auto;
+            min-height: calc(100vh - 60px);
+        }
+        .criteria-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .criteria-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px;
+            width: 100%;
+        }
+        .criteria-input {
+            width: 100% !important;
+        }
+        .comp-table-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .table-search-box input,
+        .table-search-box input:focus {
+            width: 100%;
+        }
+        .comp-summary-bar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .summary-pill-group {
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 6px;
+        }
+        .summary-pill {
+            flex: 1 1 calc(50% - 6px);
+        }
+        .summary-pill-val {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comp-wrapper">
+    <!-- Top Criteria Form -->
+    <form method="POST" id="comprehensiveSaleForm" class="criteria-card">
+        {% csrf_token %}
+        
+        <!-- Left: Shop Select Box -->
+        <div class="shop-select-box">
+            <div class="shop-select-header">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                    <input type="checkbox" id="selectAllShops" {% if not shop_id %}checked{% endif %}>
+                    Select Shop
+                </label>
+            </div>
+            <div class="shop-select-list">
+                <label class="shop-select-item">
+                    <input type="radio" name="shop_id_radio" value="" {% if not shop_id %}checked{% endif %}>
+                    All Shops
+                </label>
+                {% for b in branches %}
+                <label class="shop-select-item">
+                    <input type="radio" name="shop_id_radio" value="{{ b.id }}" {% if shop_id == b.id|stringformat:"s" %}checked{% endif %}>
+                    {{ b.name }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        <input type="hidden" name="shop_id" id="shop_id" value="{{ shop_id }}">
+
+        <!-- Right Controls -->
+        <div class="criteria-controls">
+            <!-- Row 1: Cashier, Category & Date From -->
+            <div class="criteria-row">
+                <div class="criteria-group" style="flex: 1.2;">
+                    <span class="criteria-label">Cashier:</span>
+                    <select name="cashier" id="cashier" class="criteria-input" style="flex: 1;">
+                        <option value="">-- All Cashiers --</option>
+                        {% for c in cashiers %}
+                        <option value="{{ c }}" {% if cashier == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="criteria-group" style="flex: 1.2;">
+                    <span class="criteria-label">Category:</span>
+                    <select name="category" id="category" class="criteria-input" style="flex: 1;">
+                        <option value="">-- All Categories --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="criteria-group" style="flex: 1;">
+                    <span class="criteria-label" style="min-width: 45px;">From:</span>
+                    <input type="date" name="date_from" id="date_from" class="criteria-input" value="{{ date_from }}" style="flex: 1;">
+                </div>
+            </div>
+
+            <!-- Row 2: Filter Mode Combobox (Sale vs Cost) & Date To -->
+            <div class="criteria-row">
+                <div class="criteria-group" style="flex: 2.4;">
+                    <span class="criteria-label">Filter:</span>
+                    <select name="filter_mode" id="filter_mode" class="criteria-input" style="flex: 1; font-weight: 600;">
+                        <option value="" {% if not filter_mode %}selected{% endif %}>All Sales</option>
+                        <option value="sale_gt_cost" {% if filter_mode == 'sale_gt_cost' %}selected{% endif %}>Sale &gt; Cost (Profit)</option>
+                        <option value="sale_lt_cost" {% if filter_mode == 'sale_lt_cost' or filter_mode == 'sale_lte_cost' %}selected{% endif %}>Sale &lt; Cost (Loss)</option>
+                        <option value="sale_eq_cost" {% if filter_mode == 'sale_eq_cost' %}selected{% endif %}>Sale = Cost (Break Even)</option>
+                        <option value="return" {% if filter_mode == 'return' %}selected{% endif %}>Returns Only</option>
+                    </select>
+                </div>
+                <div class="criteria-group" style="flex: 1;">
+                    <span class="criteria-label" style="min-width: 45px;">To:</span>
+                    <input type="date" name="date_to" id="date_to" class="criteria-input" value="{{ date_to }}" style="flex: 1;">
+                </div>
+            </div>
+
+            <!-- Row 3: Action Buttons & Counter -->
+            <div class="criteria-row" style="margin-top: 2px;">
+                <button type="submit" class="btn-pos btn-pos-primary">
+                    <i class="fas fa-sync-alt"></i> Generate
+                </button>
+                <button type="button" class="btn-pos" onclick="setQuickFilterAndSubmit('sale_gt_cost')">
+                    Sale &gt; Cost
+                </button>
+                <button type="button" class="btn-pos" onclick="setQuickFilterAndSubmit('sale_lt_cost')">
+                    Sale &lt; Cost
+                </button>
+                <button type="button" class="btn-pos" onclick="setQuickFilterAndSubmit('sale_eq_cost')">
+                    Sale = Cost
+                </button>
+                <button type="button" class="btn-pos" onclick="setQuickFilterAndSubmit('return')">
+                    Return
+                </button>
+                <button type="button" class="btn-pos" onclick="window.print()">
+                    <i class="fas fa-print"></i> Report
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Table Header Bar with JS Live Search (matching daybook) -->
+    <div class="comp-table-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <h3 class="comp-table-title">
+                <i class="fas fa-receipt"></i>
+                Comprehensive Sales Records
+            </h3>
+            <span class="comp-record-badge" id="recordCount">
+                {{ summary.total_rows|default:"0" }} Records
+            </span>
+        </div>
+        <div class="table-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="tableSearch" placeholder="Search Anything Here..." autocomplete="off">
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="comp-table-container">
+        <table class="comp-table" id="compTable">
+            <thead>
+                <tr>
+                    <th style="width: 24%; text-align: left;">Product</th>
+                    <th style="width: 6%; text-align: right;">Qty</th>
+                    <th style="width: 8%; text-align: center;">Receipt#</th>
+                    <th style="width: 8%; text-align: right;">Sale Price</th>
+                    <th style="width: 7%; text-align: right;">Disc</th>
+                    <th style="width: 9%; text-align: right;">Amount</th>
+                    <th style="width: 8%; text-align: center;">Date</th>
+                    <th style="width: 6%; text-align: center;">Time</th>
+                    <th style="width: 10%; text-align: left;">Emp.Name</th>
+                    <th style="width: 14%; text-align: left;">Shop Name</th>
+                </tr>
+            </thead>
+            <tbody id="compTableBody">
+                {% if data %}
+                {% for row in data %}
+                <tr class="data-row">
+                    <td class="cell-product">{{ row.prod_name }}</td>
+                    <td class="text-right {% if row.raw_qty < 0 %}text-negative{% endif %}">{{ row.qty }}</td>
+                    <td class="cell-receipt" onclick="window.open('/sale/?bill_no={{ row.bill_no }}', '_blank')">{{ row.bill_no }}</td>
+                    <td class="text-right">{{ row.rate }}</td>
+                    <td class="text-right">{{ row.disc }}</td>
+                    <td class="text-right {% if row.raw_amount < 0 %}text-negative{% endif %}">{{ row.amount }}</td>
+                    <td class="text-center">{{ row.date }}</td>
+                    <td class="text-center">{{ row.time }}</td>
+                    <td>{{ row.user }}</td>
+                    <td class="cell-shop">{{ row.shop_name }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr id="noDataRow">
+                    <td colspan="10" style="text-align: center; padding: 40px 0; color: #64748b;">
+                        <i class="fas fa-shopping-cart" style="font-size: 28px; margin-bottom: 8px; display: block; color: #94a3b8;"></i>
+                        No sales transactions found for the selected criteria.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bottom Summary Bar (Prominent, High-Contrast Values) -->
+    <div class="comp-summary-bar">
+        <div class="summary-disc-box">
+            <span>Item.Disc:</span>
+            <div class="summary-disc-val">{{ summary.item_disc }}</div>
+        </div>
+
+        <div class="summary-pill-group">
+            <div class="summary-pill">
+                <span class="summary-pill-label">Bills</span>
+                <span class="summary-pill-val">{{ summary.bills_count }}</span>
+            </div>
+            <div class="summary-pill">
+                <span class="summary-pill-label">SOLD:</span>
+                <span class="summary-pill-val">{{ summary.total_sold_qty }}</span>
+            </div>
+            <div class="summary-pill return-pill">
+                <span class="summary-pill-label">Returned:</span>
+                <span class="summary-pill-val">{{ summary.total_returned_qty }}</span>
+            </div>
+            <div class="summary-pill">
+                <span class="summary-pill-label">Disc:</span>
+                <span class="summary-pill-val">{{ summary.total_disc }}</span>
+            </div>
+            <div class="summary-pill">
+                <span class="summary-pill-label">Sale:</span>
+                <span class="summary-pill-val">{{ summary.total_sale }}</span>
+            </div>
+            <div class="summary-pill return-pill">
+                <span class="summary-pill-label">Return:</span>
+                <span class="summary-pill-val">{{ summary.total_return }}</span>
+            </div>
+            <div class="summary-pill net-pill">
+                <span class="summary-pill-label">Net:</span>
+                <span class="summary-pill-val">{{ summary.net_total }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    function setQuickFilterAndSubmit(mode) {
+        const filterSelect = document.getElementById('filter_mode');
+        if (filterSelect) {
+            filterSelect.value = (filterSelect.value === mode) ? '' : mode;
+        }
+        document.getElementById('comprehensiveSaleForm').submit();
+    }
+
+    // Client-side JS Live Search (like Daybook)
+    const searchInput = document.getElementById('tableSearch');
+    const recordBadge = document.getElementById('recordCount');
+    const rows = document.querySelectorAll('#compTableBody tr.data-row');
+
+    searchInput?.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const match = !query || text.includes(query);
+            row.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+
+        if (recordBadge) {
+            recordBadge.textContent = `${visibleCount} Records`;
+        }
+    });
+
+    // Sync shop selection with radio & checkbox
+    const shopHidden = document.getElementById('shop_id');
+    const shopRadios = document.querySelectorAll('input[name="shop_id_radio"]');
+    const selectAllCheckbox = document.getElementById('selectAllShops');
+
+    shopRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            shopHidden.value = this.value;
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = (this.value === "");
+            }
+        });
+    });
+
+    selectAllCheckbox?.addEventListener('change', function () {
+        if (this.checked) {
+            shopHidden.value = "";
+            const allRadio = document.querySelector('input[name="shop_id_radio"][value=""]');
+            if (allRadio) allRadio.checked = true;
+        }
+    });
+</script>
+{% endblock extra_js %}

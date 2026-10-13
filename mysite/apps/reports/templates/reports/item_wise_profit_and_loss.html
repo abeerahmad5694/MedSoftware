@@ -1,0 +1,254 @@
+{% extends "main.html" %}
+{% load static %}
+{% load extra_filters %}
+
+{% block extra_css %}
+<link rel='stylesheet' href="{% static 'reports/css/daybook.css' %}">
+<style>
+    /* Override global main-content padding to allow full-width "fixed" layout like Ledger */
+    .main-content {
+        padding: 0 !important;
+    }
+    .text-profit {
+        color: #10b981 !important;
+        font-weight: 700;
+    }
+    .text-loss {
+        color: #ef4444 !important;
+        font-weight: 700;
+    }
+    td.ledgerRowCell[data-key="sold_qty"],
+    td.ledgerRowCell[data-key="avg_sale_rate"],
+    td.ledgerRowCell[data-key="total_net_sale"],
+    td.ledgerRowCell[data-key="avg_cost"],
+    td.ledgerRowCell[data-key="total_net_cost"],
+    td.ledgerRowCell[data-key="profit"],
+    td.ledgerRowCell[data-key="purchase_qty"],
+    td.ledgerRowCell[data-key="total_net_purchase"],
+    th:nth-child(2), th:nth-child(3), th:nth-child(4),
+    th:nth-child(5), th:nth-child(6), th:nth-child(7),
+    th:nth-child(8), th:nth-child(9) {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="daybook-wrapper">
+    <!-- Header Section -->
+    <div class="daybook-header">
+        <div class="header-left">
+            <div class="header-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="header-info">
+                <h1 class="header-title">Item-Wise Profit &amp; Loss</h1>
+                <p class="header-subtitle">Item profitability and sales vs cost analysis</p>
+            </div>
+        </div>
+        <form method="POST" class="toolbar-form" id="daybookForm">
+            {% csrf_token %}
+            <div class="toolbar-left">
+                <div class="date-range-group">
+
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-filter"></i>
+                            Profit Filter
+                        </label>
+                        <select class="form-input" id="profitFilter" name="profit_filter">
+                            <option value="all" {% if profit_filter == "all" or not profit_filter %}selected{% endif %}>
+                                All Items
+                            </option>
+                            <option value="sale_gt_cost" {% if profit_filter == "sale_gt_cost" %}selected{% endif %}>
+                                Sale Rate &gt; Cost (Profit)
+                            </option>
+                            <option value="cost_gt_sale" {% if profit_filter == "cost_gt_sale" %}selected{% endif %}>
+                                Cost &gt; Sale Rate (Loss)
+                            </option>
+                            <option value="sale_eq_cost" {% if profit_filter == "sale_eq_cost" %}selected{% endif %}>
+                                Sale Rate = Cost (Break Even)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            From
+                        </label>
+                        <input type="date" name="date_from" id="date_from" class="form-input" value="{{ date_from }}">
+                    </div>
+                    <div class="date-separator">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            To
+                        </label>
+                        <input type="date" name="date_to" id="date_to" class="form-input" value="{{ date_to }}">
+                    </div>
+                    <button type="submit" id="generate" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i>
+                        Generate
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="header-right">
+            <div class="current-date">
+                <i class="fas fa-calendar-day"></i>
+                <span id="currentDate">{{ date_from|default:"Select Date" }} to {{ date_to|default:"Select Date" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="daybook-content">
+        <!-- Table Section -->
+        <div class="table-section">
+            <div class="table-header">
+                <div class="table-header-left">
+                    <h3 class="table-title">
+                        <i class="fas fa-list-alt"></i>
+                        Item Profitability Records
+                    </h3>
+                    <span class="record-badge" id="recordCount">
+                        {% if data %}{{ data|length }}{% else %}0{% endif %} Items
+                    </span>
+                </div>
+                <div class="table-header-right">
+                    <div class="table-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search items..." id="tableSearch">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                {% if data %}
+                {% include "reports/partials/global_table.html" %}
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3 class="empty-title">No Item Data Available</h3>
+                    <p class="empty-text">Select a date range and click "Generate" to calculate profit and loss</p>
+                    <div class="empty-hint">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Tip: Ensure sales or purchase transactions exist in the selected period</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky Summary Section -->
+    <div class="daybook-summary">
+        <!-- Sales Summary -->
+        <div class="summary-card sales-card">
+            <div class="summary-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">SALES OVERVIEW</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="item-label">Sold Qty</span>
+                        <span class="item-value highlight" id="totalSoldQty">{{ summary.total_sold_qty|default:"0" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Total Net Sale</span>
+                        <span class="item-value highlight" id="totalNetSale">Rs {{ summary.total_net_sale|default:"0.00" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Summary -->
+        <div class="summary-card discount-card">
+            <div class="summary-icon">
+                <i class="fas fa-truck-loading"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">PURCHASE OVERVIEW</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="item-label">Pur. Qty</span>
+                        <span class="item-value" id="totalPurchaseQty">{{ summary.total_purchase_qty|default:"0" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Total Purchase</span>
+                        <span class="item-value" id="totalNetPurchase">Rs {{ summary.total_net_purchase|default:"0.00" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit Summary -->
+        <div class="summary-card payment-card">
+            <div class="summary-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="summary-content">
+                <h4 class="summary-title">PROFIT &amp; LOSS</h4>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="item-label">Total Cost (COGS)</span>
+                        <span class="item-value" id="totalNetCost">Rs {{ summary.total_net_cost|default:"0.00" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="item-label">Net Profit / (Loss)</span>
+                        <span class="item-value text-success font-bold" id="totalProfit">Rs {{ summary.total_profit|default:"0.00" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="summary-toggle-btn" id="summaryToggle" title="Toggle Summary">
+        <i class="fas fa-chart-bar"></i>
+    </button>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Realtime Table search
+    document.getElementById('tableSearch')?.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        let visibleCount = 0;
+        document.querySelectorAll('.table-container tbody tr').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const match = text.includes(query);
+            row.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+        const badge = document.getElementById('recordCount');
+        if (badge) {
+            badge.textContent = `${visibleCount} Items`;
+        }
+    });
+
+    // Mobile Summary Toggle
+    document.getElementById('summaryToggle')?.addEventListener('click', function () {
+        const summary = document.querySelector('.daybook-summary');
+        const icon = this.querySelector('i');
+
+        summary?.classList.toggle('show-mobile');
+        this.classList.toggle('active');
+
+        if (summary?.classList.contains('show-mobile')) {
+            icon?.classList.replace('fa-chart-bar', 'fa-times');
+        } else {
+            icon?.classList.replace('fa-times', 'fa-chart-bar');
+        }
+    });
+</script>
+{% endblock extra_js %}

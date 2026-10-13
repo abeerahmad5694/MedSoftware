@@ -1,0 +1,32 @@
+:root{--jvm-grad:linear-gradient(135deg,#667eea,#764ba2);--jvm-font:'Segoe UI',Tahoma,sans-serif;--jvm-radius:8px}
+.jvm-panel{background:#fff;border-radius:var(--jvm-radius);box-shadow:0 4px 20px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;font-family:var(--jvm-font);color:#333;font-size:14px}
+.jvm-topbar{background:var(--jvm-grad);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;flex-shrink:0}
+.jvm-topbar-title{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.jvm-topbar-exit{background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 18px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.jvm-topbar-exit:hover{background:rgba(255,255,255,.35);transform:scale(1.02)}
+.jvm-body{flex:1;overflow-y:auto;padding:24px 20px}
+.jvm-form-group{margin-bottom:18px}
+.jvm-form-label{display:block;margin-bottom:6px;color:#333;font-weight:600;font-size:13px}
+.jvm-form-label.required::after{content:" *";color:#e74c3c}
+.jvm-input-row{display:flex;gap:10px;align-items:center}
+.jvm-form-input{width:100%;padding:10px 14px;border:2px solid #e0e6ed;border-radius:var(--jvm-radius);font-size:14px;font-family:inherit;transition:all .25s;background:#f8f9fa}
+.jvm-form-input:focus{outline:none;border-color:#667eea;background:#fff;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+.jvm-input-wide{flex:2}
+.jvm-input-sm{flex:0 0 100px;text-align:center}
+.jvm-btn-search{padding:10px 18px;background:var(--jvm-grad);color:#fff;border:none;border-radius:var(--jvm-radius);cursor:pointer;font-weight:600;font-size:13px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.jvm-btn-search:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.35)}
+.jvm-form-textarea{width:100%;padding:10px 14px;border:2px solid #e0e6ed;border-radius:var(--jvm-radius);font-size:14px;font-family:inherit;transition:all .25s;background:#f8f9fa;min-height:80px;resize:vertical}
+.jvm-form-textarea:focus{outline:none;border-color:#667eea;background:#fff;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+.jvm-footer{padding:16px 20px;background:#f8f9fa;border-top:1px solid #e0e6ed;display:flex;justify-content:flex-end;gap:12px;flex-shrink:0}
+.jvm-btn{padding:10px 24px;border:none;border-radius:var(--jvm-radius);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.jvm-btn-cancel{background:#e0e6ed;color:#333}.jvm-btn-cancel:hover{background:#d1d8e0}
+.jvm-btn-submit{background:var(--jvm-grad);color:#fff;box-shadow:0 3px 10px rgba(102,126,234,.3)}.jvm-btn-submit:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(102,126,234,.4)}
+.jvm-page-wrapper{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f0f2f5}
+.jvm-page-wrapper .jvm-panel{width:100%;max-width:600px;max-height:calc(100vh - 40px)}
+.jvm-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.jvm-modal-overlay.active{display:flex}
+.jvm-modal-overlay .jvm-panel{width:90%;max-width:600px;max-height:90vh;animation:jvmSlide .25s ease}
+@keyframes jvmSlide{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.jvm-body::-webkit-scrollbar{width:6px}.jvm-body::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}.jvm-body::-webkit-scrollbar-thumb{background:#667eea;border-radius:10px}
+@media(max-width:768px){.jvm-modal-overlay{padding:0}.jvm-modal-overlay .jvm-panel{width:100%;max-width:100%;max-height:100vh;border-radius:0}.jvm-page-wrapper{padding:0}.jvm-page-wrapper .jvm-panel{max-width:100%;max-height:100vh;border-radius:0}.jvm-input-row{flex-direction:column}.jvm-input-sm{flex:unset;width:100%}.jvm-btn-search{width:100%}.jvm-footer{flex-direction:column}.jvm-btn{width:100%}.jvm-body{padding:16px 12px}.jvm-topbar{height:46px;padding:0 14px}.jvm-topbar-title{font-size:15px}}
+@media(max-width:480px){.jvm-form-input,.jvm-form-textarea{padding:8px 10px;font-size:13px}.jvm-topbar-title{font-size:14px}.jvm-btn{padding:10px 16px;font-size:13px}}

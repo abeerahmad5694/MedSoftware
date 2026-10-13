@@ -1,0 +1,85 @@
+{% extends "main.html" %}
+{% load static %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'reports/css/inventory_update.css' %}">{% endblock %}
+{% block content %}
+<section id="inventory-editor" data-url="{% url 'inventory_update' %}">
+    {% csrf_token %}
+    <header class="iu-header">
+        <div><span class="iu-eyebrow">INVENTORY / MASTER DATA</span><h1>Bulk inventory update</h1><p>Less clicking. More control. Changes stay in draft until you save.</p></div>
+        <div class="iu-actions"><button type="button" id="iu-undo" disabled>Undo</button><button type="button" id="iu-discard" disabled>Discard drafts</button><button type="button" class="iu-primary" id="iu-review" disabled>Review &amp; save <span id="iu-dirty">0</span></button></div>
+    </header>
+    <div id="iu-message" role="status" aria-live="polite"></div>
+    <form id="iu-filters" class="iu-panel iu-toolbar">
+        <label>Company / manufacturer<select id="iu-company"><option value="">All companies</option></select></label>
+        <label>Category<select id="iu-category"><option value="">All categories</option></select></label>
+        <label class="iu-grow">Find items across inventory<input id="iu-query" type="search" placeholder="Name, alias or barcode"></label>
+        <button class="iu-primary" type="submit">Load items</button>
+    </form>
+    <details class="iu-panel iu-urdu-panel" id="iu-urdu">
+        <summary>Urdu Name Assistant <span>Online suggestions · review first · save with your drafts</span></summary>
+        <div class="iu-formula-content">
+            <p>Generate phonetic Urdu names, not meaning-based translations. Model codes such as O12 and 12W stay unchanged. Always check brand spellings.</p>
+            <p class="iu-note">Uses the action scope below (selected or visible items on this page). Only uncached alphabetic words are sent directly from your browser to Google Input Tools. This unofficial service may be unavailable or blocked by your browser. Loaded names can be converted without the app/database connection; loading or saving inventory still needs it. Nothing is sent until you click Generate.</p>
+            <div class="iu-toolbar">
+                <label class="iu-check"><input type="checkbox" id="iu-urdu-overwrite">Include existing Urdu names (replace only after review)</label>
+                <button type="button" class="iu-primary" id="iu-urdu-generate">Generate suggestions</button>
+                <button type="button" id="iu-urdu-stop" disabled>Stop</button>
+                <span id="iu-urdu-network" role="status"></span>
+            </div>
+            <p id="iu-urdu-status" role="status" aria-live="polite"></p>
+            <progress id="iu-urdu-progress" value="0" max="1" hidden aria-label="Suggestion progress"></progress>
+            <div class="iu-toolbar iu-urdu-cache-tools">
+                <button type="button" id="iu-urdu-export">Export dictionary JSON</button>
+                <button type="button" id="iu-urdu-import">Import reviewed dictionary</button>
+                <input id="iu-urdu-file" type="file" accept=".json,application/json" hidden aria-label="Import Urdu word dictionary">
+                <span id="iu-urdu-cache-status" role="status">Loading browser dictionary…</span>
+            </div>
+            <p class="iu-note">Extract once → translate missing words → cache → convert locally. Import/export uses a WORD → Urdu JSON object. Imported spellings override the glossary; import only reviewed dictionaries. Browser online status is required to generate; cached runs make no Google requests.</p>
+            <div id="iu-urdu-results"></div>
+            <button type="button" id="iu-urdu-apply" disabled>Apply checked suggestions to drafts</button>
+            <p class="iu-note">Existing names are skipped by default. Applied suggestions are unsaved drafts: Undo and Review &amp; save work normally. Stop retains completed suggestions.</p>
+        </div>
+    </details>
+    <details class="iu-panel" id="iu-formulas">
+        <summary>Formula studio <span>Reusable rules • saved on this browser</span></summary>
+        <div class="iu-formula-content">
+            <p>Choose a destination and build arithmetic with field names, numbers, + − * / and parentheses. Blank numbers count as zero. Prices round to 2 decimals; quantities to whole units.</p>
+            <div class="iu-toolbar">
+                <label>Quick preset<select id="iu-preset"><option value="">Choose a preset…</option><option value="retail">Retail net → carton &amp; dozen</option><option value="wholesale">Wholesale net → carton &amp; dozen</option></select></label>
+                <button type="button" id="iu-use-preset">Use preset</button>
+                <label class="iu-check"><input type="checkbox" id="iu-auto">Auto-recalculate dependent fields when editing</label>
+            </div>
+            <div class="iu-toolbar">
+                <label>Destination<select id="iu-target"></select></label>
+                <label class="iu-grow">Formula<input id="iu-expression" placeholder="discounted_base_price * carton_qty" maxlength="300" spellcheck="false"></label>
+                <label>Insert a field<select id="iu-insert"></select></label>
+                <button type="button" id="iu-add-rule">Add / replace rule</button>
+            </div>
+            <ul id="iu-rules"></ul>
+            <div class="iu-actions"><button type="button" id="iu-store-rules">Save rules for next time</button><button type="button" id="iu-apply-rules">Apply rules to action scope</button></div>
+            <p class="iu-note">Rules never run just because you open this page. Carton/dozen prices have separate discounts: a net-price preset does not reset those discounts. Set them to zero yourself if you do not want a second discount.</p>
+        </div>
+    </details>
+    <div class="iu-panel iu-toolbar">
+        <label>Action scope<select id="iu-scope"><option value="selected">Selected items on this page</option><option value="visible">All visible items on this page</option></select></label>
+        <label>Bulk field<select id="iu-bulk-field"></select></label>
+        <label>Operation<select id="iu-operation"><option value="set">Set value</option><option value="add">Add amount</option><option value="percent">Increase / decrease %</option></select></label>
+        <label id="iu-bulk-value-wrap">Value<input id="iu-bulk-value" type="number" step="any" placeholder="e.g. 10 or -5"></label>
+        <button type="button" id="iu-bulk-apply">Preview bulk change</button>
+    </div>
+    <div class="iu-toolbar iu-table-tools">
+        <label>Columns<select id="iu-group"><option value="Prices">Retail + wholesale</option><option value="Packing">Packing / units</option><option value="Details">Item details</option><option value="Stock limits">Stock limits &amp; location</option><option value="All">All fields</option></select></label>
+        <label class="iu-grow">Quick table search<input type="search" id="iu-local-search" placeholder="Instant search within this loaded page"></label>
+        <span id="iu-count"></span>
+    </div>
+    <p class="iu-note">Enter ↓ next item · Shift+Enter ↑ previous item · Tab → next field · Ctrl/Cmd+S review · Stock on hand and audit fields are read-only. Drafts remain when changing pages.</p>
+    <div class="iu-grid" tabindex="0" aria-label="Inventory editing table"><table id="iu-table"><thead></thead><tbody></tbody></table><p id="iu-empty" hidden>No items match your filters.</p></div>
+    <footer class="iu-footer"><button type="button" id="iu-prev">← Previous</button><span id="iu-page"></span><button type="button" id="iu-next">Next →</button><span>100 items per page • up to 500 changed items per save</span></footer>
+    <dialog id="iu-review-dialog"><div class="iu-dialog-inner"><h2>Review inventory changes</h2><p id="iu-review-summary"></p><div id="iu-review-list"></div><p class="iu-note">All drafts are included, even on other pages. Stock movements and historical invoices are not changed.</p><div class="iu-actions"><button type="button" id="iu-cancel-save">Keep editing</button><button type="button" class="iu-primary" id="iu-save">Confirm &amp; save all drafts</button></div></div></dialog>
+</section>
+{{ editor_config|json_script:"iu-config" }}
+<script src="{% static 'reports/js/inventory_formulas.js' %}" defer></script>
+<script src="{% static 'reports/js/inventory_update.js' %}" defer></script>
+<script src="{% static 'reports/js/urdu_dictionary.js' %}" defer></script>
+<script src="{% static 'reports/js/urdu_names.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!-- templates/sale/search_product_modal.html -->
+{% load static %}
+<link href="{% static 'sale/css/search_product_modal.css' %}" rel="stylesheet">
+
+<div id="product-modal-overlay" class="product-modal-overlay" aria-hidden="true" style="display:none;">
+  <div class="product-modal" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+    <div class="modal-header">
+      <h3 id="product-modal-title">Product Search</h3>
+      <div class="modal-controls">
+        <input id="modal-search-input" placeholder="Search products (name, id, barcode)..." aria-label="Search products" />
+        <button id="modal-clear-btn" type="button" title="Clear search">Clear</button>
+        <button id="modal-close-btn" type="button" title="Close">✕</button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div id="modal-results" class="modal-results">
+        <!-- table gets injected here -->
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div id="modal-pagination" class="modal-pagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- load the modal script (make sure this path exists) -->
+{% comment %} <script src="{% static 'sale/js/search_product_modal.js' %}"></script> {% endcomment %}
+

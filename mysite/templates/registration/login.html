@@ -1,0 +1,361 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      background: url("{% static 'images/bg.jpg' %}") no-repeat center center / cover;
+      padding-right: 12%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Interactive Canvas for Glowing Tech Particles */
+    #particleCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 3D Rotating Globe Container */
+    .globe-stage {
+      position: absolute;
+      top: 22%;
+      left: 8%;
+      width: 340px;
+      height: 340px;
+      perspective: 1000px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .globe-sphere {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: rotateGlobe 14s linear infinite;
+    }
+
+    /* Rotating Rings surrounding the Globe */
+    .orbit-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(56, 189, 248, 0.6);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+      transform: translate(-50%, -50%);
+    }
+
+    .ring-outer {
+      width: 320px;
+      height: 320px;
+      animation: spinClockwise 12s linear infinite;
+    }
+
+    .ring-inner {
+      width: 280px;
+      height: 280px;
+      border: 1px solid rgba(14, 165, 233, 0.4);
+      border-left-color: transparent;
+      border-right-color: transparent;
+      animation: spinCounterClockwise 8s linear infinite;
+    }
+
+    /* Pulse Light Core */
+    .globe-core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(14, 165, 233, 0.05) 70%, transparent 100%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulseCore 3s ease-in-out infinite alternate;
+    }
+
+    /* Form Container */
+    .login-card {
+      position: relative;
+      z-index: 10;
+      width: 380px;
+      padding: 42px 34px;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6),
+                  0 0 30px rgba(14, 165, 233, 0.15);
+      color: #ffffff;
+      animation: floatCard 6s ease-in-out infinite;
+      transition: transform 0.2s ease-out, box-shadow 0.3s ease;
+    }
+
+    .login-card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7),
+                  0 0 40px rgba(14, 165, 233, 0.25);
+    }
+
+    .login-header {
+      margin-bottom: 28px;
+    }
+
+    .login-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .login-header p {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      font-size: 14px;
+      color: #ffffff;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .input-field::placeholder {
+      color: #64748b;
+    }
+
+    .input-field:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .error-msg {
+      color: #f87171;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border: none;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Keyframe Animations */
+    @keyframes spinClockwise {
+      0% { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(0deg); }
+      100% { transform: translate(-50%, -50%) rotateX(70deg) rotateZ(360deg); }
+    }
+
+    @keyframes spinCounterClockwise {
+      0% { transform: translate(-50%, -50%) rotateX(65deg) rotateY(20deg) rotateZ(360deg); }
+      100% { transform: translate(-50%, -50%) rotateX(65deg) rotateY(20deg) rotateZ(0deg); }
+    }
+
+    @keyframes pulseCore {
+      0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.5; }
+      100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; }
+    }
+
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* Media Queries */
+    @media (max-width: 1100px) {
+      .globe-stage {
+        display: none;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      body { padding-right: 6%; }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        justify-content: center;
+        padding: 20px;
+      }
+      .login-card {
+        width: 100%;
+        max-width: 380px;
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particleCanvas"></canvas>
+
+  <div class="globe-stage">
+    <div class="globe-core"></div>
+    <div class="orbit-ring ring-outer"></div>
+    <div class="orbit-ring ring-inner"></div>
+  </div>
+
+  <div class="login-card" id="loginCard">
+    <div class="login-header">
+      <h2>Welcome Back</h2>
+      <p>Please enter your username and password</p>
+    </div>
+
+    {% if form.errors %}
+      <div class="error-msg">
+        Invalid username or password.
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <input 
+          type="text" 
+          name="username" 
+          class="input-field" 
+          placeholder="Enter Username" 
+          required 
+          autofocus 
+        />
+      </div>
+
+      <div class="form-group">
+        <input 
+          type="password" 
+          name="password" 
+          class="input-field" 
+          placeholder="Enter Password" 
+          required 
+        />
+      </div>
+
+      <button type="submit" class="submit-btn">Log In</button>
+    </form>
+  </div>
+
+  <script>
+    // Canvas Particle Stream Animation
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width * 0.5; // Focus stream around left globe region
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 + 0.2;
+        this.speedY = (Math.random() - 0.5) * 0.4;
+        this.opacity = Math.random() * 0.5 + 0.2;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+          this.reset();
+        }
+      }
+      draw() {
+        ctx.fillStyle = `rgba(56, 189, 248, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 45; i++) {
+      particles.push(new Particle());
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // 3D Tilt Effect on Login Card for Desktop
+    const card = document.getElementById('loginCard');
+    if (window.innerWidth > 768) {
+      document.addEventListener('mousemove', (e) => {
+        const xAxis = (window.innerWidth / 2 - e.pageX) / 45;
+        const yAxis = (window.innerHeight / 2 - e.pageY) / 45;
+        card.style.transform = `translateY(-4px) rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+      });
+
+      document.addEventListener('mouseleave', () => {
+        card.style.transform = 'translateY(0px) rotateY(0deg) rotateX(0deg)';
+      });
+    }
+  </script>
+
+</body>
+</html>

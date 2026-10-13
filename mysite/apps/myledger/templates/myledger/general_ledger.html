@@ -1,0 +1,14 @@
+{% extends 'main.html' %} {% load static %} {% block extra_css %}
+<style>
+  .ledger-page-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+  }
+</style>
+{% endblock %} {% block content %}
+<div style="flex: 1; overflow-y: auto; overflow-x: hidden">
+  {% include 'myledger/modals/ledger_modal.html' with mode='page' %} {% include 'mysearch/global_search_modal.html' %}
+</div>
+<script src="{% static 'invoice_designer/js/document_printer.js' %}?v=3"></script>
+{% endblock %}

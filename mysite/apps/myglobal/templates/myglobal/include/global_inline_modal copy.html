@@ -1,0 +1,82 @@
+<!-- Global Inline Modal for Adding/Listing Items -->
+<div id="globalInlineModal" class="fixed inset-0 hidden font-sans" style="z-index: 9999;">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] transition-opacity" onclick="GlobalInlineModal.close()"></div>
+    
+    <!-- Modal Content -->
+    <div class="fixed flex flex-col bg-slate-50 rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden border border-gray-200" 
+         style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; height: 480px;">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-200 shrink-0 shadow-sm z-10">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-blue-50 text-blue-600 w-6 h-6 rounded flex items-center justify-center">
+                    <i class="fas fa-layer-group text-[11px]"></i>
+                </div>
+                <h3 id="modalTitle" class="text-[14px] font-semibold text-gray-800 m-0 tracking-tight">Manage Records</h3>
+            </div>
+            <button id="globalInlineModalClose" class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded p-1.5 focus:outline-none transition-colors flex items-center justify-center h-6 w-6">
+                <i class="fas fa-times text-[12px]"></i>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="flex-1 flex flex-col p-4 overflow-hidden gap-3.5">
+            
+            <!-- Input Area -->
+            <div class="flex items-end gap-2.5 shrink-0 bg-white p-3 rounded shadow-sm border border-gray-200">
+                <div class="flex-1 relative">
+                    <input type="hidden" id="modalItemId" value="">
+                    <label class="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                        <!-- <span id="modalItemLabel">Item</span> Name -->
+                    </label>
+                    <input type="text" id="modalNewName" placeholder="Enter new record..." autocomplete="off"
+                           class="block w-full rounded border border-gray-300 px-2.5 py-1.5 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-[13px] transition-shadow">
+                </div>
+                <button onclick="GlobalInlineModal.newItem()" id="modalNewBtn"
+                        class="hidden px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-black text-[13px] font-medium rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400 transition-all flex items-center justify-center h-[32px] min-w-[70px]">
+                    <i class="fas fa-plus mr-1.5 text-[12px]"></i> New
+                </button>
+                <button onclick="GlobalInlineModal.save()" id="modalSaveBtn"
+                        class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-medium rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 transition-all flex items-center justify-center h-[32px] min-w-[70px]">
+                    <i class="fas fa-save mr-1.5 text-[12px]"></i> Save
+                </button>
+            </div>
+            
+            <div id="modalError" class="text-[12px] text-red-600 font-medium p-2 bg-red-50 border border-red-100 rounded hidden shrink-0 shadow-sm"></div>
+            
+            <!-- List Area -->
+            <div class="flex-1 flex flex-col rounded border border-gray-200 overflow-hidden relative shadow-sm bg-white">
+                <!-- List Header -->
+                <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 shrink-0 flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Existing Records</span>
+                    <i class="fas fa-list text-gray-400 text-[10px]"></i>
+                </div>
+                
+                <!-- Scrollable List -->
+                <div class="flex-1 overflow-y-auto relative bg-white">
+                    <table class="w-full text-left text-[13px] whitespace-nowrap">
+                        <tbody id="modalTableBody" class="divide-y divide-gray-100">
+                            <!-- Rows rendered by JS -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty State -->
+                    <div id="modalEmptyState" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 hidden bg-white z-10">
+                        <div class="w-8 h-8 rounded bg-gray-50 flex items-center justify-center mb-1.5">
+                            <i class="fas fa-inbox text-[14px] text-gray-300"></i>
+                        </div>
+                        <p class="text-[12px] font-medium text-gray-500">No records found</p>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="modalLoading" class="absolute inset-0 flex flex-col items-center justify-center text-blue-600 z-20 hidden bg-white/90 backdrop-blur-sm">
+                    <i class="fas fa-circle-notch fa-spin text-xl mb-2"></i>
+                    <p class="text-[12px] font-medium text-gray-600">Loading...</p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>

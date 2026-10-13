@@ -1,0 +1,101 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'invoice_designer/css/designer.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="studio">
+        <div class="studio-topbar">
+            <div class="brand"><span class="brand-mark">⬛</span> Document Studio</div>
+
+            <div class="topbar-select">
+                <label>Document</label>
+                <select id="document-type-select" onchange="location.href='/invoice-designer/designer/' + this.value + '/{{ page_type }}/'">
+                    {% for value, label in document_type_choices %}
+                    <option value="{{ value }}" {% if value == document_type %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="topbar-select">
+                <label>Page</label>
+                <select id="page-type-select" onchange="location.href='/invoice-designer/designer/{{ document_type }}/' + this.value + '/'">
+                    {% for value, label in page_type_choices %}
+                    <option value="{{ value }}" {% if value == page_type %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="spacer"></div>
+            <button class="ghost" id="preview-button">Full Preview / Print</button>
+            <button id="save-button">Save Template</button>
+        </div>
+
+        <div class="rail-left">
+            <div class="rail-panel">
+                <div class="rail-heading">Sections</div>
+                <div id="section-tabs"></div>
+            </div>
+
+            <div class="rail-panel rail-panel-grow">
+                <div class="rail-heading">Add Fields</div>
+                <div class="field-search-wrap">
+                    <span class="field-search-icon">⌕</span>
+                    <input type="text" id="field-search" class="field-search" placeholder="Search fields…" autocomplete="off">
+                </div>
+                <div id="field-library"></div>
+            </div>
+
+            <div class="rail-panel rail-panel-grow">
+                <div class="rail-heading">In This Section <span class="rail-heading-hint">drag ⠿ to reorder</span></div>
+                <div id="added-fields"></div>
+            </div>
+        </div>
+
+        <div class="canvas-wrap" id="canvas-wrap">
+            <div class="canvas-hint">Live preview — always shown with sample data. Type in a field's box on the right to override it for real, too.</div>
+            <div class="page-frame" id="page-frame"></div>
+        </div>
+
+        <div class="rail-right">
+            <div class="rail-heading">Properties</div>
+            <div id="property-panel">
+                <div class="empty-state">Click any field — in the preview, or in the list on the left — to edit it here.</div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="print-modal-overlay" id="print-modal-overlay">
+        <div class="print-modal">
+            <div class="print-modal-toolbar no-print">
+                <select id="print-modal-page-type">
+                    <option value="thermal_58">Thermal 58mm</option>
+                    <option value="thermal_80">Thermal 80mm</option>
+                    <option value="a5">A5</option>
+                    <option value="a4">A4</option>
+                </select>
+                <div class="spacer"></div>
+                <button id="print-modal-print-button">Print (Ctrl+P)</button>
+                <button class="ghost" id="print-modal-close-button">Close (Esc)</button>
+            </div>
+            <div class="print-modal-page-wrap">
+                <div class="print-modal-page" id="print-modal-page"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.INITIAL_CONFIGURATION = {{ initial_configuration_json|safe }};
+        window.DESIGNER_DOCUMENT_TYPE = "{{ document_type }}";
+        window.DESIGNER_PAGE_TYPE = "{{ page_type }}";
+        window.RENDER_API_URL = "{% url 'invoice_designer:api_render' %}";
+        window.CONFIGURATION_API_URL = "{% url 'invoice_designer:api_configuration' %}";
+        window.DOCUMENT_DATA_API_URL = "{% url 'invoice_designer:api_document_data' %}";
+        window.FIELD_REGISTRY_API_URL = "{% url 'invoice_designer:api_field_registry' %}";
+    </script>
+    <script src="{% static 'invoice_designer/js/document_printer.js' %}"></script>
+    <script src="{% static 'invoice_designer/js/designer.js' %}"></script>
+{% endblock %}

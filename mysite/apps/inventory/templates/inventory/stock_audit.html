@@ -1,0 +1,818 @@
+{% extends 'main.html' %} {% load static %} {% block extra_css %}
+<style>
+  :root {
+    --audit-ink: #172033;
+    --audit-muted: #64748b;
+    --audit-border: #dbe3ee;
+    --audit-blue: #1d4ed8;
+    --audit-soft: #f5f8fc;
+  }
+  .audit-wrap {
+    padding: clamp(12px, 2vw, 28px);
+    max-width: 1680px;
+    margin: auto;
+    color: var(--audit-ink);
+  }
+  .audit-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fff, #f3f7ff);
+    border: 1px solid var(--audit-border);
+    border-radius: 16px;
+    box-shadow: 0 5px 20px #0f172a0b;
+  }
+  .audit-head h1 {
+    font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+    margin: 0 0 5px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+  .audit-head .muted {
+    font-size: 0.92rem;
+  }
+  .audit-tools {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .audit-tools input,
+  .audit-tools select,
+  .audit-tools button,
+  .audit-table input {
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #fff;
+    font: inherit;
+  }
+  .audit-tools input[type="search"] {
+    min-width: min(300px, 80vw);
+  }
+  .audit-tools button {
+    cursor: pointer;
+    background: var(--audit-blue);
+    color: #fff;
+    border: 0;
+    font-weight: 700;
+    box-shadow: 0 2px 5px #1d4ed82c;
+  }
+  .audit-tools button:hover {
+    filter: brightness(0.94);
+  }
+  .audit-tools button.secondary {
+    background: #475569;
+  }
+  .audit-tools button.danger {
+    background: #b91c1c;
+  }
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(150px, 1fr)) auto;
+    gap: 9px;
+    margin: 10px 0 14px;
+    align-items: center;
+  }
+  .filters select {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #fff;
+    font: inherit;
+  }
+  .audit-table-wrap {
+    overflow: auto;
+    background: #fff;
+    border: 1px solid var(--audit-border);
+    border-radius: 12px;
+    max-height: 76vh;
+    box-shadow: 0 4px 18px #0f172a08;
+  }
+  .audit-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 1200px;
+    font-size: 13px;
+  }
+  .audit-table th {
+    position: sticky;
+    top: 0;
+    background: #f1f5f9;
+    z-index: 1;
+    text-align: left;
+    color: #334155;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+  }
+  .audit-table th,
+  .audit-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #e8edf4;
+  }
+  .audit-table tbody tr:hover {
+    background: #f8fafc;
+  }
+  .audit-table td.num,
+  .audit-table th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .audit-table input.qty {
+    width: 92px;
+    text-align: right;
+    background: #fff1bf;
+    border: 1px solid #d6a700;
+    font-weight: 750;
+  }
+  .audit-table td.manual-qty-cell,
+  .audit-table th.manual-qty-col {
+    background: #fff8df;
+  }
+  .audit-table input.qty:focus {
+    background: #ffeb99;
+    outline: 2px solid #ca8a04;
+    border-color: #ca8a04;
+  }
+  .audit-table input.note {
+    width: 190px;
+  }
+  .diff-neg {
+    color: #b91c1c;
+    font-weight: 700;
+  }
+  .diff-pos {
+    color: #15803d;
+    font-weight: 700;
+  }
+  .muted {
+    color: var(--audit-muted);
+  }
+  .status {
+    margin: 8px 2px;
+    color: #334155;
+    min-height: 1.2em;
+  }
+  .item-name {
+    font-weight: 650;
+  }
+  .audit-footer {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 2px;
+    font-size: 0.85rem;
+  }
+  .pill {
+    background: #eff6ff;
+    color: #1e40af;
+    border-radius: 20px;
+    padding: 6px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .dirty {
+    background: #fff7ed !important;
+  }
+  .audit-table input:focus,
+  .audit-tools input:focus,
+  .filters select:focus {
+    outline: 2px solid #93c5fd;
+    border-color: #2563eb;
+  }
+  .loading {
+    opacity: 0.65;
+    pointer-events: none;
+  }
+  .print-options {
+    display: flex;
+    gap: 10px 18px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--audit-border);
+    border-radius: 12px;
+    background: #fff;
+  }
+  .print-options strong {
+    margin-right: 4px;
+  }
+  .print-options label {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
+    min-height: 34px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .print-options input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--audit-blue);
+  }
+  .print-hint {
+    font-size: 0.82rem;
+    color: var(--audit-muted);
+    width: 100%;
+  }
+  @media (max-width: 900px) {
+    .filters {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .audit-tools {
+      width: 100%;
+    }
+    .audit-tools input[type="search"] {
+      flex: 1;
+    }
+  }
+  @media (max-width: 640px) {
+    .audit-wrap {
+      padding: 10px;
+    }
+    .audit-head {
+      padding: 15px;
+      border-radius: 12px;
+      gap: 12px;
+    }
+    .audit-tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      gap: 8px;
+    }
+    .audit-tools input[type="search"] {
+      grid-column: 1/-1;
+      min-width: 0;
+      width: 100%;
+    }
+    .audit-tools select {
+      grid-column: 1/-1;
+      width: 100%;
+    }
+    .audit-tools button {
+      width: 100%;
+      min-height: 46px;
+      padding: 9px 7px;
+      font-size: 0.82rem;
+    }
+    .filters {
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .filters select {
+      min-width: 0;
+      font-size: 0.82rem;
+    }
+    .pill {
+      grid-column: 1/-1;
+      justify-self: start;
+    }
+    .audit-table-wrap {
+      overflow: visible;
+      max-height: none;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .audit-table {
+      display: block;
+      min-width: 0;
+    }
+    .audit-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+    .audit-table tbody {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 11px;
+    }
+    .audit-table tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      background: #fff;
+      border: 1px solid var(--audit-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 12px #0f172a0b;
+    }
+    .audit-table td {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      border-bottom: 1px solid #edf1f6;
+      min-width: 0;
+      font-size: 0.84rem;
+    }
+    .audit-table td::before {
+      content: attr(data-label);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.035em;
+      color: var(--audit-muted);
+      font-weight: 750;
+      flex: 0 0 45%;
+      text-align: left;
+    }
+    .audit-table td:first-child {
+      grid-column: 1/-1;
+      background: #f5f8fc;
+      font-size: 0.98rem;
+      font-weight: 750;
+      justify-content: flex-start;
+    }
+    .audit-table td:first-child::before {
+      display: none;
+    }
+    .audit-table td:nth-child(2),
+    .audit-table td:nth-child(3),
+    .audit-table td:nth-child(4),
+    .audit-table td:nth-child(5) {
+      grid-column: 1/-1;
+    }
+    .audit-table td.manual-qty-cell {
+      background: #fff5cd;
+    }
+    .audit-table input.qty {
+      width: min(130px, 52vw);
+      min-height: 44px;
+      font-size: 1rem;
+    }
+    .audit-table input.note {
+      width: min(180px, 52vw);
+      min-height: 42px;
+    }
+    .audit-footer {
+      display: block;
+      line-height: 1.5;
+    }
+    .audit-footer > * {
+      display: block;
+      margin: 5px 0;
+    }
+    .print-options {
+      gap: 6px 12px;
+      padding: 10px;
+    }
+    .print-options label {
+      font-size: 0.82rem;
+    }
+    .print-hint {
+      line-height: 1.4;
+    }
+  }
+  @media print {
+    .audit-wrap > * {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="audit-wrap" id="auditApp">
+  {% csrf_token %}
+  <div class="audit-head">
+    <div>
+      <h1>Stock Audit &amp; Adjustments</h1>
+      <div class="muted">
+        All inventory is loaded once; search and filters run locally for fast
+        response.
+      </div>
+    </div>
+    <div class="audit-tools">
+      <input
+        id="search"
+        type="search"
+        placeholder="Search item, alias or barcode"
+        autocomplete="off"
+        aria-label="Search inventory"
+      />
+      <select id="stockFilter" aria-label="Filter stock quantity">
+        <option value="all">All stock quantities</option>
+        <option value="negative">Negative stock</option>
+        <option value="positive">Positive stock</option>
+        <option value="zero">Zero stock</option>
+      </select>
+      <button id="zeroFiltered" class="secondary" type="button">
+        Set filtered rows to 0
+      </button>
+      <button id="zeroAll" class="danger" type="button">
+        Set all inventory to 0
+      </button>
+      <button id="printBtn" class="secondary" type="button">
+        Print audit sheet
+      </button>
+      <button id="saveBtn" type="button">Save audit</button>
+    </div>
+  </div>
+  <div class="filters" aria-label="Inventory filters">
+    <select id="companyFilter">
+      <option value="">All companies</option>
+    </select>
+    <select id="locationFilter">
+      <option value="">All locations</option>
+    </select>
+    <select id="categoryFilter">
+      <option value="">All categories</option>
+    </select>
+    <select id="subcategoryFilter">
+      <option value="">All subcategories</option>
+    </select>
+    <span id="resultCount" class="pill">Loading inventory…</span>
+  </div>
+  <section class="print-options" aria-label="Print fields">
+    <strong>Print rows:</strong>
+    <label
+      ><input type="radio" name="printScope" value="all" checked /> Whole
+      inventory</label
+    >
+    <label
+      ><input type="radio" name="printScope" value="filtered" /> Filtered /
+      shown rows</label
+    >
+    <span class="print-hint"
+      >Choose whether to print the entire inventory or only the rows matching
+      the current search and filters.</span
+    >
+    <strong>Print fields:</strong>
+    <label
+      ><input type="checkbox" class="print-field" value="name" checked />
+      Product name</label
+    >
+    <label
+      ><input type="checkbox" class="print-field" value="company" />
+      Company</label
+    >
+    <label
+      ><input type="checkbox" class="print-field" value="location" />
+      Location</label
+    >
+    <label
+      ><input type="checkbox" class="print-field" value="category" checked />
+      Category</label
+    >
+    <label
+      ><input type="checkbox" class="print-field" value="subcategory" />
+      Subcategory</label
+    >
+    <label
+      ><input
+        type="checkbox"
+        class="print-field"
+        value="computed_qty"
+        checked
+      />
+      Computed qty</label
+    >
+    <label
+      ><input type="checkbox" class="print-field" value="manual_qty" checked />
+      Manual qty (blank)</label
+    >
+    <label
+      ><input type="checkbox" class="print-field" value="remarks" checked />
+      Remarks (blank)</label
+    >
+    <span class="print-hint"
+      >Manual quantity and remarks print as blank spaces for paper audit. Choose
+      at least one field to print.</span
+    >
+  </section>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <div class="audit-table-wrap" id="tableWrap">
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>Item name</th>
+          <th>Company</th>
+          <th>Location</th>
+          <th>Category</th>
+          <th>Sub category</th>
+          <th class="num">Computed qty</th>
+          <th class="num manual-qty-col">Manual qty</th>
+          <th class="num">Qty difference</th>
+          <th class="num">Amount difference</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="audit-footer">
+    <span id="summary" class="muted"></span
+    ><span class="muted"
+      >Amount difference is informational (quantity difference × item cost);
+      adjustment voucher values and costs remain 0.</span
+    >
+  </div>
+</div>
+<script>
+  (() => {
+    "use strict";
+    const itemsUrl = "{% url 'stock_audit_items' %}",
+      saveUrl = "{% url 'save_stock_audit' %}";
+    const tbody = document.getElementById("rows"),
+      statusEl = document.getElementById("status"),
+      wrap = document.getElementById("tableWrap");
+    const filters = [
+      "companyFilter",
+      "locationFilter",
+      "categoryFilter",
+      "subcategoryFilter",
+      "stockFilter",
+    ];
+    let items = [],
+      visibleItems = [];
+    const esc = (value) =>
+      String(value ?? "").replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[c],
+      );
+    const norm = (value) => String(value ?? "").toLocaleLowerCase();
+    function addOptions(id, values) {
+      const select = document.getElementById(id);
+      const first = select.options[0];
+      select.replaceChildren(first);
+      for (const value of values) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.append(option);
+      }
+    }
+    function chosen(name) {
+      return document.getElementById(name).value;
+    }
+    function filtered() {
+      const text = norm(document.getElementById("search").value.trim());
+      const stock = chosen("stockFilter");
+      return items.filter((item) => {
+        if (chosen("companyFilter") && item.company !== chosen("companyFilter"))
+          return false;
+        if (
+          chosen("locationFilter") &&
+          item.location !== chosen("locationFilter")
+        )
+          return false;
+        if (
+          chosen("categoryFilter") &&
+          item.category !== chosen("categoryFilter")
+        )
+          return false;
+        if (
+          chosen("subcategoryFilter") &&
+          item.subcategory !== chosen("subcategoryFilter")
+        )
+          return false;
+        if (stock === "negative" && Number(item.computed_qty) >= 0)
+          return false;
+        if (stock === "positive" && Number(item.computed_qty) <= 0)
+          return false;
+        if (stock === "zero" && Number(item.computed_qty) !== 0) return false;
+        return (
+          !text ||
+          [
+            item.name,
+            item.alias,
+            item.barcode,
+            item.manual_barcode,
+            item.barcode2,
+            item.company,
+            item.location,
+            item.category,
+            item.subcategory,
+          ].some((v) => norm(v).includes(text))
+        );
+      });
+    }
+    function deltaFor(item) {
+      const qty = Number(item.manual_qty);
+      return (Number.isFinite(qty) ? qty : 0) - Number(item.computed_qty);
+    }
+    function render() {
+      visibleItems = filtered();
+      const fragment = document.createDocumentFragment();
+      for (const item of visibleItems) {
+        const delta = deltaFor(item),
+          tr = document.createElement("tr");
+        tr.dataset.id = item.id;
+        if (delta) tr.classList.add("dirty");
+        tr.innerHTML = `<td class="item-name" data-label="Product">${esc(item.name)}</td><td data-label="Company">${esc(item.company)}</td><td data-label="Location">${esc(item.location)}</td><td data-label="Category">${esc(item.category)}</td><td data-label="Subcategory">${esc(item.subcategory)}</td><td class="num" data-label="Computed qty">${esc(item.computed_qty)}</td><td class="num manual-qty-cell" data-label="Manual qty"><input class="qty" type="number" step="1" value="${esc(item.manual_qty)}" aria-label="Manual quantity for ${esc(item.name)}"></td><td class="num delta ${delta < 0 ? "diff-neg" : delta > 0 ? "diff-pos" : ""}" data-label="Qty difference">${delta}</td><td class="num amount" data-label="Amount difference">${(delta * Number(item.cost || 0)).toFixed(2)}</td><td data-label="Remarks"><input class="note" type="text" maxlength="1000" value="${esc(item.remarks)}" placeholder="Audit remarks" aria-label="Remarks for ${esc(item.name)}"></td>`;
+        const qtyInput = tr.querySelector(".qty"),
+          noteInput = tr.querySelector(".note");
+        qtyInput.addEventListener("input", () => {
+          item.manual_qty = qtyInput.value;
+          refreshRow(tr, item);
+        });
+        qtyInput.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          const next = tr.nextElementSibling;
+          if (next) {
+            const nextQty = next.querySelector(".qty");
+            if (nextQty) {
+              nextQty.focus();
+              nextQty.select();
+            }
+          }
+        });
+        noteInput.addEventListener("input", () => {
+          item.remarks = noteInput.value;
+        });
+        fragment.append(tr);
+      }
+      tbody.replaceChildren(fragment);
+      document.getElementById("resultCount").textContent =
+        `${visibleItems.length.toLocaleString()} of ${items.length.toLocaleString()} items`;
+      document.getElementById("summary").textContent =
+        `${items.length.toLocaleString()} inventory items loaded · ${items.filter((i) => deltaFor(i) !== 0).length.toLocaleString()} unsaved differences`;
+    }
+    function refreshRow(tr, item) {
+      const delta = deltaFor(item),
+        cell = tr.querySelector(".delta");
+      cell.textContent = delta;
+      cell.className = `num delta ${delta < 0 ? "diff-neg" : delta > 0 ? "diff-pos" : ""}`;
+      tr.querySelector(".amount").textContent = (
+        delta * Number(item.cost || 0)
+      ).toFixed(2);
+      tr.classList.toggle("dirty", delta !== 0);
+      document.getElementById("summary").textContent =
+        `${items.length.toLocaleString()} inventory items loaded · ${items.filter((i) => deltaFor(i) !== 0).length.toLocaleString()} unsaved differences`;
+    }
+    async function load() {
+      wrap.classList.add("loading");
+      statusEl.textContent = "Loading full inventory…";
+      try {
+        const response = await fetch(itemsUrl, {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        });
+        const data = await response.json();
+        if (!response.ok)
+          throw Error(data.error || "Could not load inventory.");
+        items = data.rows.map((row) => ({
+          ...row,
+          manual_qty: String(row.computed_qty),
+          remarks: "",
+        }));
+        addOptions("companyFilter", data.filters.companies);
+        addOptions("locationFilter", data.filters.locations);
+        addOptions("categoryFilter", data.filters.categories);
+        addOptions("subcategoryFilter", data.filters.subcategories);
+        render();
+        statusEl.textContent = "";
+      } catch (error) {
+        statusEl.textContent = error.message;
+      } finally {
+        wrap.classList.remove("loading");
+      }
+    }
+    document.getElementById("search").addEventListener("input", render);
+    filters.forEach((id) =>
+      document.getElementById(id).addEventListener("change", render),
+    );
+    const printColumns = {
+      name: ["Product name", (item) => esc(item.name)],
+      company: ["Company", (item) => esc(item.company)],
+      location: ["Location", (item) => esc(item.location)],
+      category: ["Category", (item) => esc(item.category)],
+      subcategory: ["Subcategory", (item) => esc(item.subcategory)],
+      computed_qty: ["Computed qty", (item) => esc(item.computed_qty)],
+      manual_qty: ["Manual qty", () => '<div class="blank"></div>'],
+      remarks: ["Remarks", () => '<div class="blank tall"></div>'],
+    };
+    document.getElementById("printBtn").addEventListener("click", () => {
+      const selected = [
+        ...document.querySelectorAll(".print-field:checked"),
+      ].map((input) => input.value);
+      if (!selected.length) {
+        statusEl.textContent = "Select at least one field to print.";
+        return;
+      }
+      const printScope =
+        document.querySelector('input[name="printScope"]:checked')?.value ||
+        "all";
+      const printRows = printScope === "filtered" ? visibleItems : items;
+      if (!printRows.length) {
+        statusEl.textContent =
+          "No inventory rows match the selected print scope.";
+        return;
+      }
+      const popup = window.open("", "_blank");
+      if (!popup) {
+        statusEl.textContent = "Allow pop-ups to print the audit sheet.";
+        return;
+      }
+      const headers = selected
+        .map((key) => `<th>${esc(printColumns[key][0])}</th>`)
+        .join("");
+      const body = printRows
+        .map(
+          (item) =>
+            `<tr>${selected.map((key) => `<td>${printColumns[key][1](item)}</td>`).join("")}</tr>`,
+        )
+        .join("");
+      const doc = `<!doctype html><html><head><meta charset="utf-8"><title>Inventory Stock Audit Sheet</title><style>@page{size:landscape;margin:10mm}*{box-sizing:border-box}body{font:10px Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 4px}.meta{font-size:10px;margin-bottom:10px;color:#444}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #555;padding:5px 6px;text-align:left;overflow-wrap:anywhere}th{background:#eee;font-weight:bold}tbody tr{break-inside:avoid;height:30px}.blank{height:18px;min-width:48px;border-bottom:1px solid #555}.blank.tall{height:28px} @media screen{body{padding:18px}button{padding:8px;margin-bottom:12px}}</style></head><body><button onclick="window.print()">Print</button><h1>Inventory Stock Audit</h1><div class="meta">Printed: ${esc(new Date().toLocaleString())} &nbsp; | &nbsp; Items: ${printRows.length.toLocaleString()} &nbsp; | &nbsp; Manual quantity and remarks are blank for paper entry.</div><table><thead><tr>${headers}</tr></thead><tbody>${body}</tbody></table><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+      popup.document.open();
+      popup.document.write(doc);
+      popup.document.close();
+    });
+    document.getElementById("zeroFiltered").addEventListener("click", () => {
+      if (!visibleItems.length) return;
+      for (const item of visibleItems) item.manual_qty = "0";
+      render();
+    });
+    document.getElementById("zeroAll").addEventListener("click", () => {
+      if (!items.length) return;
+      if (
+        !confirm(
+          `Set manual quantity to zero for all ${items.length.toLocaleString()} inventory items? This will create adjustment vouchers for every item with stock.`,
+        )
+      )
+        return;
+      for (const item of items) item.manual_qty = "0";
+      render();
+    });
+    document
+      .getElementById("saveBtn")
+      .addEventListener("click", async (event) => {
+        const changes = items
+          .filter((item) => deltaFor(item) !== 0)
+          .map((item) => ({
+            id: item.id,
+            manual_qty: String(item.manual_qty),
+            remarks: item.remarks,
+          }));
+        if (!changes.length) {
+          statusEl.textContent = "There are no stock differences to save.";
+          return;
+        }
+        if (
+          !confirm(`Save ${changes.length.toLocaleString()} stock adjustments?`)
+        )
+          return;
+        const button = event.currentTarget;
+        button.disabled = true;
+        wrap.classList.add("loading");
+        statusEl.textContent = `Saving ${changes.length.toLocaleString()} adjustments…`;
+        try {
+          const response = await fetch(saveUrl, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ items: changes }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw Error(data.error || "Save failed.");
+          const refs = [];
+          if (data.sale_bill_no) refs.push(`Sale #${data.sale_bill_no}`);
+          if (data.purchase_bill_no)
+            refs.push(`Purchase #${data.purchase_bill_no}`);
+          statusEl.textContent = `Saved ${data.adjusted} adjustment(s). ${refs.join(" · ")}`;
+          await load();
+        } catch (error) {
+          statusEl.textContent = error.message;
+        } finally {
+          button.disabled = false;
+          wrap.classList.remove("loading");
+        }
+      });
+    function getCookie(name) {
+      const match = document.cookie.match(
+        new RegExp(
+          "(?:^|; )" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "=([^;]*)",
+        ),
+      );
+      return match ? decodeURIComponent(match[1]) : "";
+    }
+    load();
+  })();
+</script>
+{% endblock %}

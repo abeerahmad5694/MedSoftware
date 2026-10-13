@@ -1,0 +1,329 @@
+{% extends "main.html" %}
+{% load static %}
+{% load extra_filters %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding: 0 !important;
+    }
+    .stock-report-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 60px);
+        background: var(--bg-color, #f8f9fc);
+    }
+    .report-header {
+        background: #fff;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e3e6f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        z-index: 10;
+    }
+    .header-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .header-icon {
+        background: #4e73df;
+        color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    .header-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #5a5c69;
+    }
+    .header-subtitle {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #858796;
+    }
+    
+    .toolbar-form {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-end;
+    }
+    .field-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .field-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #858796;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+    }
+    .form-input, .filter-select {
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #d1d3e2;
+        border-radius: 0.35rem;
+        font-size: 0.875rem;
+        color: #6e707e;
+        outline: none;
+    }
+    .form-input:focus, .filter-select:focus {
+        border-color: #bac8f3;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-primary {
+        background: #4e73df;
+        color: #fff;
+        border: none;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.35rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    .btn-primary:hover {
+        background: #2e59d9;
+    }
+    
+    .filters-bar {
+        background: #fff;
+        padding: 0.75rem 1.5rem;
+        border-bottom: 1px solid #e3e6f0;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .report-content {
+        flex: 1;
+        padding: 1.5rem;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .table-container {
+        background: #fff;
+        border-radius: 0.35rem;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        flex: 1;
+        overflow: auto;
+    }
+    
+    .stock-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .stock-table th {
+        background: #f8f9fc;
+        color: #4e73df;
+        font-weight: 700;
+        padding: 0.75rem;
+        text-align: left;
+        position: sticky;
+        top: 0;
+        border-bottom: 2px solid #e3e6f0;
+        z-index: 1;
+    }
+    .stock-table th.text-right, .stock-table td.text-right {
+        text-align: right;
+    }
+    
+    .stock-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e3e6f0;
+        color: #5a5c69;
+        font-size: 0.85rem;
+    }
+    
+    .stock-table tbody tr:hover {
+        background-color: #eaecf4;
+    }
+    
+    /* Quantity Colors */
+    .qty-positive {
+        color: #1cc88a;
+        font-weight: 700;
+        background: rgba(28, 200, 138, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+    }
+    .qty-negative {
+        color: #e74a3b;
+        font-weight: 700;
+        background: rgba(231, 74, 59, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+    }
+    .qty-zero {
+        color: #f6c23e;
+        font-weight: 700;
+        background: rgba(246, 194, 62, 0.1);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+    }
+    
+    .search-input {
+        min-width: 250px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stock-report-wrapper">
+    <!-- Header Section -->
+    <div class="report-header">
+        <div class="header-info">
+            <div class="header-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div>
+                <h1 class="header-title">Stock Report</h1>
+                <p class="header-subtitle">Detailed product performance & balances</p>
+            </div>
+        </div>
+        
+        <form method="POST" class="toolbar-form" id="stockForm">
+            {% csrf_token %}
+            <div class="field-group">
+                <label class="field-label"><i class="fas fa-calendar-alt"></i> From</label>
+                <input type="date" name="date_from" id="date_from" class="form-input" value="{{ date_from }}">
+            </div>
+            <div class="field-group">
+                <label class="field-label"><i class="fas fa-calendar-alt"></i> To</label>
+                <input type="date" name="date_to" id="date_to" class="form-input" value="{{ date_to }}">
+            </div>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-sync-alt"></i> Generate
+            </button>
+        </form>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-bar">
+        <div class="field-group">
+            <input type="text" class="form-input search-input" id="searchFilter" placeholder="Search product, category, company...">
+        </div>
+        
+        <div class="field-group">
+            <select class="filter-select" id="balanceFilter">
+                <option value="all">All Items</option>
+                <option value="positive">Only Positive Stock</option>
+                <option value="negative">Only Negative Stock</option>
+                <option value="zero">Only Zero Balance</option>
+            </select>
+        </div>
+        
+        <div style="margin-left: auto; font-size: 0.85rem; color: #858796;">
+            <strong>Total Items:</strong> <span id="recordCount">0</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="report-content">
+        <div class="table-container">
+            <table class="stock-table" id="stockTable">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Company</th>
+                        {% if has_cost_perm %}
+                        <th class="text-right">Total Pur Qty</th>
+                        <th class="text-right">Avg Pur Rate</th>
+                        {% endif %}
+                        <th class="text-right">Total Sold Qty</th>
+                        <th class="text-right">Avg Sale Rate</th>
+                        <th class="text-right">Current Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Rows rendered by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const rawData = JSON.parse('{{ data_json|escapejs }}');
+    const hasCostPerm = {{ has_cost_perm|yesno:"true,false" }};
+    
+    const tableBody = document.getElementById('tableBody');
+    const searchFilter = document.getElementById('searchFilter');
+    const balanceFilter = document.getElementById('balanceFilter');
+    const recordCount = document.getElementById('recordCount');
+    
+    function getBalanceClass(qty) {
+        if (qty > 0) return 'qty-positive';
+        if (qty < 0) return 'qty-negative';
+        return 'qty-zero';
+    }
+    
+    function renderTable() {
+        const query = searchFilter.value.toLowerCase();
+        const balFilter = balanceFilter.value;
+        
+        let filteredData = rawData.filter(item => {
+            // Search Text Filter
+            const textMatch = 
+                item.prod_name.toLowerCase().includes(query) ||
+                item.category.toLowerCase().includes(query) ||
+                item.company.toLowerCase().includes(query);
+            
+            if (!textMatch) return false;
+            
+            // Balance Filter
+            if (balFilter === 'positive' && item.bal_qty <= 0) return false;
+            if (balFilter === 'negative' && item.bal_qty >= 0) return false;
+            if (balFilter === 'zero' && item.bal_qty !== 0) return false;
+            
+            return true;
+        });
+        
+        // Render Rows
+        tableBody.innerHTML = filteredData.map(item => {
+            const balClass = getBalanceClass(item.bal_qty);
+            
+            let html = `<tr>
+                <td><strong>${item.prod_name}</strong></td>
+                <td>${item.category}</td>
+                <td>${item.company}</td>`;
+                
+            if (hasCostPerm) {
+                html += `
+                <td class="text-right">${item.pur_qty.toLocaleString()}</td>
+                <td class="text-right">${item.avg_pur_rate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>`;
+            }
+            
+            html += `
+                <td class="text-right">${item.sale_qty.toLocaleString()}</td>
+                <td class="text-right">${item.avg_sale_rate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="text-right"><span class="${balClass}">${item.bal_qty.toLocaleString()}</span></td>
+            </tr>`;
+            
+            return html;
+        }).join('');
+        
+        recordCount.textContent = filteredData.length;
+    }
+    
+    // Event Listeners for Filters
+    searchFilter.addEventListener('input', renderTable);
+    balanceFilter.addEventListener('change', renderTable);
+    
+    // Initial Render
+    renderTable();
+</script>
+{% endblock %}

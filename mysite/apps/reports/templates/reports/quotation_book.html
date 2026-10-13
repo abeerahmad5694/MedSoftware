@@ -1,0 +1,182 @@
+{% extends "main.html" %}
+{% load static %}
+{% load extra_filters %}
+
+{% block extra_css %}
+<link rel='stylesheet' href="{% static 'reports/css/daybook.css' %}">
+<style>
+    /* Full-width layout without bottom summary gap */
+    .main-content {
+        padding: 0 !important;
+    }
+    .daybook-wrapper.no-summary {
+        padding-bottom: 1rem !important;
+        min-height: calc(100vh - 60px);
+    }
+    .quotation-link {
+        color: #2563eb;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+    .quotation-link:hover {
+        color: #1d4ed8;
+    }
+    td.ledgerRowCell[data-key="net_total"],
+    td.ledgerRowCell[data-key="total_items"],
+    th:nth-child(7), th:nth-child(8) {
+        text-align: right;
+    }
+    td.ledgerRowCell[data-key="vno"],
+    th:nth-child(4) {
+        text-align: center;
+        cursor: pointer;
+        color: #2563eb;
+        font-weight: 700;
+    }
+    td.ledgerRowCell[data-key="vno"]:hover {
+        text-decoration: underline;
+        color: #1d4ed8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="daybook-wrapper no-summary">
+    <!-- Header Section -->
+    <div class="daybook-header">
+        <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">
+                <i class="fas fa-file-signature"></i>
+            </div>
+            <div class="header-info">
+                <h1 class="header-title">Quotation Book</h1>
+                <p class="header-subtitle">List and manage all generated quotations</p>
+            </div>
+        </div>
+        <form method="POST" class="toolbar-form" id="quotationBookForm">
+            {% csrf_token %}
+            <div class="toolbar-left">
+                <div class="date-range-group">
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            From
+                        </label>
+                        <input type="date" name="date_from" id="date_from" class="form-input" value="{{ date_from }}">
+                    </div>
+                    <div class="date-separator">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            To
+                        </label>
+                        <input type="date" name="date_to" id="date_to" class="form-input" value="{{ date_to }}">
+                    </div>
+                    <button type="submit" id="generate" class="btn btn-primary" style="background: #8b5cf6;">
+                        <i class="fas fa-sync-alt"></i>
+                        Generate
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="header-right">
+            <div class="current-date">
+                <i class="fas fa-calendar-day"></i>
+                <span id="currentDate">{{ date_from|default:"Select Date" }} to {{ date_to|default:"Select Date" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="daybook-content" style="flex: 1;">
+        <!-- Table Section -->
+        <div class="table-section">
+            <div class="table-header">
+                <div class="table-header-left">
+                    <h3 class="table-title">
+                        <i class="fas fa-list-alt"></i>
+                        Quotation Records (Click Quotation # to Open)
+                    </h3>
+                    <span class="record-badge" id="recordCount">
+                        {% if data %}{{ data|length }}{% else %}0{% endif %} Quotations
+                    </span>
+                </div>
+                <div class="table-header-right">
+                    <div class="table-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search quotations..." id="tableSearch">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                {% if data %}
+                {% include "reports/partials/global_table.html" %}
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <h3 class="empty-title">No Quotations Found</h3>
+                    <p class="empty-text">Select a date range and click "Generate" to view quotations</p>
+                    <div class="empty-hint">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Tip: Click on any Quotation number to open it directly in the Quotation terminal</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    // Realtime search
+    document.getElementById('tableSearch')?.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase();
+        let visibleCount = 0;
+        document.querySelectorAll('.table-container tbody tr').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const match = text.includes(query);
+            row.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+        const badge = document.getElementById('recordCount');
+        if (badge) {
+            badge.textContent = `${visibleCount} Quotations`;
+        }
+    });
+
+    // Click on quotation number (or row) to open quotation terminal
+    document.addEventListener('click', (e) => {
+        const cell = e.target.closest('.ledgerRowCell');
+        if (!cell) return;
+        const cellName = cell.dataset.key;
+        const cellValue = cell.textContent.trim();
+
+        if (cellName === 'vno' && cellValue) {
+            window.open(`/quotation/?bill_no=${encodeURIComponent(cellValue)}`, '_blank');
+        }
+    });
+
+    // Double click any row to open quotation
+    document.querySelectorAll('.table-container tbody tr').forEach(row => {
+        row.addEventListener('dblclick', () => {
+            const vnoCell = row.querySelector('.ledgerRowCell[data-key="vno"]');
+            if (vnoCell) {
+                const billNo = vnoCell.textContent.trim();
+                if (billNo) {
+                    window.open(`/quotation/?bill_no=${encodeURIComponent(billNo)}`, '_blank');
+                }
+            }
+        });
+    });
+</script>
+{% endblock extra_js %}

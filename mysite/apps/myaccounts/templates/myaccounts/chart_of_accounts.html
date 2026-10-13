@@ -1,0 +1,93 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+
+<link rel="stylesheet" href="{% static 'myaccounts/css/chart_of_accounts.css' %}">
+<style>
+  .coa-page-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="coa-page-wrapper" style="flex:1; overflow-y:auto; overflow-x:hidden;">
+
+<div class="coa-wrap">
+    <div class="coa-header">
+        <div>
+            <div class="coa-title">Chart of Accounts</div>
+            <div class="coa-subtitle">Click a group to expand · Use <strong style="font-weight:500">+</strong> to add sub-accounts</div>
+        </div>
+    </div>
+  <div class="coa-tabs">
+  <button class="coa-tab active" id="tab-groups" onclick="switchTab('groups')">Account Groups</button>
+  <button class="coa-tab" id="tab-details" onclick="switchTab('details')">Detail Accounts</button>
+</div>
+    <div class="coa-layout">
+        <!-- Left Pane: Group Tree -->
+        <div class="coa-pane coa-pane--left">
+            <div class="tree-root" id="tree-root">
+                <!-- Group Tree dynamically rendered here -->
+            </div>
+        </div>
+
+        <!-- Right Pane: Detail Accounts -->
+        <div class="coa-pane coa-pane--right">
+            <div class="details-header">
+                <div class="details-title">
+                    <span id="selected-group-name">Select a Level 3 Group</span>
+                    <span class="badge badge-detail" id="selected-group-code" style="display:none"></span>
+                </div>
+                
+                <div class="details-actions" style="display:none" id="details-actions">
+                    <input type="text" id="details-search" class="search-input" placeholder="Search details..." autocomplete="off">
+                    <button class="add-btn add-btn--primary" id="btn-add-detail" title="Add Detail Account">
+                        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="details-body">
+                <div class="table-container">
+                    <table class="details-table" id="details-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Account Name</th>
+                                <!-- <th>Type</th>
+                                <th>City</th>
+                                <th class="text-right">Balance</th> -->
+                            </tr>
+                        </thead>
+                        <tbody id="details-tbody">
+                            <tr>
+                                <td colspan="2" class="empty-state">Select a group from the left to view detail accounts.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="details-pagination" style="display:none">
+                    <button class="page-btn" id="btn-prev" disabled>Prev</button>
+                    <span class="page-info" id="page-info">Page 1 of 1</span>
+                    <button class="page-btn" id="btn-next" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'myaccounts/modals/global_account_form_modal.html'%}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- <script src="{% static 'myaccounts/js/account_utils.js' %}"></script> -->
+<script type = 'module' src="{% static 'myaccounts/js/services/chart_of_accounts_mobile_tabs.js' %}"></script>
+<script type = 'module' src="{% static 'myaccounts/js/chart_of_accounts.js' %}"></script>
+{% endblock %}

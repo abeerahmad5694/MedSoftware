@@ -1,0 +1,304 @@
+# ═══════════════════════════════════════════════════════════════
+#  ERP SOFTWARE — DESIGN SYSTEM SPECIFICATION  v2.0
+# ═══════════════════════════════════════════════════════════════
+#
+#  This document defines every visual decision made in the base
+#  template (index.html / main.html). Follow these rules on ALL
+#  child pages to guarantee a unified experience.
+#
+# ═══════════════════════════════════════════════════════════════
+
+
+## 1. LAYOUT ARCHITECTURE
+─────────────────────────
+
+### 1.1 Overall Structure
+  - Two-part layout: SIDEBAR + CONTENT AREA
+  - NO top header bar on desktop — everything lives in the sidebar
+  - On mobile (<769px) a slim 48px fixed top bar appears with
+    hamburger toggle + theme shortcut
+
+### 1.2 Sidebar
+  - Collapsed width (default):  3.25rem  (52px)  — icons only
+  - Expanded width (on hover):  15rem    (240px) — full labels
+  - Expansion trigger: CSS hover on desktop, hamburger on mobile
+  - Transition: 250ms cubic-bezier(0.4, 0, 0.2, 1)
+  - Contains: Logo, Search, Navigation, Theme button, User profile
+  - Position: Static on desktop, fixed overlay on mobile
+  - Z-index: 40
+
+### 1.3 Content Area
+  - Takes remaining viewport width (flex-1, min-w-0)
+  - Internal padding: 24px (desktop) / 16px (mobile)
+  - Scrolls independently (overflow-y: auto)
+
+
+## 2. MULTI-THEME SYSTEM
+─────────────────────────
+
+### 2.1 Architecture
+  - Themes applied via `data-theme` attribute on <html>
+  - All colors reference CSS Custom Properties (variables)
+  - Theme persists in localStorage key: `erp-theme`
+  - Theme selector is a modal panel (not a dropdown)
+
+### 2.2 CSS Variable Contract
+  Every theme MUST define these 14 variables:
+
+  | Variable                | Purpose                              |
+  |-------------------------|--------------------------------------|
+  | --bg-canvas             | Page body / main background          |
+  | --bg-surface            | Cards, panels, modals, table bg      |
+  | --bg-sidebar            | Sidebar background                   |
+  | --bg-sidebar-hover      | Sidebar item hover state             |
+  | --bg-sidebar-active     | Sidebar active item highlight        |
+  | --text-main             | Primary text (headings, body)        |
+  | --text-muted            | Secondary text, labels, captions     |
+  | --text-sidebar          | Sidebar link default color           |
+  | --text-sidebar-active   | Sidebar link active/hover color      |
+  | --color-primary         | Brand accent (buttons, links, focus) |
+  | --color-primary-hover   | Primary button hover state           |
+  | --color-primary-light   | Light tint bg for badges, hover rows |
+  | --color-primary-rgb     | RGB triplet for rgba() usage         |
+  | --border-color          | Dividers, card borders, inputs       |
+  | --shadow-color          | Box-shadow base color                |
+  | --accent-indicator      | Active sidebar indicator bar         |
+
+### 2.3 Theme Presets (8 total)
+
+  ┌─────────────────┬──────────────┬──────────────┬──────────────┐
+  │ Name            │ Sidebar      │ Primary      │ Canvas       │
+  ├─────────────────┼──────────────┼──────────────┼──────────────┤
+  │ Default Ocean   │ #1e293b      │ #2563eb      │ #f1f5f9      │
+  │ Eclipse Dark    │ #0f1520      │ #3b82f6      │ #0b0f19      │
+  │ Emerald Grove   │ #064e3b      │ #059669      │ #f0fdf4      │
+  │ Royal Velvet    │ #2e1065      │ #7c3aed      │ #faf5ff      │
+  │ Sunset Amber    │ #451a03      │ #d97706      │ #fffbeb      │
+  │ Rose Quartz     │ #4c0519      │ #e11d48      │ #fff1f2      │
+  │ Midnight Teal   │ #021716      │ #14b8a6      │ #042f2e      │
+  │ Slate Minimal   │ #f1f5f9      │ #334155      │ #f8fafc      │
+  └─────────────────┴──────────────┴──────────────┴──────────────┘
+
+  NOTE: "Eclipse Dark", "Midnight Teal" are full dark themes
+        (dark canvas + dark surface). All others are light canvas
+        with dark sidebar. "Slate Minimal" has a light sidebar.
+
+
+## 3. TYPOGRAPHY
+─────────────────
+
+  - Primary font: 'Inter', system-ui, -apple-system, sans-serif
+  - Load weights: 300, 400, 500, 600, 700
+  - Page titles:     text-xl md:text-2xl  font-bold
+  - Section heads:   text-sm              font-semibold
+  - Body text:       text-xs md:text-sm   font-medium
+  - Labels/captions: text-[0.625rem]      font-bold uppercase tracking-wider
+  - Monospace nums:  font-mono  (financial figures, IDs, codes)
+  - Line heights:    Use Tailwind defaults (leading-normal)
+  - Colors:          var(--text-main) for emphasis,
+                     var(--text-muted) for secondary
+
+
+## 4. SIDEBAR NAVIGATION COMPONENTS
+─────────────────────────────────────
+
+### 4.1 Nav Item (.nav-item)
+  - Height: 2.5rem (40px)
+  - Horizontal padding: 0.75rem
+  - Margin: 1px vertical, 0.375rem horizontal
+  - Border-radius: 0.5rem
+  - Icon container: 1.625rem wide, centered
+  - Label: 0.8125rem font, weight 500
+  - Active indicator: 3px bar on left edge, color --accent-indicator
+
+### 4.2 Sub-menu (.sub-parent)
+  - Toggle button identical to nav-item
+  - Chevron icon: 0.5625rem, rotates 180° on open
+  - Sub-links: padding-left 3rem, font-size 0.75rem
+  - Expand animation: max-height transition 250ms
+  - Sub-menus auto-collapse when sidebar collapses
+
+### 4.3 Section Labels (.sb-section-label)
+  - Font: 0.5625rem, bold, uppercase, tracking 0.08em
+  - Opacity: 0.5 of sidebar text color
+  - Hidden when sidebar collapsed (height:0, overflow:hidden)
+
+### 4.4 Tooltip (collapsed state, desktop only)
+  - Appears on hover via CSS ::after pseudo-element
+  - data-tip attribute on .nav-item
+  - Background: #1e293b, color: #f1f5f9
+  - Border-radius: 0.375rem, font-size 0.6875rem
+  - Position: just right of collapsed sidebar
+
+
+## 5. CONTENT AREA COMPONENTS
+──────────────────────────────
+
+### 5.1 Surface Card (.surface)
+  - Background: var(--bg-surface)
+  - Border: 1px solid var(--border-color)
+  - Border-radius: 0.75rem (rounded-xl)
+  - No box-shadow by default (clean flat look)
+  - Padding: 16px mobile, 20px desktop
+
+### 5.2 KPI / Metric Cards
+  - Grid: 2 columns mobile, 4 columns desktop
+  - Gap: 12px mobile, 20px desktop
+  - Icon badge: 32x32 rounded-lg, background rgba(primary, 0.1)
+  - Value: text-lg md:text-2xl, font-bold font-mono
+  - Trend indicator: text-emerald-500 (up) or text-red-400 (down)
+
+### 5.3 Data Tables
+  - Wrapper: .surface with overflow-hidden
+  - Header row bg: rgba(var(--color-primary-rgb), 0.03)
+  - Header text: 0.625rem, bold, uppercase, tracking-wider
+  - Cell padding: 12px mobile, 16px desktop
+  - Row hover: var(--color-primary-light) background
+  - Row dividers: 1px solid var(--border-color)
+  - Status badges: colored rounded-full pills
+    • Verified:   bg-emerald-100 text-emerald-700
+    • Pending:    bg-yellow-100  text-yellow-700
+    • Processing: bg-blue-100    text-blue-700
+    • Overdue:    bg-red-100     text-red-700
+
+### 5.4 Forms
+  - Label: 0.625rem, bold, uppercase, tracking-wider, muted color
+  - Inputs: border var(--border-color), rounded-lg, px-3 py-2
+  - Focus: ring-2 ring-[var(--color-primary)]
+  - Background: transparent (inherits surface)
+  - Submit buttons: full-width, var(--color-primary) bg, white text
+
+
+## 6. MOBILE RESPONSIVENESS
+─────────────────────────────
+
+### 6.1 Breakpoint
+  - Single breakpoint: 769px
+  - Below 769px = mobile layout
+  - Above 769px = desktop layout
+
+### 6.2 Mobile Behavior
+  - Sidebar: fixed, full-expanded width, slides in from left
+  - Overlay: semi-transparent black backdrop (#000 @ 50% opacity)
+  - Top bar: 48px fixed, contains hamburger + logo + theme btn
+  - Content: adds 48px top spacer to clear fixed header
+  - Grids collapse: 4-col → 2-col, 3-col → 1-col
+  - Tables: min-width 480px with horizontal scroll
+  - Font sizes scale down slightly
+
+### 6.3 Touch Considerations
+  - All interactive elements minimum 40px touch target
+  - Theme panel slides up from bottom (sheet-style) on mobile
+  - No hover-dependent features on mobile (all click/tap)
+
+
+## 7. SPACING & SIZING SCALE
+──────────────────────────────
+
+  Use Tailwind spacing utilities consistently:
+  - Page padding:     p-4 (mobile) / p-6 (desktop)
+  - Card padding:     p-4 (mobile) / p-5 (desktop)
+  - Section gaps:     space-y-5 or gap-5
+  - Card grid gaps:   gap-3 (mobile) / gap-5 (desktop)
+  - Inner element gap: gap-2 to gap-3
+  - Border radius:    rounded-lg (inputs/badges) or rounded-xl (cards)
+
+
+## 8. ANIMATION & TRANSITIONS
+───────────────────────────────
+
+  - Sidebar width:     250ms cubic-bezier(0.4, 0, 0.2, 1)
+  - Label fade:        180ms ease (opacity + translateX)
+  - Hover backgrounds: 150ms ease
+  - Theme modal:       200ms ease-out (fadeScale desktop, slideUp mobile)
+  - Sub-menu expand:   250ms ease-out (max-height)
+  - Body bg/color:     300ms ease
+
+
+## 9. SCROLLBAR STYLING
+────────────────────────
+
+  - Width/height: 5px
+  - Track: transparent
+  - Thumb: rgba(128,128,128,0.3), radius 3px
+  - Thumb hover: rgba(128,128,128,0.5)
+  - Applied via .custom-scroll class
+
+
+## 10. DJANGO TEMPLATE INTEGRATION
+────────────────────────────────────
+
+### 10.1 Block Structure
+  The main content area is wrapped in:
+    <!-- {% block content %} -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 custom-scroll">
+      ... page content ...
+    </main>
+    <!-- {% endblock %} -->
+
+### 10.2 Extending the Base
+  Child templates should:
+    {% extends "main.html" %}
+    {% block content %}
+      <div> ... your page ... </div>
+    {% endblock %}
+
+### 10.3 Active Navigation
+  Use Django template tags to set active class:
+    <a href="{% url 'dashboard' %}"
+       class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+
+### 10.4 Dynamic Menu
+  For dynamic menus from database:
+    {% for menu in sidebar_menus %}
+      {% if menu.children %}
+        <div class="sub-parent">...</div>
+      {% else %}
+        <a class="nav-item">...</a>
+      {% endif %}
+    {% endfor %}
+
+
+## 11. CREATING NEW PAGES — CHECKLIST
+───────────────────────────────────────
+
+  When building any new module page, ensure:
+
+  ☐ Extend main.html using {% extends %}
+  ☐ Use .surface class for all card/panel containers
+  ☐ Use var(--color-primary) for accent elements, not hardcoded colors
+  ☐ Use var(--text-main) and var(--text-muted) for text, never raw colors
+  ☐ Use var(--border-color) for all borders and dividers
+  ☐ Use var(--bg-surface) for backgrounds, never raw #ffffff
+  ☐ Use font-mono for financial figures and reference codes
+  ☐ Use the KPI card pattern for summary metrics
+  ☐ Use the table pattern with sticky headers for data lists
+  ☐ Responsive grid: specify both mobile and desktop columns
+  ☐ Test with at least 3 themes (light, dark, colored)
+  ☐ Minimum touch target 40px on all interactive elements
+
+
+## 12. ICON LIBRARY
+────────────────────
+
+  Using Font Awesome 6.4.0 Free (CDN)
+  Recommended icon style: fa-solid (filled)
+
+  Common icons used in the ERP:
+  - Dashboard:   fa-grid-2
+  - Analytics:   fa-chart-mixed
+  - Sales:       fa-cart-shopping
+  - Purchase:    fa-basket-shopping
+  - Inventory:   fa-cubes
+  - HR:          fa-users
+  - Accounting:  fa-file-invoice-dollar
+  - Reports:     fa-chart-pie
+  - Settings:    fa-gear
+  - Search:      fa-magnifying-glass
+  - Theme:       fa-palette
+  - Logout:      fa-right-from-bracket
+  - Add/Create:  fa-plus
+  - Export:      fa-download or fa-file-export
+  - Edit:        fa-pen
+  - Delete:      fa-trash-can
+  - Chevron:     fa-chevron-down / fa-chevron-right

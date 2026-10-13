@@ -1,0 +1,187 @@
+{% load static %}
+<link
+  rel="stylesheet"
+  href="{% static 'myledger/css/jv_voucher_modal.css' %}"
+/>
+{% if mode == 'modal' %}
+<div class="jvm-modal-overlay" id="jvVoucherModalOverlay" style="display: none">
+  <div class="jvm-panel" id="jvVoucherModalPanel">
+    {% else %}
+    <div
+      class="jvm-page-wrapper"
+      id="jvVoucherPageWrapper"
+      data-vtype="{{ v_type }}"
+      data-vno="{{ vno }}"
+    >
+      <div class="jvm-panel" id="jvVoucherPagePanel">
+        {% endif %}
+
+        <!-- Header -->
+        <div class="jvm-topbar">
+          <span class="jvm-topbar-title">📝 Journal Voucher</span>
+          {% if mode == 'modal' %}
+          <button class="jvm-topbar-exit" id="jvm-closeBtn">✕ Close</button>
+          {% endif %}
+        </div>
+
+        <!-- Body -->
+        <div class="jvm-body">
+          <input type="hidden" id="jvm_v_type" />
+          <input type="hidden" id="jvm_dateent" />
+
+          <!-- Date & Voucher No -->
+          <div class="jvm-form-group">
+            <label class="jvm-form-label required" for="jvm_date">Date</label>
+            <div class="jvm-input-row">
+              <input
+                type="date"
+                id="jvm_date"
+                class="jvm-form-input"
+                required
+              />
+              <input
+                type="text"
+                id="jvm_vno"
+                class="jvm-form-input jvm-input-sm"
+                readonly
+                placeholder="V#"
+              />
+            </div>
+          </div>
+
+          <!-- Debit Account -->
+          <div class="jvm-form-group">
+            <label class="jvm-form-label required">Debit Account (+)</label>
+            <div class="jvm-input-row">
+              <input
+                type="text"
+                id="jvm_acc_head_dr"
+                class="jvm-form-input jvm-input-wide"
+                placeholder="Account name..."
+              />
+              <input
+                type="text"
+                id="jvm_acc_code_dr"
+                class="jvm-form-input jvm-input-sm"
+                placeholder="Code"
+              />
+              <button
+                type="button"
+                class="jvm-btn-search"
+                id="jvm_btn-search-drAccount"
+              >
+                🔍 Search
+              </button>
+            </div>
+            <input type="hidden" id="jvm_account_from_id" />`
+          </div>
+
+          <!-- Credit Account -->
+          <div class="jvm-form-group">
+            <label class="jvm-form-label required">Credit Account (−)</label>
+            <div class="jvm-input-row">
+              <input
+                type="text"
+                id="jvm_acc_head_cr"
+                class="jvm-form-input jvm-input-wide"
+                placeholder="Account name..."
+              />
+              <input
+                type="text"
+                id="jvm_acc_code_cr"
+                class="jvm-form-input jvm-input-sm"
+                placeholder="Code"
+              />
+              <button
+                type="button"
+                class="jvm-btn-search"
+                id="jvm_btn-search-crAccount"
+              >
+                🔍 Search
+              </button>
+            </div>
+            <input type="hidden" id="jvm_account_to_id" />
+          </div>
+
+          <!-- Amount -->
+          <div class="jvm-form-group">
+            <label class="jvm-form-label required" for="jvm_amount"
+              >Amount</label
+            >
+            <input
+              type="number"
+              id="jvm_amount"
+              class="jvm-form-input"
+              placeholder="Enter amount"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+
+          <!-- Notes -->
+          <div class="jvm-form-group">
+            <label class="jvm-form-label" for="jvm_notes">Notes</label>
+            <textarea
+              id="jvm_notes"
+              class="jvm-form-textarea"
+              placeholder="Add notes or description (optional)"
+            ></textarea>
+          </div>
+
+          <!-- Chq No -->
+          <div class="jvm-form-group">
+            <label class="jvm-form-label" for="jvm_chqno">Chq No</label>
+            <input
+              type="number"
+              id="jvm_chqno"
+              class="jvm-form-input"
+              placeholder="0"
+              step="1"
+              min="0"
+            />
+          </div>
+
+          <!-- Receipt No -->
+          <div class="jvm-form-group">
+            <label class="jvm-form-label" for="jvm_receiptno">Receipt No</label>
+            <input
+              type="number"
+              id="jvm_receiptno"
+              class="jvm-form-input"
+              placeholder="0"
+              step="1"
+              min="0"
+            />
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="jvm-footer">
+          <button
+            type="button"
+            class="jvm-btn jvm-btn-cancel"
+            id="jvm_cancelBtn"
+          >
+            Cancel
+          </button>
+          <button type="button" class="jvm-btn jvm-btn-submit" id="jvm_saveBtn">
+            Save Voucher
+          </button>
+          <button class="dv-btn dv-btn-delete" id="delete_voucher_btn">
+            🗑️ Delete
+          </button>
+          <!-- <input type="hidden" id="jvm_hidden_voucher_type_value"> -->
+        </div>
+      </div>
+    </div>
+
+    {% comment %}
+    <script src="{% static 'invoice_designer/js/document_printer.js' %}?v=3"></script>
+    {% endcomment %}
+    <script
+      type="module"
+      src="{% static 'myledger/js/modals/jv_voucher_modal.js' %}"
+    ></script>
+  </div>
+</div>
