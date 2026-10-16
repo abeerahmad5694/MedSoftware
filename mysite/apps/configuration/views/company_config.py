@@ -91,6 +91,7 @@ def company_config_view(request):
             'allow_negative_stock': request.POST.get('inventory_allow_negative_stock') == 'on',
             'enable_expiry_tracking': request.POST.get('inventory_enable_expiry_tracking') == 'on',
             'enable_low_stock_alerts': request.POST.get('inventory_enable_low_stock_alerts') == 'on',
+            'pictures_allowed': request.POST.get('inventory_pictures_allowed') == 'on',
         }
         
         

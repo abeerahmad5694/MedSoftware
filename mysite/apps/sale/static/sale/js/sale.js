@@ -80,7 +80,10 @@ import { POS_MAPPING } from "/static/sale/js/config/constants.js";
 let allowSync = true;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  
+  if(!window.companyConfigurations){
+    await window.loadCompanyConfigurations();
+  }
+    
   // console.log('adkfjalkjfdlksjfklj/')
   // Load inventory into IndexedDB on load if not present
   // if (window.IndexDBConfig) {
@@ -110,11 +113,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (loader) loader.style.display = "none";
   // if(date) date.value = new Date();
 
+
   
 
   await initialize_cart_row_id();
   const cart = getCart();
 
+  
+
+  
   // Auto-fill Default GST Percent from company config if allowed and not already set
   const posConfig = window.companyConfigurations?.pos || {};
   if (posConfig.tax_charges_allowed !== false && taxPercentInput && !taxPercentInput.value) {
@@ -122,6 +129,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   Setup_Listeners();
+
+
+  if(window.SALE_CART_ROW_FIELDS){
+      console.log('foc allowed', window.companyConfigurations?.pos?.foc_allowed);
+      if ( !(window.companyConfigurations?.pos?.foc_allowed || false )) {
+          delete window.SALE_CART_ROW_FIELDS.foc_qty;
+          console.log('wido', window.SALE_CART_ROW_FIELDS)
+      }
+
+   }
+
+  // Dynamic column configuration based on company settings
+  
+
   renderCart(cart);
   refreshCartUI();
   selectLastRow();

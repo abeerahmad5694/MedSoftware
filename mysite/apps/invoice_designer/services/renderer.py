@@ -45,6 +45,7 @@ from apps.invoice_designer.schema import (
     get_invoice_language_for_page_type,
     is_urdu_page_type,
     is_bilingual_page_type,
+    lookup_item_column,
     resolve_style,
     style_dict_to_css,
 )
@@ -61,6 +62,8 @@ _ZERO_ALWAYS_VISIBLE = {"net_total", "subtotal"}
 #   "Product"  → "product_name"
 #   "Disc"     → "discount_percent"
 #   "Qty"      → "quantity"
+#   "FOC"      → "foc_qty"
+#   "Warranty" → "warranty"
 # This lets users write {Product} or {product_name} in format_string — both work,
 # and it works even if that column is disabled/hidden in the current template.
 # ---------------------------------------------------------------------------
@@ -69,6 +72,11 @@ _FORMAT_KEY_TO_FIELD: dict[str, str] = {
     for field_key, entry in ITEM_COLUMN_REGISTRY.items()
     if entry.get("format_key")
 }
+_FORMAT_KEY_TO_FIELD.setdefault("FOC", "foc_qty")
+_FORMAT_KEY_TO_FIELD.setdefault("Warranty", "warranty")
+_FORMAT_KEY_TO_FIELD.setdefault("WarrantyNotes", "warranty_notes")
+_FORMAT_KEY_TO_FIELD.setdefault("Barcode", "barcode")
+_FORMAT_KEY_TO_FIELD.setdefault("Brand", "brand")
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
@@ -253,7 +261,7 @@ class DocumentRenderer:
         resolved = []
         for column in columns:
             field_key = column.get("field")
-            registry_entry = ITEM_COLUMN_REGISTRY.get(field_key, {})
+            registry_entry = ITEM_COLUMN_REGISTRY.get(field_key) or lookup_item_column(field_key)
 
             # Auto-hide column if all values are zero (unless explicitly kept)
             if not column.get("always_show") and all_items:
@@ -267,10 +275,11 @@ class DocumentRenderer:
                 if all_zero:
                     continue
 
+            default_lbl = registry_entry.get("label", field_key.replace("_", " ").title())
             resolved.append({
                 "field": field_key,
-                "label": column.get("label") or registry_entry.get("label", field_key),
-                "default_label": registry_entry.get("label", field_key),
+                "label": column.get("label") or default_lbl,
+                "default_label": default_lbl,
                 "width": column.get("width") or registry_entry.get("default_width", "auto"),
                 "style_css": _resolve_field_style_css(column),
                 "format_string": column.get("format_string") or None,  # e.g. "{product_name} ({discount_percent}%)"

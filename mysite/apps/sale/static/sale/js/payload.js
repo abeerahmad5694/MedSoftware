@@ -78,7 +78,7 @@ export function buildBillPayload({
       let packQty = factor;
 
       const isRowDiscountAllowed = window.companyConfigurations?.pos?.row_discount_allowed !== false;
-      return {
+      const rowItem = {
         inv_id: i.id,
         prod_name: i.product_description,
         product_name_ur: i.prod_name_ur || "",
@@ -93,6 +93,15 @@ export function buildBillPayload({
         row_notes: i.row_notes || "",
         row_old_total_base_qty: i.row_old_total_base_qty || 0,
       };
+
+      // Dynamically attach all dynamic fields from the registry
+      if (window.SALE_CART_ROW_FIELDS) {
+        for (const fieldName of Object.keys(window.SALE_CART_ROW_FIELDS)) {
+          rowItem[fieldName] = i[fieldName] !== undefined ? i[fieldName] : "";
+        }
+      }
+
+      return rowItem;
     }),
   };
 

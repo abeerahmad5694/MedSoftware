@@ -361,6 +361,7 @@ _SHARED_ITEM_COLUMNS = {
     "product_name": {"label": "Product",  "format_key": "Product",  "category": "Product",  "default_visible": True,  "default_width": "28%"},
     "category":     {"label": "Category", "format_key": "Category", "category": "Product",  "default_visible": False, "default_width": "12%"},
     "quantity":     {"label": "Qty",      "format_key": "Qty",      "category": "Quantity", "default_visible": True,  "default_width": "8%"},
+    "foc_qty":      {"label": "FOC Qty",  "format_key": "FOC",      "category": "Quantity", "default_visible": False, "default_width": "8%"},
     "unit":         {"label": "Unit",     "format_key": "Unit",     "category": "Quantity", "default_visible": False, "default_width": "8%"},
     "packing_mode": {"label": "Packing",  "format_key": "Packing",  "category": "Quantity", "default_visible": False, "default_width": "10%"},
     "pack_quantity":{"label": "Pack Qty", "format_key": "PackQty",  "category": "Quantity", "default_visible": False, "default_width": "8%"},
@@ -368,7 +369,16 @@ _SHARED_ITEM_COLUMNS = {
     "discount_percent": {"label": "Disc. %", "format_key": "Disc",  "category": "Discount", "default_visible": False, "default_width": "7%"},
     "discount_amount":  {"label": "Disc.",   "format_key": "DiscAmt","category": "Discount", "default_visible": False, "default_width": "8%"},
     "item_notes":   {"label": "Notes",    "format_key": "Notes",    "category": "Extra",    "default_visible": False, "default_width": "15%"},
+    "warranty":     {"label": "Warranty / Notes", "format_key": "Warranty", "category": "Extra", "default_visible": False, "default_width": "15%"},
     "amount":       {"label": "Amount",   "format_key": "Amount",   "category": "Extra",    "default_visible": True,  "default_width": "12%"},
+    # Key Inventory model fields:
+    "barcode":      {"label": "Barcode",  "format_key": "Barcode",  "category": "Product",  "default_visible": False, "default_width": "14%"},
+    "brand":        {"label": "Brand",    "format_key": "Brand",    "category": "Product",  "default_visible": False, "default_width": "12%"},
+    "generic_group":{"label": "Generic Group", "format_key": "Generic", "category": "Product", "default_visible": False, "default_width": "14%"},
+    "salt_composition": {"label": "Composition", "format_key": "Formula", "category": "Product", "default_visible": False, "default_width": "14%"},
+    "strength":     {"label": "Strength", "format_key": "Strength", "category": "Product",  "default_visible": False, "default_width": "10%"},
+    "registration_no": {"label": "Reg. No", "format_key": "RegNo",  "category": "Product",  "default_visible": False, "default_width": "12%"},
+    "product_location": {"label": "Location / Rack", "format_key": "Location", "category": "Extra", "default_visible": False, "default_width": "10%"},
 }
 
 _SALE_ONLY_ITEM_COLUMNS = {
@@ -417,8 +427,87 @@ DEFAULT_ITEM_COLUMN_KEYS = ["product_name", "quantity", "rate", "amount"]
 DEFAULT_VOUCHER_COLUMN_KEYS = ["account_name", "description", "debit_amount", "credit_amount"]
 
 
+def _get_model_discovered_columns() -> dict:
+    """
+    Auto-discovers any new fields added to the Inventory model or Invoice / Purchase rows,
+    so adding a field in models.py automatically makes it available in the invoice designer
+    without manual schema changes.
+    """
+    discovered = {}
+    ignored_fields = {
+        "id", "inv_id", "company", "branch", "posterminal", "store",
+        "dateent", "updated_at", "dateedit", "image_updated_at",
+        "user", "updated_by", "edit_by",
+        "is_header", "is_deleted", "active",
+        "prod_picture", "prod_picture_thumb", "history",
+    }
+
+    try:
+        from apps.inventory.models import Inventory
+        for field in Inventory._meta.fields:
+            name = field.name
+            if name in ignored_fields or name.startswith("header_") or name.startswith("prod_picture"):
+                continue
+            if name in _SHARED_ITEM_COLUMNS or name in discovered:
+                continue
+            verbose = getattr(field, "verbose_name", None)
+            label = verbose.title() if verbose and verbose != name else name.replace("_", " ").title()
+            format_key = "".join(word.capitalize() for word in name.split("_"))
+            discovered[name] = {
+                "label": label,
+                "format_key": format_key,
+                "category": "Inventory",
+                "default_visible": False,
+                "default_width": "10%",
+            }
+    except Exception:
+        pass
+
+    try:
+        from apps.sale.models import Invoice
+        for field in Invoice._meta.fields:
+            name = field.name
+            if name in ignored_fields or name.startswith("header_") or name in ("bill_no", "is_header"):
+                continue
+            if name in _SHARED_ITEM_COLUMNS or name in discovered:
+                continue
+            verbose = getattr(field, "verbose_name", None)
+            label = verbose.title() if verbose and verbose != name else name.replace("_", " ").title()
+            format_key = "".join(word.capitalize() for word in name.split("_"))
+            discovered[name] = {
+                "label": label,
+                "format_key": format_key,
+                "category": "Extra",
+                "default_visible": False,
+                "default_width": "10%",
+            }
+    except Exception:
+        pass
+
+    return discovered
+
+
 def get_item_column_registry(document_type: str) -> dict:
-    return ITEM_COLUMN_REGISTRIES.get(document_type, _SHARED_ITEM_COLUMNS)
+    base = ITEM_COLUMN_REGISTRIES.get(document_type, _SHARED_ITEM_COLUMNS)
+    if document_type == "voucher":
+        return base
+    dynamic = _get_model_discovered_columns()
+    return {**dynamic, **base}
+
+
+def lookup_item_column(field_key: str, document_type: str = "pos_invoice") -> dict:
+    reg = get_item_column_registry(document_type)
+    if field_key in reg:
+        return reg[field_key]
+    if field_key in ITEM_COLUMN_REGISTRY:
+        return ITEM_COLUMN_REGISTRY[field_key]
+    return {
+        "label": field_key.replace("_", " ").title(),
+        "format_key": "".join(w.capitalize() for w in field_key.split("_")),
+        "category": "Extra",
+        "default_visible": False,
+        "default_width": "10%",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -541,6 +630,12 @@ URDU_COLUMN_LABELS = {
     "discount_percent": "رعایت %",
     "discount_amount": "رعایت",
     "item_notes": "نوٹس",
+    "warranty": "وارنٹی / نوٹس",
+    "warranty_notes": "وارنٹی / نوٹس",
+    "foc_qty": "مفت مقدار",
+    "foc": "مفت مقدار",
+    "barcode": "بارکوڈ",
+    "brand": "برانڈ",
     "amount": "رقم",
     # Totals
     "total_items": "کل آئٹم",
@@ -643,11 +738,19 @@ def default_configuration_for(document_type: str, page_type: str) -> dict:
 def get_field_registry_payload() -> dict:
     """Everything the designer's field libraries need, in one cheap,
     cacheable, DB-free payload — fetched once per session and cached
-    client-side (O(1) after the first load)."""
+    client-side (O(1) after the first load). Includes all dynamic model fields."""
+    dynamic = _get_model_discovered_columns()
+    registries = {}
+    for doc_type, cols in ITEM_COLUMN_REGISTRIES.items():
+        if doc_type == "voucher":
+            registries[doc_type] = cols
+        else:
+            registries[doc_type] = {**cols, **dynamic}
+
     return {
         "fields": FIELD_REGISTRY,
         "section_categories": SECTION_ALLOWED_CATEGORIES,
-        "item_columns_by_document_type": ITEM_COLUMN_REGISTRIES,
+        "item_columns_by_document_type": registries,
         "totals_fields": TOTALS_REGISTRY,
         "style_base": DEFAULT_STYLE_BASE,
         "style_presets": STYLE_PRESETS,

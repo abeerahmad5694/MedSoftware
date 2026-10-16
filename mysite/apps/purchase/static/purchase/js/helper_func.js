@@ -11,9 +11,7 @@ import {
   handleCartUpdate,
   selectLastRow,
   refreshCartUI,
-  
 } from "./cart.js";
-
 
 // import { features, get_features } from "./waste/pos_features.js";
 import {
@@ -46,7 +44,7 @@ import {
   btnConvertToWholesale,
   searchAccountBtn,
   multiline,
-  directPrinting, 
+  directPrinting,
   barcodeScanCheckbox,
   purchaseRadio,
   purchaseReturnRadio,
@@ -72,7 +70,7 @@ if (zoomOutBtn) {
 // _______________________ Key Events Control ____________________
 document.addEventListener("keydown", function (e) {
   if (e.ctrlKey && e.key.toLowerCase() === "d") {
-    e.preventDefault(); 
+    e.preventDefault();
     if (deliveryCharges) deliveryCharges.focus();
   }
 
@@ -92,50 +90,48 @@ document.addEventListener("keydown", function (e) {
     }
   }
 
-
   if (e.altKey && e.key.toLowerCase() === "n") {
     e.preventDefault();
     e.stopPropagation();
     if (btnNewBill) btnNewBill.click();
   }
-  
+
   if (e.ctrlKey && e.key.toLowerCase() === "q") {
     e.preventDefault();
     if (btnConvertToBill) btnConvertToBill.click();
   }
-  if (e.ctrlKey && e.key.toLowerCase() === "j") {
+  if (e.ctrlKey && e.key.toLowerCase() === "s") {
     e.preventDefault();
     if (btnSaveBill) btnSaveBill.click();
   }
   if (e.altKey && e.key.toLowerCase() === "w") {
     e.preventDefault();
-    if(btnConvertToWholesale) btnConvertToWholesale.click();
+    if (btnConvertToWholesale) btnConvertToWholesale.click();
   }
   if (e.altKey && e.key.toLowerCase() === "s") {
     e.preventDefault();
-    if(searchAccountBtn) searchAccountBtn.click();
+    if (searchAccountBtn) searchAccountBtn.click();
   }
-  if(e.altKey && e.key.toLowerCase() === "m"){
+  if (e.altKey && e.key.toLowerCase() === "m") {
     e.preventDefault();
-    if(multiline) multiline.click();
+    if (multiline) multiline.click();
   }
-  if(e.altKey && e.key.toLowerCase() === "r"){
+  if (e.altKey && e.key.toLowerCase() === "r") {
     e.preventDefault();
-    if(purchaseReturnRadio) purchaseReturnRadio.click();
+    if (purchaseReturnRadio) purchaseReturnRadio.click();
   }
-  if(e.altKey && e.key.toLowerCase() === "p"){
+  if (e.altKey && e.key.toLowerCase() === "p") {
     e.preventDefault();
-    if(purchaseRadio) purchaseRadio.click();
+    if (purchaseRadio) purchaseRadio.click();
   }
-  if(e.altKey && e.key.toLowerCase() === "d"){
+  if (e.altKey && e.key.toLowerCase() === "d") {
     e.preventDefault();
-    if(directPrinting) directPrinting.click();
+    if (directPrinting) directPrinting.click();
   }
-  if(e.altKey && e.key.toLowerCase() === "b"){
+  if (e.altKey && e.key.toLowerCase() === "b") {
     e.preventDefault();
-    if(barcodeScanCheckbox) barcodeScanCheckbox.click();
-  }
-  else if (e.altKey) {
+    if (barcodeScanCheckbox) barcodeScanCheckbox.click();
+  } else if (e.altKey) {
     let modeValue = null;
 
     switch (e.key.toLowerCase()) {
@@ -157,23 +153,21 @@ document.addEventListener("keydown", function (e) {
         break;
     }
 
-  
-
     if (modeValue) {
       e.preventDefault();
-      
+
       // Find matching radio input by value
-      const targetRadio = document.querySelector(`input[name="price_mode"][value="${modeValue}"]`);
-      
+      const targetRadio = document.querySelector(
+        `input[name="price_mode"][value="${modeValue}"]`,
+      );
+
       if (targetRadio && !targetRadio.checked) {
         targetRadio.checked = true;
         // This fires your existing priceModeRadios event listener
-        targetRadio.dispatchEvent(new Event('change', { bubbles: true }));
+        targetRadio.dispatchEvent(new Event("change", { bubbles: true }));
       }
     }
   }
-
-
 
   // Escape to search
   if (e.key === "Escape") {
@@ -189,54 +183,82 @@ document.addEventListener("keydown", function (e) {
   if (rows.length === 0) return;
 
   let currentIndex = Array.from(rows).findIndex((r) =>
-    r.classList.contains("selected-row")
+    r.classList.contains("selected-row"),
   );
 
-  
-  
-  
-  if(document.activeElement === searchInput){
-  
-      console.log('iam here ')
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-        e.preventDefault();
-    
-        if (currentIndex !== -1) {
-          rows[currentIndex].classList.remove("selected-row");
-        }
-    
-        if (e.key === "ArrowDown") {
-          currentIndex = (currentIndex + 1) % rows.length;
-        } else if (e.key === "ArrowUp") {
-          currentIndex = (currentIndex - 1 + rows.length) % rows.length;
-        }
-    
-        rows[currentIndex].classList.add("selected-row");
-        rows[currentIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    }
-  
-    if (e.key == '`') {
+  if (document.activeElement === searchInput) {
+    console.log("iam here ");
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-  
-      const selectedRow = document.querySelector(".cart-item-row.selected-row");
-  
-      if (!selectedRow) return;
-  
-      const qtyInput = selectedRow.querySelector(".qty-input");
-  
-      if (qtyInput) {
-        qtyInput.focus();
-        qtyInput.select(); // optional: selects existing quantity
+
+      if (currentIndex !== -1) {
+        rows[currentIndex].classList.remove("selected-row");
+      }
+
+      if (e.key === "ArrowDown") {
+        currentIndex = (currentIndex + 1) % rows.length;
+      } else if (e.key === "ArrowUp") {
+        currentIndex = (currentIndex - 1 + rows.length) % rows.length;
+      }
+
+      rows[currentIndex].classList.add("selected-row");
+      rows[currentIndex].scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }
+
+  if (e.key == "`") {
+    e.preventDefault();
+
+    const selectedRow = document.querySelector(".cart-item-row.selected-row");
+
+    if (!selectedRow) return;
+
+    const qtyInput = selectedRow.querySelector(".qty-input");
+
+    if (qtyInput) {
+      qtyInput.focus();
+      qtyInput.select(); // optional: selects existing quantity
+    }
+  }
+
+  // _______________________ Cart Arrow Navigation (Vertical Column) _______________________
+  const activeCartRow = document.activeElement?.closest(".cart-item-row");
+  if (activeCartRow && (e.key === "ArrowDown" || e.key === "ArrowUp") && document.activeElement.tagName !== "SELECT") {
+    const rowList = Array.from(rows);
+    const rowIndex = rowList.indexOf(activeCartRow);
+
+    if (rowIndex !== -1) {
+      const targetIndex = e.key === "ArrowDown" ? rowIndex + 1 : rowIndex - 1;
+
+      if (targetIndex >= 0 && targetIndex < rowList.length) {
+        e.preventDefault();
+
+        const targetRow = rowList[targetIndex];
+        const currentCell = document.activeElement.closest("td");
+        const cellIndex = currentCell ? currentCell.cellIndex : -1;
+
+        const targetInput = cellIndex !== -1
+          ? targetRow.cells[cellIndex]?.querySelector("input:not([type='hidden']):not([readonly]), select")
+          : null;
+
+        const finalInput = targetInput || targetRow.querySelector(".qty-input");
+
+        rowList.forEach((r) => r.classList.remove("selected-row"));
+        targetRow.classList.add("selected-row");
+        targetRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+        if (finalInput) {
+          finalInput.focus();
+          finalInput.select?.();
+        }
       }
     }
+  }
 
-
-
-
-
-
-      // _______________________ Cart TAB Navigation _______________________
+  // _______________________ Cart TAB Navigation _______________________
   if (e.key === "Tab" && !e.shiftKey) {
     const activeElement = document.activeElement;
 
@@ -263,7 +285,7 @@ document.addEventListener("keydown", function (e) {
 
         if (nextQty) {
           // Update selected row
-          rows.forEach(row => row.classList.remove("selected-row"));
+          rows.forEach((row) => row.classList.remove("selected-row"));
           nextRow.classList.add("selected-row");
 
           nextQty.focus();
@@ -283,11 +305,6 @@ document.addEventListener("keydown", function (e) {
       }
     }
   }
-
-
-
-
-
 });
 
 if (lastBillAmount) {
@@ -321,17 +338,18 @@ export function handlePaymentModeChange() {
   //   if (cardNumber) cardNumber.focus();
   // }
 
-  if (paymentMode.value != window.getDefaultAccount('default_cash_acc', 110000001)  ) {
-    if (receivedAmountLabel) receivedAmountLabel.textContent =
-      "Paid Bank Amount (+)";
-    if (receivedAmountLabel) receivedAmountLabel.style.color = '#d56262';
+  if (
+    paymentMode.value != window.getDefaultAccount("default_cash_acc", 110000001)
+  ) {
+    if (receivedAmountLabel)
+      receivedAmountLabel.textContent = "Paid Bank Amount (+)";
+    if (receivedAmountLabel) receivedAmountLabel.style.color = "#d56262";
     // if (changeAmountLabel) changeAmountLabel.textContent = 'Taken as Bank Amount';
     // if (cardDetails) cardDetails.style.display = "block";
-  }
-
-  else {
-    if (receivedAmountLabel) receivedAmountLabel.textContent = "Paid Cash Amount (+)";
-    if (changeAmountLabel) changeAmountLabel.textContent = 'Change Amount';
+  } else {
+    if (receivedAmountLabel)
+      receivedAmountLabel.textContent = "Paid Cash Amount (+)";
+    if (changeAmountLabel) changeAmountLabel.textContent = "Change Amount";
     if (cardDetails) cardDetails.style.display = "none";
     if (cardNumber) cardNumber.value = "";
   }

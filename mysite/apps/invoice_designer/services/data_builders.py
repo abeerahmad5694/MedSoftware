@@ -136,6 +136,9 @@ def build_pos_invoice_data(header_row, include_previous_balance: bool = False) -
     acc_code = _get(header_row, "header_acc_code")
     dateent = _get(header_row, "dateent")
 
+    line_rows = _fetch_line_items(header_row.__class__, bill_no, header_row)
+    inv_map = _fetch_inventory_map([getattr(r, "inv_id", None) for r in line_rows])
+
     data = {
         "bill_number": bill_no,
         "invoice_title": "INVOICE",
@@ -168,8 +171,8 @@ def build_pos_invoice_data(header_row, include_previous_balance: bool = False) -
         },
 
         "items": [
-            _build_sale_item(row)
-            for row in _fetch_line_items(header_row.__class__, bill_no, header_row)
+            _build_sale_item(row, inv_map.get(getattr(row, "inv_id", None)))
+            for row in line_rows
         ],
     }
 
@@ -213,26 +216,95 @@ def _fetch_line_items(model_class, bill_no, header_row=None):
         return []
 
 
-def _build_sale_item(row) -> dict:
-    """Matches schema.ITEM_COLUMN_REGISTRIES['pos_invoice'] exactly —
-    every key here is a real Invoice row column. Includes optional Urdu name."""
-    inv_id = getattr(row, "inv_id", None)
-    prod_name_ur = ""
-    if inv_id:
+def _fetch_inventory_map(inv_ids) -> dict:
+    if not inv_ids:
+        return {}
+    valid_ids = [i for i in inv_ids if i is not None]
+    if not valid_ids:
+        return {}
+    try:
+        from apps.inventory.models import Inventory
+        return {
+            inv.inv_id: inv
+            for inv in Inventory.objects.filter(inv_id__in=set(valid_ids))
+        }
+    except Exception:
+        return {}
+
+
+def _populate_model_fields(item: dict, inv_instance, row_instance):
+    """
+    Auto-populates any extra custom or standard fields from Inventory and the line item row
+    into the item dictionary so they are immediately available in the template and renderer.
+    """
+    if inv_instance:
+        item["barcode"] = getattr(inv_instance, "barcode", "") or getattr(inv_instance, "manualbc", "") or ""
+        item["brand"] = str(getattr(inv_instance, "brand", "") or "")
+        item["generic_group"] = getattr(inv_instance, "generic_group", "") or ""
+        item["salt_composition"] = getattr(inv_instance, "salt_composition", "") or ""
+        item["strength"] = getattr(inv_instance, "strength", "") or ""
+        item["registration_no"] = getattr(inv_instance, "registration_no", "") or ""
+        item["product_location"] = str(getattr(inv_instance, "product_location", "") or "")
+        if "warranty" not in item or not item["warranty"]:
+            inv_w = getattr(inv_instance, "warranty", None) or getattr(inv_instance, "warranty_notes", None)
+            if inv_w:
+                item["warranty"] = inv_w
+                item["warranty_notes"] = inv_w
+
         try:
-            from apps.inventory.models import Inventory
-            inv = Inventory.objects.filter(inv_id=inv_id).first()
-            if inv:
-                prod_name_ur = getattr(inv, "prod_name_ur", "") or ""
+            for f in inv_instance._meta.fields:
+                fname = f.name
+                if fname not in item and not fname.startswith("prod_picture") and fname not in ("company", "branch", "user", "updated_by", "history"):
+                    val = getattr(inv_instance, f.attname, None)
+                    if hasattr(val, "name"):
+                        val = str(val.name)
+                    elif hasattr(val, "__str__") and not isinstance(val, (int, float, str, bool, type(None))):
+                        val = str(val)
+                    if val is not None:
+                        item[fname] = val
         except Exception:
             pass
 
-    return {
+    if row_instance:
+        try:
+            for f in row_instance._meta.fields:
+                fname = f.name
+                if fname not in item and not fname.startswith("header_") and fname not in ("id", "bill_no", "is_header", "company", "branch", "posterminal", "user", "history"):
+                    val = getattr(row_instance, f.attname, None)
+                    if val is not None:
+                        item[fname] = val
+        except Exception:
+            pass
+
+
+def _build_sale_item(row, inv=None) -> dict:
+    """Matches schema.ITEM_COLUMN_REGISTRIES['pos_invoice'] and includes FOC,
+    warranty, inventory attributes, and any dynamically added model fields."""
+    inv_id = getattr(row, "inv_id", None)
+    prod_name_ur = ""
+    if inv is None and inv_id:
+        try:
+            from apps.inventory.models import Inventory
+            inv = Inventory.objects.filter(inv_id=inv_id).first()
+        except Exception:
+            pass
+
+    if inv:
+        prod_name_ur = getattr(inv, "prod_name_ur", "") or ""
+
+    foc_val = _get(row, "foc_qty", 0)
+    billed_qty = _get(row, "qty", 0) + foc_val if _get(row, "qty", 0) < 0 else _get(row, "qty", 0) - foc_val
+    row_notes = _get(row, "row_notes", "") or _get(row, "notes", "")
+    warranty_val = _get(row, "warranty", "") or _get(row, "warranty_notes", "") or (getattr(inv, "warranty", "") if inv else "") or row_notes
+
+    item = {
         "product_name": _get(row, "prod_name", ""),
         "product_name_ur": prod_name_ur or _get(row, "prod_name_ur", "") or "",
-        "category": _get(row, "category", ""),
-        "quantity": _get(row, "qty", 0),
-        "unit": _get(row, "uom", ""),
+        "category": _get(row, "category", "") or (str(getattr(inv, "category", "")) if inv else ""),
+        "quantity": billed_qty,
+        "foc_qty": foc_val,
+        "foc": foc_val,
+        "unit": _get(row, "uom", "") or (str(getattr(inv, "base_uom", "")) if inv else ""),
         "packing_mode": PACKING_MODE_LABELS.get(_get(row, "packing_mode", 1), ""),
         "pack_quantity": _get(row, "pack_qty", 0),
         "rate": _get(row, "rate", 0),
@@ -240,9 +312,15 @@ def _build_sale_item(row) -> dict:
         "discount_amount": _get(row, "row_discount_amount", 0),
         "cost_price": _get(row, "row_rate_cost", 0),
         "net_cost": _get(row, "row_net_cost", 0),
-        "item_notes": _get(row, "row_notes", ""),
+        "item_notes": row_notes,
+        "row_notes": row_notes,
+        "warranty": warranty_val,
+        "warranty_notes": warranty_val,
         "amount": _get(row, "row_net_total", 0),
     }
+
+    _populate_model_fields(item, inv, row)
+    return item
 
 
 def build_purchase_invoice_data(header_row, include_previous_balance: bool = False) -> dict:
@@ -253,6 +331,9 @@ def build_purchase_invoice_data(header_row, include_previous_balance: bool = Fal
     bill_no = _get(header_row, "bill_no")
     acc_code = _get(header_row, "header_acc_code")
     company_data, branch_data = _company_and_branch_data(_get(header_row, "company"), _get(header_row, "branch"))
+
+    line_rows = _fetch_line_items(header_row.__class__, bill_no, header_row)
+    inv_map = _fetch_inventory_map([getattr(r, "inv_id", None) for r in line_rows])
 
     data = {
         "bill_number": bill_no,
@@ -288,8 +369,8 @@ def build_purchase_invoice_data(header_row, include_previous_balance: bool = Fal
         },
 
         "items": [
-            _build_purchase_item(row)
-            for row in _fetch_line_items(header_row.__class__, bill_no, header_row)
+            _build_purchase_item(row, inv_map.get(getattr(row, "inv_id", None)))
+            for row in line_rows
         ],
     }
 
@@ -303,32 +384,43 @@ def build_purchase_invoice_data(header_row, include_previous_balance: bool = Fal
     return data
 
 
-def _build_purchase_item(row) -> dict:
+def _build_purchase_item(row, inv=None) -> dict:
     """Matches schema.ITEM_COLUMN_REGISTRIES['purchase_invoice'] exactly
-    — every key here is a real Purchase row column. Includes optional Urdu name."""
+    — includes FOC, warranty, inventory attributes, and any dynamically added model fields."""
     inv_id = getattr(row, "inv_id", None)
     prod_name_ur = ""
-    if inv_id:
+    if inv is None and inv_id:
         try:
             from apps.inventory.models import Inventory
             inv = Inventory.objects.filter(inv_id=inv_id).first()
-            if inv:
-                prod_name_ur = getattr(inv, "prod_name_ur", "") or ""
         except Exception:
             pass
 
-    return {
+    if inv:
+        prod_name_ur = getattr(inv, "prod_name_ur", "") or ""
+        
+    foc_val = _get(row, "foc_qty", 0)
+    billed_qty = _get(row, "qty", 0) + foc_val if _get(row, "qty", 0) < 0 else _get(row, "qty", 0) - foc_val
+    row_notes = _get(row, "row_notes", "") or _get(row, "notes", "")
+    warranty_val = _get(row, "warranty", "") or _get(row, "warranty_notes", "") or (getattr(inv, "warranty", "") if inv else "") or row_notes
+
+    item = {
         "product_name": _get(row, "prod_name", ""),
         "product_name_ur": prod_name_ur or _get(row, "prod_name_ur", "") or "",
-        "category": _get(row, "category", ""),
-        "quantity": _get(row, "qty", 0),
-        "unit": _get(row, "uom", ""),
+        "category": _get(row, "category", "") or (str(getattr(inv, "category", "")) if inv else ""),
+        "quantity": billed_qty,
+        "foc_qty": foc_val,
+        "foc": foc_val,
+        "unit": _get(row, "uom", "") or (str(getattr(inv, "base_uom", "")) if inv else ""),
         "packing_mode": PACKING_MODE_LABELS.get(_get(row, "packing_mode", 1), ""),
         "pack_quantity": _get(row, "pack_qty", 0),
         "rate": _get(row, "rate", 0),
         "discount_percent": _get(row, "row_discount_percent", 0),
         "discount_amount": _get(row, "row_discount_amount", 0),
-        "item_notes": _get(row, "row_notes", ""),
+        "item_notes": row_notes,
+        "row_notes": row_notes,
+        "warranty": warranty_val,
+        "warranty_notes": warranty_val,
         "amount": _get(row, "row_net_total", 0),
         "batch_number": _get(row, "row_batch_no", ""),
         "batch_quantity": _get(row, "row_batch_qty", 0),
@@ -344,6 +436,9 @@ def _build_purchase_item(row) -> dict:
         "landed_cost": _get(row, "row_total_cost_per_base_unit", 0),
     }
 
+    _populate_model_fields(item, inv, row)
+    return item
+
 
 def build_quotation_data(header_row, include_previous_balance: bool = False) -> dict:
     """
@@ -355,6 +450,9 @@ def build_quotation_data(header_row, include_previous_balance: bool = False) -> 
     company_data, branch_data = _company_and_branch_data(_get(header_row, "company"), _get(header_row, "branch"))
     posterminal = _get(header_row, "posterminal")
     dateent = _get(header_row, "dateent")
+
+    line_rows = _fetch_line_items(header_row.__class__, bill_no, header_row)
+    inv_map = _fetch_inventory_map([getattr(r, "inv_id", None) for r in line_rows])
 
     data = {
         "bill_number": bill_no,
@@ -388,8 +486,8 @@ def build_quotation_data(header_row, include_previous_balance: bool = False) -> 
         },
 
         "items": [
-            _build_sale_item(row)
-            for row in _fetch_line_items(header_row.__class__, bill_no, header_row)
+            _build_sale_item(row, inv_map.get(getattr(row, "inv_id", None)))
+            for row in line_rows
         ],
     }
 

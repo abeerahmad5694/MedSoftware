@@ -54,7 +54,10 @@ class Invoice(models.Model):
     inv_id = models.IntegerField(null=True, blank=True)
     prod_name = models.CharField(max_length=255, blank=True, default='')
     category = models.CharField(max_length=100, blank=True, default='',null = True)
-    qty = models.DecimalField(max_digits=12, decimal_places=3, default=0, null=True, blank=True)
+    
+    qty = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    foc_qty = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
+    
     rate = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
     uom = models.CharField(max_length=20, blank=True, default='',null = True)
     packing_mode = models.PositiveSmallIntegerField(default=1, null=True, blank=True,

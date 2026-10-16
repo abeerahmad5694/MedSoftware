@@ -94,7 +94,7 @@
     align-items: center;
     padding: 14px 20px;
     border-bottom: 2px solid var(--gsm-primary);
-    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    background: var(--color-primary)
     flex-shrink: 0;
     gap: 12px;
 }

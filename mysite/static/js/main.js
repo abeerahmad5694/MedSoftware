@@ -248,9 +248,12 @@ window.getDefaultAccount = function(key, fallback = 112000001) {
 };
 
 // ── Document Ready Handler ──
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Automatically load company configurations on page load
-    window.loadCompanyConfigurations();
+    if(!window.companyConfigurations){
+        window.loadCompanyConfigurations();
+    }
+    
 });
 
 

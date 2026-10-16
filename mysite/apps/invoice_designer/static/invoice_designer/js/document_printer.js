@@ -46,22 +46,35 @@ window.DocumentPrinter = (function () {
         if (!payload) return {};
 
         // Map item fields from POS payload shape -> document_data shape
-        const items = (payload.items || []).map(i => ({
-            product_name:     i.prod_name || i.product_name || "",
-            product_name_ur:  i.prod_name_ur || i.product_name_ur || "",
-            category:         i.category || "",
-            quantity:         i.qty !== undefined ? i.qty : (i.quantity !== undefined ? i.quantity : ""),
-            unit:             i.uom || i.unit || "",
-            packing_mode:     i.packing_mode || "",
-            pack_quantity:    i.pack_qty !== undefined ? i.pack_qty : (i.pack_quantity !== undefined ? i.pack_quantity : ""),
-            rate:             i.rate !== undefined ? i.rate : "",
-            discount_percent: i.row_discount_percent !== undefined ? i.row_discount_percent : (i.discount_percent !== undefined ? i.discount_percent : 0),
-            discount_amount:  i.row_discount_amount !== undefined ? i.row_discount_amount : (i.discount_amount !== undefined ? i.discount_amount : 0),
-            amount:           i.row_net_total !== undefined ? i.row_net_total : (i.amount !== undefined ? i.amount : ""),
-            item_notes:       i.row_notes || i.item_notes || "",
-            cost_price:       i.row_rate_cost || i.cost_price || 0,
-            net_cost:         i.row_net_cost || i.net_cost || 0,
-        }));
+        const items = (payload.items || []).map(i => {
+            const rowNotes = i.row_notes || i.item_notes || i.notes || "";
+            const focQty = i.foc_qty !== undefined ? i.foc_qty : (i.foc !== undefined ? i.foc : 0);
+            const warranty = i.warranty || i.warranty_notes || rowNotes;
+            return {
+                ...i,
+                product_name:     i.prod_name || i.product_name || "",
+                product_name_ur:  i.prod_name_ur || i.product_name_ur || "",
+                category:         i.category || "",
+                quantity:         i.qty !== undefined ? i.qty : (i.quantity !== undefined ? i.quantity : ""),
+                foc_qty:          focQty,
+                foc:              focQty,
+                unit:             i.uom || i.unit || "",
+                packing_mode:     i.packing_mode || "",
+                pack_quantity:    i.pack_qty !== undefined ? i.pack_qty : (i.pack_quantity !== undefined ? i.pack_quantity : ""),
+                rate:             i.rate !== undefined ? i.rate : "",
+                discount_percent: i.row_discount_percent !== undefined ? i.row_discount_percent : (i.discount_percent !== undefined ? i.discount_percent : 0),
+                discount_amount:  i.row_discount_amount !== undefined ? i.row_discount_amount : (i.discount_amount !== undefined ? i.discount_amount : 0),
+                amount:           i.row_net_total !== undefined ? i.row_net_total : (i.amount !== undefined ? i.amount : ""),
+                item_notes:       rowNotes,
+                row_notes:        rowNotes,
+                warranty:         warranty,
+                warranty_notes:   warranty,
+                barcode:          i.barcode || i.manualbc || "",
+                brand:            i.brand || i.brand_name || "",
+                cost_price:       i.row_rate_cost || i.cost_price || 0,
+                net_cost:         i.row_net_cost || i.net_cost || 0,
+            };
+        });
 
         offline_bill_no += 1;
         return {

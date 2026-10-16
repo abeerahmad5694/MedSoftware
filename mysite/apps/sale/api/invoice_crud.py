@@ -249,6 +249,9 @@ def save_bill(request):
             }
             data.pop('local_id',None)
             data.pop('items',None)
+            
+            
+            # print('this is data',data)
     
             sale_date = fields_will_update.get('date')
             bill_no = fields_will_update.get('bill_no')
@@ -263,6 +266,8 @@ def save_bill(request):
                 first_item = (index == 0)
                 return_amount += abs(item.get("row_net_total")) if int(item.get("row_net_total")) < 0 else 0
                 positive_amount += item.get("row_net_total") if int(item.get("row_net_total")) > 0 else 0
+                item['qty'] = Decimal(item.get('qty', 0)) + abs(Decimal(item.get('foc_qty', 0)))
+                item['foc_qty'] = abs(Decimal(item.get('foc_qty',0)))
                 if first_item:
                     invoices.append(json_to_invoice(item=item, header_fields=data, fields_will_update=fields_will_update, system_fields=system_fields, is_header=True, update=update))
                 else:
@@ -512,12 +517,17 @@ def get_bill(request,bill_no):
                 "is_header":item.is_header,
                 "header_acc_code":item.header_acc_code,
             }
+                
+            item_qty = Decimal(str(item.qty or 0))
+            item_foc = Decimal(str(item.foc_qty or 0))
+            billed_qty = (item_qty + item_foc) if False else (item_qty - item_foc)
             item_list.append({
                 "inv_id":item.inv_id,
                 "pack_qty" :item.pack_qty,
                 "packing_mode" :item.packing_mode,
                 "prod_name" :item.prod_name,
-                "qty" :item.qty,
+                "qty" :billed_qty,
+                "foc_qty" :item.foc_qty,
                 "rate" :item.rate,
                 "row_discount_amount" :item.row_discount_amount,
                 "row_discount_percent" :item.row_discount_percent,
@@ -525,7 +535,7 @@ def get_bill(request,bill_no):
                 "row_notes" :item.row_notes,
                 "uom" :item.uom,
             })
-        data_list['items']=item_list
+        data_list['items'] = item_list
         # print('data_list======================',item_list)
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)})

@@ -25,7 +25,9 @@ document.getElementById('copySameItemBtn').addEventListener('click', function(e)
     console.log('copySameItemBtn clicked')
 });
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function() {
+
+
     IndexDBConfig.sync_indexdb('inventory', 'Inventory');
 
     const form = document.getElementById('inventoryForm');
@@ -35,6 +37,13 @@ document.addEventListener('DOMContentLoaded', function () {
             InvHelpers.saveUpdateInventory();
         });
     }
+
+    if(!window.companyConfigurations){
+        // console.log('This si running')
+        await window.loadCompanyConfigurations();
+    }
+
+
 
     // Inline Quick Find widget — reuses GlobalSearchModal search engine
     window._iswInventory = new InlineSearchWidget({
@@ -48,10 +57,26 @@ document.addEventListener('DOMContentLoaded', function () {
         searchFields: ['prod_name', 'alias_name', 'barcode', 'manualbc', 'inv_id'],
         displayColumns: [
             { key: 'inv_id',    header: 'ID',   width: '50px' },
-            { key: 'prod_picture_thumb', header: 'Img', width: '40px', render: (val, item) => {
-                if (val) return `<img src="/media/${val}" class="w-8 h-8 object-cover rounded shadow-sm border border-gray-200" style="min-width:32px;">`;
-                return `<img src="/static/no-image.webp" class="w-8 h-8 object-cover rounded shadow-sm border border-gray-200 opacity-50" style="min-width:32px;">`;
-            }},
+
+            // { key: 'prod_picture_thumb', header: 'Img', width: '40px', render: (val, item) => {
+            //     if (val && window.companyConfigurations?.inventory?.pictures_allowed === true) return `<img src="/media/${val}" class="w-8 h-8 object-cover rounded shadow-sm border border-gray-200" style="min-width:32px;">`;
+            //     else if (val == null && window.companyConfigurations?.inventory?.pictures_allowed === true) return `<img src="/static/no-image.webp" class="w-8 h-8 object-cover rounded shadow-sm border border-gray-200 opacity-50" style="min-width:32px;">`;
+            //     else return '';
+            // }},
+            ...(window.companyConfigurations?.inventory?.pictures_allowed === true
+            ? [{
+                key: 'prod_picture_thumb',
+                header: 'Img',
+                width: '40px',
+                render: (val, item) => {
+                    if (val) {
+                        return `<img src="/media/${val}" class="w-8 h-8 object-cover rounded shadow-sm border border-gray-200" style="min-width:32px;">`;
+                    }
+
+                    return `<img src="/static/no-image.webp" class="w-8 h-8 object-cover rounded shadow-sm border border-gray-200 opacity-50" style="min-width:32px;">`;
+                }
+            }]
+            : []),
             { key: 'prod_name', header: 'Name' },
             { key: 'base_price',header: 'Price', width: '70px' },
         ],
@@ -62,4 +87,14 @@ document.addEventListener('DOMContentLoaded', function () {
             InvHelpers.fetchAndFillInventoryData(item.inv_id);
         }
     });
+
+    
+    // console.log('This si running')
+    if(window.companyConfigurations?.inventory?.pictures_allowed === true){
+        // console.log('This si running')
+        document.getElementById('image-section').classList.remove('hidden');
+    } else {
+        const identityCard = document.querySelector('.identity-card');
+        identityCard.style.gridTemplateColumns = '1fr';
+    }
 });

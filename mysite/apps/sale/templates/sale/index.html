@@ -378,7 +378,7 @@
     tabindex="8"
     data-shortcut="ctrl+c"
   >
-    Select Client(Alt+C)
+    Select Client(Alt+S)
   </button>
   
   <button
@@ -446,17 +446,31 @@
 <!-- Include Global Search Modal -->
 {% include 'mysearch/global_search_modal.html' %}
 
-{% comment %} <script type="module" src="{% static 'sale/js/main_pos.js' %}"></script> {% endcomment %}
-{% comment %} <script type="module" src="{% static 'sale/js/helper_func.js' %}"></script> {% endcomment %}
-
 <script src = "{% static "sale/js/vendor/qz/qz_tray.js" %}" ></script>
-{% comment %}<script type="module" src = "{% static "sale/js/waste/recept_modal.js" %}"></script>{% endcomment %}
+
 
 {% endblock content %} 
 
 
 
 {% block extra_js %}
+<script>
+
+
+  
+ window.SALE_CART_ROW_FIELDS = {
+
+    // row_sale_base_price: { default: "", type: "number", title: "SaleRate", input_class: "input-flat", width: "80px" },
+    //if(window.companyConfigurations?.purchase?.foc_allowed || false) foc_qty: { default: "0", type: "number", title: "FOC", input_class: "input-flat", width: "50px" },
+    foc_qty :{ default: "0", type: "number", title: "FOC", input_class: "input-flat", width: "50px" },
+    row_notes: { default: "", type: "text", title: "Warranty/Notes", input_class: "cart-input", width: "120px" },
+    //row_expiry_dt: { default: "", type: "date", title: "ExpiryDate", input_class: "input-flat", width: "50px" },
+    // row_notes: { default: "", type: "text", title: "Notes", input_class: "cart-input notes-input", width: "200px  " }
+  };  
+
+  
+</script>
+
 <script src="{% static 'invoice_designer/js/document_printer.js' %}?v=3"></script> 
 <script type="module" src="{% static 'sale/js/sale.js' %}" ></script>
 <script type='module' src="{% static 'sale/js/config/global_search_modal.js' %}"></script>

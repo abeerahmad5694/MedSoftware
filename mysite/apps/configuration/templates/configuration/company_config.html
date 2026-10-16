@@ -731,6 +731,16 @@
                             <span class="slider"></span>
                         </label>
                     </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Pictures Allowed</span>
+                            <small>Allow adding pictures to items</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="inventory_pictures_allowed" {% if config.inventory.pictures_allowed %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
 
                     <div class="toggle-row hidden">
                         <div class="toggle-info">

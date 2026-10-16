@@ -43,6 +43,7 @@ DEFAULT_CONFIG_DATA = {
         'allow_negative_stock': False,
         'enable_expiry_tracking': True,
         'enable_low_stock_alerts': True,
+        'pictures_allowed': False,
     },
     'dashboard': {
         'default_period': 'today',

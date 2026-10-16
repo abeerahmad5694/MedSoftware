@@ -775,22 +775,23 @@
     </div>
 
     <!-- Image aligned to right like screenshot -->
-    <div class="identity-image">
-        <div class="image-drop-zone" id="imageDropZone" onclick="document.getElementById('product-image-input').click()">
-            <div class="text-gray-400 mb-1"><i class="fas fa-image"></i></div>
-            <div class="text- font-semibold text-gray-700">Click to upload</div>
-            <div class="text- text-gray-500">PNG, JPG up to 2MB</div>
+    
+        <div class="identity-image hidden" id='image-section'>
+            <div class="image-drop-zone" id="imageDropZone" onclick="document.getElementById('product-image-input').click()">
+                <div class="text-gray-400 mb-1"><i class="fas fa-image"></i></div>
+                <div class="text- font-semibold text-gray-700">Click to upload</div>
+                <div class="text- text-gray-500">PNG, JPG up to 2MB</div>
 
-            <div class="image-preview-wrapper {% if form.instance.prod_picture %}has-image{% endif %}" id="imagePreviewWrapper">
-                <img id="image-preview" src="{% if form.instance.prod_picture %}{{ form.instance.prod_picture.url }}{% endif %}">
-                <div class="image-actions" onclick="event.stopPropagation()">
-                    <button type="button" class="image-btn btn-remove" id="btnRemoveImage"><i class="fas fa-trash"></i></button>
+                <div class="image-preview-wrapper {% if form.instance.prod_picture %}has-image{% endif %}" id="imagePreviewWrapper">
+                    <img id="image-preview" src="{% if form.instance.prod_picture %}{{ form.instance.prod_picture.url }}{% endif %}">
+                    <div class="image-actions" onclick="event.stopPropagation()">
+                        <button type="button" class="image-btn btn-remove" id="btnRemoveImage"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
             </div>
+            <input type="hidden" name="delete_image" id="deleteImageFlag" value="false">
+            <input type="file" name="prod_picture" id="product-image-input" class="hidden" accept="image/*">
         </div>
-        <input type="hidden" name="delete_image" id="deleteImageFlag" value="false">
-        <input type="file" name="prod_picture" id="product-image-input" class="hidden" accept="image/*">
-    </div>
 </div>
 
 
@@ -923,7 +924,7 @@
 
                 <!-- Pricing -->
                 <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
-                    <div class="section-title text-orange-700">Pricing</div>
+                    <div class="section-title text-orange-700">Price Settings</div>
                     <div class="space-y-1">
                         <div class="form-group-h hidden">
                             <label class="form-label-h">Market Price</label>

@@ -155,6 +155,8 @@ def json_to_invoice(
 
         "row_notes":
             item.get("row_notes", ""),
+        "foc_qty":
+            item.get("foc_qty", ""),
 
         "row_net_cost":
             (

@@ -27,7 +27,7 @@ GROUPS = {
     'Stock limits': ['min_stock', 'max_stock', 'reorder', 'product_location', 'expiry_date'],
 }
 FIELDS = [name for fields in GROUPS.values() for name in fields]
-RELATIONS = ['manufacturer', 'category', 'brand', 'subcategory', 'base_uom', 'carton_uom', 'dzn_uom']
+RELATIONS = ['manufacturer', 'category', 'brand', 'subcategory', 'base_uom', 'carton_uom', 'dzn_uom','product_location']
 LABELS = {
     'base_price': 'Retail / base price', 'base_disc_per': 'Retail discount %',
     'ws_price': 'Wholesale price', 'ws_disc_per': 'Wholesale discount %',

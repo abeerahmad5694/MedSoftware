@@ -121,6 +121,18 @@ function create_unique_row_no() {
 
 
 
+function getDefaultDynamicFieldValue(fieldConfig) {
+  if (fieldConfig?.type === "date") {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+
+    // YYYY-MM-DD for <input type="date">
+    return date.toISOString().split("T")[0];
+  }
+
+  return fieldConfig?.default ?? "";
+}
+
 function addToLocalCart(products) {
   const cart = getCart();
   // let uoms = {};
@@ -188,6 +200,14 @@ function addToLocalCart(products) {
       initialDiscPer = 0;
     }
 
+    // Dynamically build fields based on custom SALE_CART_ROW_FIELDS registry
+    const dynamicFields = {};
+    if (window.SALE_CART_ROW_FIELDS) {
+      for (const [fieldName, fieldConfig] of Object.entries(window.SALE_CART_ROW_FIELDS)) {
+        dynamicFields[fieldName] = product[fieldName] !== undefined ? product[fieldName] : getDefaultDynamicFieldValue(fieldConfig);
+      }
+    }
+
     const item = {
       cart_row_id: create_unique_row_no(),
       id: productId,
@@ -205,7 +225,8 @@ function addToLocalCart(products) {
       discount: (qtyToAdd * initialRate * initialDiscPer) / 100,
       amount: (qtyToAdd * initialRate) - ((qtyToAdd * initialRate * initialDiscPer) / 100),
       prod_categ: product.category || product.prod_categ || "",
-      row_notes: ""
+      row_notes: "",
+      ...dynamicFields
     };
 
     applyCalculation(item);
@@ -227,6 +248,9 @@ function updateLocalCartItem(cartRowId, changes) {
   const cart = getCart();
   const item = cachedCartMap.get(String(cartRowId));
   if (!item) return cart;
+
+  // Sync general changes and dynamic row inputs
+  Object.assign(item, changes);
 
   applyCalculation(item, changes);
   saveCart(cart);
@@ -347,6 +371,14 @@ async function loadBillIntoCart(bill) {
       : 0;
     const discountPct = item.row_discount_percent || 0;
 
+    // Load custom dynamic row fields from the bill item
+    const dynamicFields = {};
+    if (window.SALE_CART_ROW_FIELDS) {
+      for (const [fieldName, fieldConfig] of Object.entries(window.SALE_CART_ROW_FIELDS)) {
+        dynamicFields[fieldName] = item[fieldName] !== undefined ? item[fieldName] : getDefaultDynamicFieldValue(fieldConfig);
+      }
+    }
+
     return {
       cart_row_id: create_unique_row_no(),
       id: invId || item.id,
@@ -364,7 +396,8 @@ async function loadBillIntoCart(bill) {
       amount: Number(item.amount || item.row_net_total || 0),
       prod_categ: item.prod_categ || (originalItem ? originalItem.category : ""),
       row_notes: item.row_notes || "",
-      row_old_total_base_qty : Number(item.qty) * Number(item.pack_qty || 1)
+      row_old_total_base_qty : Number(item.qty) * Number(item.pack_qty || 1),
+      ...dynamicFields
     };
   }));
 
@@ -377,10 +410,38 @@ function renderCart(cartItems) {
 
   if (!cartBody) return;
 
+  // Build the thead dynamically based on custom row fields configured in the registry
+  const thead = document.querySelector("#cart-form table thead");
+  if (thead && window.SALE_CART_ROW_FIELDS) {
+    let dynamicHeaders = "";
+    for (const [fieldName, fieldConfig] of Object.entries(window.SALE_CART_ROW_FIELDS)) {
+      dynamicHeaders += `<th style="width: ${fieldConfig.width || '100px'}">${fieldConfig.title || fieldName}</th>`;
+    }
+    const isRowDiscountAllowed = window.companyConfigurations?.pos?.row_discount_allowed !== false;
+    thead.innerHTML = `
+      <tr>
+        <th style="width: 300px">Item Name</th>
+        <th style="width: 40px">Qty /</th>
+        <th style="width: 30px">PMode</th>
+        <th style="width: 100px">Rate //</th>
+        ${isRowDiscountAllowed ? `
+        <th style="width: 50px">Disc-per *</th>
+        <th style="width: 70px">Discount</th>` : ``}
+        <th style="width: 100px">Amount =</th>
+        ${dynamicHeaders}
+        <th style="width: 20px">▲</th>
+      </tr>
+    `;
+  }
+
   if (!cart || cart.length === 0) {
+    const isRowDiscountAllowed = window.companyConfigurations?.pos?.row_discount_allowed !== false;
+    const baseCols = isRowDiscountAllowed ? 8 : 6;
+    const dynamicCount = window.SALE_CART_ROW_FIELDS ? Object.keys(window.SALE_CART_ROW_FIELDS).length : 0;
+    const totalColumns = baseCols + dynamicCount;
     cartBody.innerHTML = `
       <tr id="empty-row">
-        <td colspan="9" style="text-align:center; color:#999; padding:20px; font-size:20px;">
+        <td colspan="${totalColumns}" style="text-align:center; color:#999; padding:20px; font-size:20px;">
           No items added
         </td>
       </tr>`;
@@ -404,6 +465,19 @@ function renderCart(cartItems) {
         <option value="4" ${item.packing_mode === 4 ? 'selected' : ''}>Wholesale</option>
       </select>
     `;
+
+    // Render dynamic inputs based on window.SALE_CART_ROW_FIELDS registry
+    let dynamicCells = "";
+    if (window.SALE_CART_ROW_FIELDS) {
+      for (const [fieldName, fieldConfig] of Object.entries(window.SALE_CART_ROW_FIELDS)) {
+        const fieldValue = item[fieldName] !== undefined && item[fieldName] !== null ? item[fieldName] : (fieldConfig.default ?? "");
+        dynamicCells += `
+          <td style="width: ${fieldConfig.width || '100px'};">
+            <input type="${fieldConfig.type}" placeholder = '0' value="${fieldValue}" class="${fieldConfig.input_class || 'cart-input'}" data-field-name="${fieldName}" style="width: 80%;" />
+          </td>
+        `;
+      }
+    }
 
     const row = `
       <tr class="cart-item-row" data-row-id="${item.cart_row_id}">
@@ -430,6 +504,7 @@ function renderCart(cartItems) {
         <td>
           <input type="number" value="${amount.toFixed(2)}" readonly class="cart-input amount-input" />
         </td>
+        ${dynamicCells}
         <td>
           <button type="button" class="btn small remove-item-btn" data-row-id="${item.cart_row_id}">×</button>
         </td>
@@ -466,7 +541,8 @@ function bindCartEvents() {
   if (!listenersInitialized) {
     cartBody.addEventListener("focusout", (e) => {
       const classes = ["qty-input", "rate-input", "discount_per_item-input", "discount_percent_per_item-input", "packing-mode-select"];
-      if (classes.some(cls => e.target.classList.contains(cls))) {
+      const isDynamicField = e.target.dataset.fieldName !== undefined;
+      if (classes.some(cls => e.target.classList.contains(cls)) || isDynamicField) {
         handleCartUpdate.call(e.target);
       }
     });
@@ -611,6 +687,16 @@ function handleCartUpdate() {
 
       changes.discount_percent_per_item = discountPercent;
       changes.discount = 0;
+    }
+  }
+
+  // Populate dynamic fields into the updates
+  if (window.SALE_CART_ROW_FIELDS) {
+    for (const fieldName of Object.keys(window.SALE_CART_ROW_FIELDS)) {
+      const inputEl = row.querySelector(`[data-field-name="${fieldName}"]`);
+      if (inputEl) {
+        changes[fieldName] = inputEl.value;
+      }
     }
   }
 

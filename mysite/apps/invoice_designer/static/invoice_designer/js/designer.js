@@ -61,8 +61,8 @@
         let items = [];
         if (documentType === "purchase_invoice") {
             items = [
-                { product_name: "Basmati Rice 5kg", product_name_ur: "باسمتی چاول 5 کلو", category: "Grocery", quantity: 20, unit: "Kg", rate: "1,000.00", discount_percent: 5, discount_amount: "1,000.00", amount: "20,000.00", batch_number: "B-12", batch_quantity: 20, expiry_date: "2027-01", pack_quantity_received: 20, trade_price: "1,150.00", retail_price: "1,200.00", old_cost: "980.00", landed_cost: "1,015.00" },
-                { product_name: "Cooking Oil 1L", product_name_ur: "کوکنگ آئل 1 لیٹر", category: "Grocery", quantity: 40, unit: "Ltr", rate: "180.00", discount_percent: 0, discount_amount: "0.00", amount: "7,200.00", batch_number: "B-07", batch_quantity: 40, expiry_date: "2026-11", pack_quantity_received: 40, trade_price: "195.00", retail_price: "210.00", old_cost: "170.00", landed_cost: "182.00" },
+                { product_name: "Basmati Rice 5kg", product_name_ur: "باسمتی چاول 5 کلو", category: "Grocery", quantity: 20, foc_qty: 2, foc: 2, unit: "Kg", rate: "1,000.00", discount_percent: 5, discount_amount: "1,000.00", amount: "20,000.00", warranty: "1 Year", warranty_notes: "1 Year", item_notes: "Warranty: 1 Year", row_notes: "Warranty: 1 Year", barcode: "890123456789", brand: "Super Basmati", batch_number: "B-12", batch_quantity: 20, expiry_date: "2027-01", pack_quantity_received: 20, trade_price: "1,150.00", retail_price: "1,200.00", old_cost: "980.00", landed_cost: "1,015.00" },
+                { product_name: "Cooking Oil 1L", product_name_ur: "کوکنگ آئل 1 لیٹر", category: "Grocery", quantity: 40, foc_qty: 0, foc: 0, unit: "Ltr", rate: "180.00", discount_percent: 0, discount_amount: "0.00", amount: "7,200.00", warranty: "", warranty_notes: "", item_notes: "", row_notes: "", barcode: "890987654321", brand: "Dalda", batch_number: "B-07", batch_quantity: 40, expiry_date: "2026-11", pack_quantity_received: 40, trade_price: "195.00", retail_price: "210.00", old_cost: "170.00", landed_cost: "182.00" },
             ];
         } else if (documentType === "voucher") {
             items = [
@@ -71,8 +71,8 @@
             ];
         } else {
             items = [
-                { product_name: "Basmati Rice 5kg", product_name_ur: "باسمتی چاول 5 کلو", category: "Grocery", quantity: 2, unit: "Kg", rate: "1,200.00", discount_percent: 5, discount_amount: "120.00", amount: "2,400.00", cost_price: "1,015.00", net_cost: "2,030.00", item_notes: "" },
-                { product_name: "Cooking Oil 1L", product_name_ur: "کوکنگ آئل 1 لیٹر", category: "Grocery", quantity: 4, unit: "Ltr", rate: "200.00", discount_percent: 0, discount_amount: "0.00", amount: "800.00", cost_price: "182.00", net_cost: "728.00", item_notes: "" },
+                { product_name: "Basmati Rice 5kg", product_name_ur: "باسمتی چاول 5 کلو", category: "Grocery", quantity: 2, foc_qty: 1, foc: 1, unit: "Kg", rate: "1,200.00", discount_percent: 5, discount_amount: "120.00", amount: "2,400.00", warranty: "1 Year", warranty_notes: "1 Year", item_notes: "Warranty: 1 Year", row_notes: "Warranty: 1 Year", barcode: "890123456789", brand: "Super Basmati", cost_price: "1,015.00", net_cost: "2,030.00" },
+                { product_name: "Cooking Oil 1L", product_name_ur: "کوکنگ آئل 1 لیٹر", category: "Grocery", quantity: 4, foc_qty: 0, foc: 0, unit: "Ltr", rate: "200.00", discount_percent: 0, discount_amount: "0.00", amount: "800.00", warranty: "", warranty_notes: "", item_notes: "", row_notes: "", barcode: "890987654321", brand: "Dalda", cost_price: "182.00", net_cost: "728.00" },
             ];
         }
 

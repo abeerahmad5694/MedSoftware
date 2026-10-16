@@ -218,6 +218,40 @@ document.addEventListener("keydown", function (e) {
     }
   }
 
+  // _______________________ Cart Arrow Navigation (Vertical Column) _______________________
+  const activeCartRow = document.activeElement?.closest(".cart-item-row");
+  if (activeCartRow && (e.key === "ArrowDown" || e.key === "ArrowUp") && document.activeElement.tagName !== "SELECT") {
+    const rowList = Array.from(rows);
+    const rowIndex = rowList.indexOf(activeCartRow);
+
+    if (rowIndex !== -1) {
+      const targetIndex = e.key === "ArrowDown" ? rowIndex + 1 : rowIndex - 1;
+
+      if (targetIndex >= 0 && targetIndex < rowList.length) {
+        e.preventDefault();
+
+        const targetRow = rowList[targetIndex];
+        const currentCell = document.activeElement.closest("td");
+        const cellIndex = currentCell ? currentCell.cellIndex : -1;
+
+        const targetInput = cellIndex !== -1
+          ? targetRow.cells[cellIndex]?.querySelector("input:not([type='hidden']):not([readonly]), select")
+          : null;
+
+        const finalInput = targetInput || targetRow.querySelector(".qty-input");
+
+        rowList.forEach((r) => r.classList.remove("selected-row"));
+        targetRow.classList.add("selected-row");
+        targetRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+        if (finalInput) {
+          finalInput.focus();
+          finalInput.select?.();
+        }
+      }
+    }
+  }
+
 
 
 
