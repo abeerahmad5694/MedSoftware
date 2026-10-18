@@ -136,6 +136,37 @@ class DiaryModuleIntegrationTests(TestCase):
         self.assertContains(response, "Diary")
         self.assertContains(response, "Today's due")
 
+    def test_all_diary_date_range_filters_scheduled_dates_inclusively(self):
+        selected_date = timezone.now().date()
+        next_date = selected_date + timedelta(days=1)
+        DiaryItem.objects.create(
+            kind=DiaryItem.Kind.NOTE,
+            title="Entry inside date range",
+            scheduled_date=selected_date,
+            company=self.company,
+            branch=self.branch,
+        )
+        DiaryItem.objects.create(
+            kind=DiaryItem.Kind.NOTE,
+            title="Entry outside date range",
+            scheduled_date=next_date,
+            company=self.company,
+            branch=self.branch,
+        )
+
+        response = self.client.get(
+            "/diary/",
+            {
+                "view": "diary",
+                "from_date": selected_date.isoformat(),
+                "to_date": selected_date.isoformat(),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Entry inside date range")
+        self.assertNotContains(response, "Entry outside date range")
+
     def test_create_payable_saves_account_code_without_account_relation(self):
         response = self.client.post(
             "/diary/api/items/",

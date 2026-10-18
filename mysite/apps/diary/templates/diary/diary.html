@@ -98,16 +98,33 @@
                 </div>
                 <form class="diary-filter" method="get">
                     <input type="hidden" name="view" value="{{ selected_view }}">
-                    <label class="sr-only" for="diaryKindFilter">Filter by entry type</label>
-                    <select name="kind" id="diaryKindFilter" onchange="this.form.submit()">
-                        <option value="">All types</option>
-                        <option value="NOTE" {% if kind_filter == 'NOTE' %}selected{% endif %}>Notes</option>
-                        <option value="TASK" {% if kind_filter == 'TASK' %}selected{% endif %}>Tasks &amp; schedules</option>
-                        <option value="PAYABLE" {% if kind_filter == 'PAYABLE' %}selected{% endif %}>Payables</option>
-                        <option value="RECEIVABLE" {% if kind_filter == 'RECEIVABLE' %}selected{% endif %}>Receivables</option>
-                    </select>
+                    <label class="diary-filter-type" for="diaryKindFilter">
+                        <span>Type</span>
+                        <select name="kind" id="diaryKindFilter" onchange="this.form.submit()">
+                            <option value="">All types</option>
+                            <option value="NOTE" {% if kind_filter == 'NOTE' %}selected{% endif %}>Notes</option>
+                            <option value="TASK" {% if kind_filter == 'TASK' %}selected{% endif %}>Tasks &amp; schedules</option>
+                            <option value="PAYABLE" {% if kind_filter == 'PAYABLE' %}selected{% endif %}>Payables</option>
+                            <option value="RECEIVABLE" {% if kind_filter == 'RECEIVABLE' %}selected{% endif %}>Receivables</option>
+                        </select>
+                    </label>
+                    {% if selected_view == 'diary' %}
+                    <label class="diary-filter-date" for="diaryFromDate">
+                        <span>From</span>
+                        <input type="date" name="from_date" id="diaryFromDate" value="{{ from_date_value }}">
+                    </label>
+                    <label class="diary-filter-date" for="diaryToDate">
+                        <span>To</span>
+                        <input type="date" name="to_date" id="diaryToDate" value="{{ to_date_value }}">
+                    </label>
+                    <button type="submit" class="diary-button diary-button-secondary diary-filter-apply">Apply</button>
+                    <a class="diary-filter-clear" href="{% url 'diary:home' %}?view=diary{% if kind_filter %}&amp;kind={{ kind_filter }}{% endif %}">Clear dates</a>
+                    {% endif %}
                 </form>
             </div>
+            {% if selected_view == 'diary' and date_filter_error %}
+            <p class="diary-filter-error" role="alert">{{ date_filter_error }}</p>
+            {% endif %}
 
             <div class="diary-table-wrap">
                 <table class="diary-table">
