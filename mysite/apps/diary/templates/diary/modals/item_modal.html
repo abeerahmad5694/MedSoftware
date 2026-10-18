@@ -1,0 +1,73 @@
+<div class="diary-modal-overlay" id="diaryItemOverlay" aria-hidden="true" hidden>
+    <section class="diary-modal" role="dialog" aria-modal="true" aria-labelledby="diaryItemModalTitle">
+        <header class="diary-modal-header">
+            <div>
+                <p class="diary-eyebrow">DIARY ENTRY</p>
+                <h2 id="diaryItemModalTitle">New entry</h2>
+            </div>
+            <button type="button" class="diary-modal-close" data-diary-close="diaryItemOverlay" aria-label="Close dialog"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </header>
+        <form id="diaryItemForm" class="diary-modal-form">
+            <input type="hidden" id="diaryItemId">
+            <div class="diary-form-grid">
+                <div class="diary-form-field diary-form-field-full">
+                    <label for="diaryItemKind">Entry type</label>
+                    <select id="diaryItemKind" required>
+                        {% if 'create_diary_items' in user_perm_codes %}<option value="NOTE">Note</option><option value="TASK">Task / schedule</option>{% endif %}
+                        {% if 'add_payable_reminders' in user_perm_codes %}<option value="PAYABLE">Payable reminder</option>{% endif %}
+                        {% if 'add_receivable_reminders' in user_perm_codes %}<option value="RECEIVABLE">Receivable reminder</option>{% endif %}
+                    </select>
+                </div>
+
+                <div class="diary-form-field diary-form-field-full">
+                    <label for="diaryItemTitle">Title</label>
+                    <input id="diaryItemTitle" maxlength="160" type="text" placeholder="Add a short title">
+                </div>
+
+                <div class="diary-form-field diary-form-field-full diary-account-fields" hidden>
+                    <label>Account</label>
+                    <div class="diary-account-picker">
+                        <input id="diaryAccountCode" type="hidden">
+                        <input id="diaryAccountName" type="text" readonly placeholder="Choose an account" aria-label="Selected account">
+                        <button id="diaryAccountSearchButton" type="button" class="diary-button diary-button-secondary">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Search accounts</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="diary-form-field">
+                    <label for="diaryScheduledDate" id="diaryScheduledDateLabel">Date</label>
+                    <input id="diaryScheduledDate" type="date" required>
+                </div>
+                <div class="diary-form-field diary-money-fields" hidden>
+                    <label for="diaryAmount">Amount (Rs)</label>
+                    <input id="diaryAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
+                </div>
+
+                <div class="diary-form-field diary-followup-field">
+                    <label for="diaryFollowupDate">Follow-up reminder</label>
+                    <input id="diaryFollowupDate" type="date">
+                </div>
+                <div class="diary-form-field diary-repeat-field" hidden>
+                    <label for="diaryRepeatDays">Repeat every (days)</label>
+                    <input id="diaryRepeatDays" type="number" min="1" step="1" placeholder="For example, 7">
+                </div>
+
+                <label class="diary-check-field diary-pinned-field">
+                    <input id="diaryPinned" type="checkbox">
+                    <span>Pin this note</span>
+                </label>
+
+                <div class="diary-form-field diary-form-field-full">
+                    <label for="diaryItemDetails">Notes</label>
+                    <textarea id="diaryItemDetails" rows="4" placeholder="Add details or instructions"></textarea>
+                </div>
+            </div>
+            <div class="diary-form-error" id="diaryItemError" role="alert" hidden></div>
+            <footer class="diary-modal-footer">
+                <button type="button" class="diary-button diary-button-secondary" data-diary-close="diaryItemOverlay">Cancel</button>
+                <button type="submit" class="diary-button diary-button-primary" id="diaryItemSaveButton">Save entry</button>
+            </footer>
+        </form>
+    </section>
+</div>

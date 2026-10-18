@@ -72,6 +72,13 @@
                 </a>
                 {% endif %}
 
+                {% if 'view_diary' in user_perm_codes %}
+                <a href="{% url 'diary:home' %}" class="nav-item {% if request.resolver_match.namespace == 'diary' %}active{% endif %}" data-tip="Diary & Reminders">
+                    <span class="nav-icon"><i class="fa-solid fa-book-open"></i></span>
+                    <span class="sb-label ml-2.5">Diary &amp; Reminders</span>
+                </a>
+                {% endif %}
+
                 <!-- <a href="#" class="nav-item" data-tip="Analytics">
                     <span class="nav-icon"><i class="fa-solid fa-cart-shopping"></i></span>
                     <span class="sb-label ml-2.5">Analytics</span>

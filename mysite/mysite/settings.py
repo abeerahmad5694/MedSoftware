@@ -141,6 +141,7 @@ INSTALLED_APPS = [
     'apps.invoice_designer',
     'apps.reports',
     "apps.dashbaord",
+    'apps.diary',
 ]
 
 MIDDLEWARE = [

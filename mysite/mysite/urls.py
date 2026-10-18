@@ -39,6 +39,7 @@ urlpatterns = [
     path('myledger/', include('apps.myledger.urls')),
     path('reports/', include('apps.reports.urls')),
     path('dashboard/', include('apps.dashbaord.urls')),
+    path('diary/', include('apps.diary.urls')),
 ]
 # Serve media files (user uploads: logos, images) using Django's serve view directly.
 # This bypasses the DEBUG check in static() and works with waitress/gunicorn/any WSGI server.
