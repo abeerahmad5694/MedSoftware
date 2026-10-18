@@ -275,17 +275,32 @@ function old_inv_print_view(event) {
     let query = old_inv_search.value;
     // fetchBill(query);
     // refreshCartUI();
+    // window.DocumentPrinter.printDocument({
+    //     bill_no: query,
+    //     model_name: 'Purchase',
+    //     page_type: "thermal_80",
+    //     document_type: "purchase_invoice",
+    //     data_source: "server",           // "local" | "server"
+    //     // payload: payload,                 // required when data_source === "local"
+    //     allow_multiple_print: true,
+    //     copies: 1,
+    //     directprint: directPrinting.checked,           
+    //   });
+
+    const copies = window.companyConfigurations?.general?.copies || 1;
+    const purPageSize = window.companyConfigurations?.purchase?.default_page_size || "thermal_80";
     window.DocumentPrinter.printDocument({
-        bill_no: query,
-        model_name: 'Invoice',
-        page_type: "thermal_80",
-        document_type: "pos_invoice",
-        data_source: "server",           // "local" | "server"
-        // payload: payload,                 // required when data_source === "local"
-        allow_multiple_print: true,
-        copies: 2,
-        directprint: directPrinting.checked,           
-      });
+      bill_no: query,
+      model_name: 'Purchase',
+      page_type: purPageSize.toLowerCase(),
+      document_type: "purchase_invoice",
+      data_source: "server",           // "local" | "server"
+      renderSource: "server",
+      allow_multiple_print: true,
+      copies: copies,
+      directprint: directPrinting.checked,           
+    });
+
     old_inv_search.value = "";
     searchInput.focus();
   }

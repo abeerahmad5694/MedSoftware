@@ -468,20 +468,27 @@ def get_bill(request,bill_no):
     has_permission, message = get_user_perms(request, "edit_invoice")
     if not has_permission:
         return JsonResponse({'success': False, 'message': message}, status=200)
-
+    bill_no = int(bill_no)
     
     user = request.user
+    
+    if bill_no < 0:
+        bill_no = Vchno.objects.filter(TYPE = 'INV').first().VCHNO
+    
+        
     if not bill_no:
         return JsonResponse({"success": False, "message": "Invalid bill_no"})
 
     try:
+        
+        # print('here bill is ',bill_no)
+        
         bill = Invoice.objects.filter(bill_no=bill_no,company = user.userprofile.company,branch = user.userprofile.branch)
         if not bill:
             return JsonResponse({"success": False, "message": "Bill not found"})
     except Exception as e:
+        print(e)
         return JsonResponse({"success": False, "message": str(e)})
-    # header_row = bill.filter(is_header = True).first()
-    # items = bill.filter(is_header = False)
     try:
         item_list = []
         for item in bill:

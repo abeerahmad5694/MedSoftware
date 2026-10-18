@@ -385,6 +385,10 @@ def get_bill(request,bill_no):
         return JsonResponse({'success': False, 'message': message}, status=200)
 
     user = request.user
+    bill_no = int(bill_no)
+    if bill_no < 0:
+        bill_no = Vchno.objects.filter(TYPE = 'PUR').first().VCHNO
+        
     if not bill_no:
         return JsonResponse({"success": False, "message": "Invalid bill_no"})
 

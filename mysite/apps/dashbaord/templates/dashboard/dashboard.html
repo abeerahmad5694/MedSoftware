@@ -15,7 +15,7 @@
 >
     <header class="dash-header">
         <div class="dash-heading">
-            <span class="dash-eyebrow">BUSINESS OVERVIEW</span>
+            {% comment %} <span class="dash-eyebrow">BUSINESS OVERVIEW</span> {% endcomment %}
             <h1>Dashboard</h1>
             <p class="dash-date-line">
                 <span id="dash-date">{{ dashboard_company|default:'Your business' }}{% if dashboard_branch %} · {{ dashboard_branch }}{% endif %}</span>

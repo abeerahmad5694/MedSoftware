@@ -10,9 +10,9 @@
     <div class="diary-container">
         <header class="diary-header">
             <div>
-                <p class="diary-eyebrow">DAILY WORKSPACE</p>
+                {% comment %} <p class="diary-eyebrow">DAILY WORKSPACE</p> {% endcomment %}
                 <h1>Diary &amp; Reminders</h1>
-                <p class="diary-subtitle">Keep notes, tasks, and account follow-ups in one place.</p>
+                {% comment %} <p class="diary-subtitle">Keep notes, tasks, and account follow-ups in one place.</p> {% endcomment %}
             </div>
             {% if can_create_any %}
             <button type="button" class="diary-button diary-button-primary" id="diaryNewEntryButton">
@@ -22,7 +22,7 @@
             {% endif %}
         </header>
 
-        <section class="diary-summary" aria-label="Reminder summary">
+        <section class="diary-summary hidden" aria-label="Reminder summary">
             <a class="diary-summary-card{% if selected_view == 'today' %} is-selected{% endif %}" href="{% url 'diary:home' %}?view=today">
                 <span class="diary-summary-label">Today's due</span>
                 <strong>{{ summary.today_count }}</strong>

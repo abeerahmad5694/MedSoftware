@@ -16,6 +16,7 @@ No document-type-specific branching lives in the views — that all lives
 in schema.py (defaults) and services/data_builders.py (server data).
 """
 
+from apps.myledger.models import Vchno
 import json
 
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -193,10 +194,24 @@ class DocumentDataView(View):
 
     def get(self, request):
         document_type = request.GET.get("document_type")
-        bill_number = request.GET.get("bill_number")
+        bill_number = int(request.GET.get("bill_number"))
         model_name = request.GET.get("model_name")
         include_previous_balance = request.GET.get("show_previous_balance") == "true"
 
+        print('document type:',document_type)
+        print('bill number:',bill_number)
+        if (bill_number < 0):
+            if(document_type == 'pos_invoice'):
+                v_type = 'INV'
+            elif(document_type == 'purchase_invoice'):
+                v_type = 'PUR'
+            elif(document_type == 'quotation'):
+                v_type = 'QOT'
+            bill_number = Vchno.objects.filter(TYPE = v_type).first().VCHNO
+                
+                
+                
+                
         if not (document_type and bill_number):
             return HttpResponseBadRequest("document_type and bill_number are required")
 
