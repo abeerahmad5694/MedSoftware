@@ -1,0 +1,181 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'diary/css/diary.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="diary-page" id="diaryPage">
+    <div class="diary-container">
+        <header class="diary-header">
+            <div>
+                <p class="diary-eyebrow">DAILY WORKSPACE</p>
+                <h1>Diary &amp; Reminders</h1>
+                <p class="diary-subtitle">Keep notes, tasks, and account follow-ups in one place.</p>
+            </div>
+            {% if can_create_any %}
+            <button type="button" class="diary-button diary-button-primary" id="diaryNewEntryButton">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                <span>New entry</span>
+            </button>
+            {% endif %}
+        </header>
+
+        <section class="diary-summary" aria-label="Reminder summary">
+            <a class="diary-summary-card{% if selected_view == 'today' %} is-selected{% endif %}" href="{% url 'diary:home' %}?view=today">
+                <span class="diary-summary-label">Today's due</span>
+                <strong>{{ summary.today_count }}</strong>
+                <span class="diary-summary-amount">Rs {{ summary.today_amount|floatformat:2 }}</span>
+            </a>
+            <a class="diary-summary-card diary-summary-overdue{% if selected_view == 'overdue' %} is-selected{% endif %}" href="{% url 'diary:home' %}?view=overdue">
+                <span class="diary-summary-label">Overdue</span>
+                <strong>{{ summary.overdue_count }}</strong>
+                <span class="diary-summary-amount">Rs {{ summary.overdue_amount|floatformat:2 }}</span>
+            </a>
+            <a class="diary-summary-card{% if selected_view == 'upcoming' %} is-selected{% endif %}" href="{% url 'diary:home' %}?view=upcoming">
+                <span class="diary-summary-label">Upcoming</span>
+                <strong>{{ summary.upcoming_count }}</strong>
+                <span class="diary-summary-amount">Rs {{ summary.upcoming_amount|floatformat:2 }}</span>
+            </a>
+        </section>
+
+        <nav class="diary-tabs" aria-label="Diary views">
+            <a class="{% if selected_view == 'today' %}active{% endif %}" href="{% url 'diary:home' %}?view=today">Today</a>
+            <a class="{% if selected_view == 'overdue' %}active{% endif %}" href="{% url 'diary:home' %}?view=overdue">Overdue</a>
+            <a class="{% if selected_view == 'upcoming' %}active{% endif %}" href="{% url 'diary:home' %}?view=upcoming">Upcoming</a>
+            <a class="{% if selected_view == 'diary' %}active{% endif %}" href="{% url 'diary:home' %}?view=diary">All diary entries</a>
+            <a class="{% if selected_view == 'report' %}active{% endif %}" href="{% url 'diary:home' %}?view=report">Account delay report</a>
+        </nav>
+
+        {% if selected_view == 'report' %}
+        <section class="diary-panel" aria-labelledby="diary-report-title">
+            <div class="diary-panel-heading">
+                <div>
+                    <h2 id="diary-report-title">Account payment delays</h2>
+                    <p>Accounts are ranked by overdue balance, extensions, and late closures.</p>
+                </div>
+            </div>
+            <div class="diary-table-wrap">
+                <table class="diary-table diary-report-table">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Open balance</th>
+                            <th>Overdue</th>
+                            <th>Overdue amount</th>
+                            <th>Date extensions</th>
+                            <th>Late closures</th>
+                            <th>Average days late</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in report_rows %}
+                        <tr>
+                            <td><strong>{{ row.account_name }}</strong><small>Code {{ row.acc_code }}</small></td>
+                            <td>Rs {{ row.open_amount|floatformat:2 }}</td>
+                            <td>{{ row.overdue_count }}</td>
+                            <td class="{% if row.overdue_amount %}diary-overdue-text{% endif %}">Rs {{ row.overdue_amount|floatformat:2 }}</td>
+                            <td>{{ row.extension_count }}</td>
+                            <td>{{ row.late_closed_count }}</td>
+                            <td>{{ row.late_days_average|floatformat:1 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="diary-empty-cell">No account reminder history to report yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% else %}
+        <section class="diary-panel" aria-labelledby="diary-list-title">
+            <div class="diary-panel-heading">
+                <div>
+                    <h2 id="diary-list-title">
+                        {% if selected_view == 'today' %}Today's diary{% elif selected_view == 'overdue' %}Overdue reminders{% elif selected_view == 'upcoming' %}Upcoming reminders{% else %}All diary entries{% endif %}
+                    </h2>
+                    <p>{% if selected_view == 'diary' %}Notes, tasks, schedules, and payment reminders.{% else %}Select an entry to review its details and history.{% endif %}</p>
+                </div>
+                <form class="diary-filter" method="get">
+                    <input type="hidden" name="view" value="{{ selected_view }}">
+                    <label class="sr-only" for="diaryKindFilter">Filter by entry type</label>
+                    <select name="kind" id="diaryKindFilter" onchange="this.form.submit()">
+                        <option value="">All types</option>
+                        <option value="NOTE" {% if kind_filter == 'NOTE' %}selected{% endif %}>Notes</option>
+                        <option value="TASK" {% if kind_filter == 'TASK' %}selected{% endif %}>Tasks &amp; schedules</option>
+                        <option value="PAYABLE" {% if kind_filter == 'PAYABLE' %}selected{% endif %}>Payables</option>
+                        <option value="RECEIVABLE" {% if kind_filter == 'RECEIVABLE' %}selected{% endif %}>Receivables</option>
+                    </select>
+                </form>
+            </div>
+
+            <div class="diary-table-wrap">
+                <table class="diary-table">
+                    <thead>
+                        <tr>
+                            <th>Entry</th>
+                            <th>Account</th>
+                            <th>Date</th>
+                            <th>Amount / balance</th>
+                            <th>Status</th>
+                            <th class="diary-actions-heading">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td class="diary-entry-cell">
+                                <span class="diary-kind diary-kind-{{ item.kind|lower }}">{{ item.get_kind_display }}</span>
+                                <strong>{% if item.title %}{{ item.title }}{% else %}{{ item.get_kind_display }}{% endif %}</strong>
+                                {% if item.details %}<small>{{ item.details|truncatechars:100 }}</small>{% endif %}
+                                {% if item.pinned %}<span class="diary-pinned"><i class="fa-solid fa-thumbtack" aria-hidden="true"></i> Pinned</span>{% endif %}
+                                {% if item.follow_up_date %}<small>Follow-up: {{ item.follow_up_date|date:'d M Y' }}</small>{% endif %}
+                            </td>
+                            <td>
+                                {% if item.acc_code %}
+                                    <strong>{{ item.account_name }}</strong>
+                                    <small>Code {{ item.acc_code }}</small>
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="diary-date-cell">
+                                <strong>{{ item.scheduled_date|date:'d M Y' }}</strong>
+                                {% if item.original_due_date and item.original_due_date != item.scheduled_date %}<small>First due {{ item.original_due_date|date:'d M Y' }}</small>{% endif %}
+                            </td>
+                            <td>
+                                {% if item.amount is not None %}
+                                    <strong>Rs {{ item.amount|floatformat:2 }}</strong>
+                                    <small>Remaining Rs {{ item.remaining_amount|floatformat:2 }}</small>
+                                {% else %}—{% endif %}
+                                {% if item.repeat_every_days %}<small>Repeats every {{ item.repeat_every_days }} days</small>{% endif %}
+                            </td>
+                            <td><span class="diary-status diary-status-{{ item.status|lower }}">{{ item.get_status_display }}</span></td>
+                            <td class="diary-row-actions">
+                                {% if can_update %}
+                                    {% if item.kind == 'NOTE' or item.kind == 'TASK' or item.status == 'OPEN' %}
+                                    <button type="button" class="diary-icon-button" title="Edit entry" aria-label="Edit entry" data-diary-edit="{{ item.pk }}"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
+                                    {% endif %}
+                                    {% if item.kind == 'TASK' and item.status == 'OPEN' %}
+                                    <button type="button" class="diary-action-link" data-diary-action="{{ item.pk }}" data-kind="{{ item.kind }}">Complete</button>
+                                    {% elif item.kind == 'PAYABLE' or item.kind == 'RECEIVABLE' %}
+                                        {% if item.status == 'OPEN' %}<button type="button" class="diary-action-link" data-diary-action="{{ item.pk }}" data-kind="{{ item.kind }}">Record action</button>{% endif %}
+                                    {% endif %}
+                                {% endif %}
+                                <button type="button" class="diary-icon-button" title="View history" aria-label="View history" data-diary-history="{{ item.pk }}"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></button>
+                                {% if can_delete %}<button type="button" class="diary-icon-button diary-icon-danger" title="Delete entry" aria-label="Delete entry" data-diary-delete="{{ item.pk }}"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="diary-empty-cell">Nothing to show for this view.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if items|length >= 400 %}<p class="diary-limit-note">Showing the first 400 entries. Use the date and type filters to narrow the list.</p>{% endif %}
+        </section>
+        {% endif %}
+    </div>
+
+    {% include "mysearch/global_search_modal.html" %}
+    {% include "diary/includes/diary_modals.html" %}
+</main>
+{% endblock %}

@@ -1,0 +1,49 @@
+<div class="diary-modal-overlay" id="diaryActionOverlay" aria-hidden="true" hidden>
+    <section class="diary-modal diary-modal-compact" role="dialog" aria-modal="true" aria-labelledby="diaryActionModalTitle">
+        <header class="diary-modal-header">
+            <div>
+                <p class="diary-eyebrow">REMINDER ACTION</p>
+                <h2 id="diaryActionModalTitle">Record action</h2>
+            </div>
+            <button type="button" class="diary-modal-close" data-diary-close="diaryActionOverlay" aria-label="Close dialog"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </header>
+        <form id="diaryActionForm" class="diary-modal-form">
+            <input type="hidden" id="diaryActionItemId">
+            <input type="hidden" id="diaryActionKind">
+            <div class="diary-action-balance" id="diaryActionBalance"></div>
+            <div class="diary-form-field">
+                <label for="diaryActionType">What happened?</label>
+                <select id="diaryActionType" required></select>
+            </div>
+            <div class="diary-form-field diary-action-amount-field" hidden>
+                <label for="diaryActionAmount">Amount (Rs)</label>
+                <input id="diaryActionAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
+            </div>
+            <div class="diary-form-field diary-action-date-field" hidden>
+                <label for="diaryActionNextDate">Next reminder date</label>
+                <input id="diaryActionNextDate" type="date">
+            </div>
+            <div class="diary-form-field diary-settlement-reason-field" hidden>
+                <label for="diarySettlementReason">Settlement reason</label>
+                <select id="diarySettlementReason">
+                    <option value="">Select a reason</option>
+                    <option value="DISCOUNT">Discount</option>
+                    <option value="ADJUSTMENT">Adjustment</option>
+                    <option value="RETURN">Return</option>
+                    <option value="BAD_DEBT">Bad debt</option>
+                    <option value="MUTUAL">Mutual settlement</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+            <div class="diary-form-field">
+                <label for="diaryActionNote">Reason / note</label>
+                <textarea id="diaryActionNote" rows="3" placeholder="Optional note"></textarea>
+            </div>
+            <div class="diary-form-error" id="diaryActionError" role="alert" hidden></div>
+            <footer class="diary-modal-footer">
+                <button type="button" class="diary-button diary-button-secondary" data-diary-close="diaryActionOverlay">Cancel</button>
+                <button type="submit" class="diary-button diary-button-primary" id="diaryActionSaveButton">Save action</button>
+            </footer>
+        </form>
+    </section>
+</div>

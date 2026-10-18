@@ -51,33 +51,33 @@ const getSystemAccountCode = (key, fallback) => {
 
 const VOUCHER_CONFIG = {
     CR: {
-        title: '🔌 CASH RECEIPT VOUCHER',
+        title: '  CASH RECEIPT VOUCHER',
         requireAccount: true,
         notes: 'CASH RCVD: ',
         get SYSTEM_ACCOUNT_CODES() { return getSystemAccountCode('default_cash_acc', '110000001'); }
     },
     CP: {
-        title: '🔌 CASH PAYMENT VOUCHER',
+        title: '  CASH PAYMENT VOUCHER',
         requireAccount: false,
         notes: 'CASH PAID: ',
         get SYSTEM_ACCOUNT_CODES() { return getSystemAccountCode('default_cash_acc', '110000001'); }
     },
     BR: {
-        title: '🔌 BANK RECEIPT VOUCHER',
+        title: '  BANK RECEIPT VOUCHER',
         requireAccount: true,
         showbanks: true,
         notes: 'BANK RCVD: ',
         get SYSTEM_ACCOUNT_CODES() { return getSystemAccountCode('default_bank_acc', '111000001'); }
     },
     BP: {
-        title: '🔌 BANK PAYMENT VOUCHER',
+        title: '  BANK PAYMENT VOUCHER',
         requireAccount: true,
         showbanks: true,
         notes: 'BANK PAID: ',
         get SYSTEM_ACCOUNT_CODES() { return getSystemAccountCode('default_bank_acc', '111000001'); }
     },
     ADJ: {
-        title: '🔌 ADJUSTMENT VOUCHER',
+        title: '  ADJUSTMENT VOUCHER',
         requireAccount: true,
         notes: 'ADJ',
         get SYSTEM_ACCOUNT_CODES() {

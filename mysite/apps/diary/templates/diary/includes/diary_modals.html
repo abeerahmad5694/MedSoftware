@@ -1,0 +1,16 @@
+{% load static %}
+{# Reusable diary modal bundle. Host screens should load diary.css and include the existing mysearch/global_search_modal.html once when account search is needed. #}
+<div id="diaryRoot" class="diary-module-config" hidden
+     data-api-base="{% url 'diary:api_create' %}"
+     data-today="{% if today %}{{ today|date:'Y-m-d' }}{% endif %}"
+     data-can-create-note="{% if 'create_diary_items' in user_perm_codes %}true{% else %}false{% endif %}"
+     data-can-add-payable="{% if 'add_payable_reminders' in user_perm_codes %}true{% else %}false{% endif %}"
+     data-can-add-receivable="{% if 'add_receivable_reminders' in user_perm_codes %}true{% else %}false{% endif %}"
+     data-can-update="{% if 'update_diary_items' in user_perm_codes %}true{% else %}false{% endif %}"
+     data-can-delete="{% if 'delete_diary_items' in user_perm_codes %}true{% else %}false{% endif %}"></div>
+{% include "diary/modals/item_modal.html" %}
+{% include "diary/modals/action_modal.html" %}
+{% include "diary/modals/history_modal.html" %}
+<form class="diary-csrf-source" aria-hidden="true">{% csrf_token %}</form>
+<div class="diary-toast" id="diaryToast" role="status" aria-live="polite"></div>
+<script type="module" src="{% static 'diary/js/diary.js' %}"></script>

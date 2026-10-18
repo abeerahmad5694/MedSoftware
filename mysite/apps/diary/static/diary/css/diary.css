@@ -1,0 +1,325 @@
+.diary-page {
+    flex: 1 1 auto;
+    min-height: 100%;
+    overflow: auto;
+    padding: 24px;
+    color: var(--text-main);
+    background: var(--bg-canvas);
+}
+
+.diary-container {
+    width: min(1480px, 100%);
+    margin: 0 auto;
+}
+
+.diary-header,
+.diary-panel-heading,
+.diary-modal-header,
+.diary-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.diary-header {
+    margin-bottom: 20px;
+}
+
+.diary-eyebrow {
+    margin: 0 0 5px;
+    color: var(--color-primary);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .13em;
+}
+
+.diary-header h1,
+.diary-modal-header h2 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: clamp(21px, 2vw, 27px);
+    font-weight: 750;
+    letter-spacing: -.035em;
+}
+
+.diary-subtitle,
+.diary-panel-heading p {
+    margin: 5px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.diary-button {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 13px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+
+.diary-button:active { transform: translateY(1px); }
+.diary-button-primary { color: #fff; background: var(--color-primary); border-color: var(--color-primary); }
+.diary-button-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.diary-button-secondary { color: var(--text-main); background: var(--bg-surface); border-color: var(--border-color); }
+.diary-button-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.diary-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.diary-summary-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 5px 12px;
+    padding: 15px 17px;
+    color: var(--text-main);
+    text-decoration: none;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 11px;
+    box-shadow: 0 2px 7px rgba(15, 23, 42, .035);
+    transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.diary-summary-card:hover,
+.diary-summary-card.is-selected {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 14px rgba(var(--color-primary-rgb), .09);
+}
+
+.diary-summary-card:hover { transform: translateY(-1px); }
+.diary-summary-label { color: var(--text-muted); font-size: 12px; font-weight: 650; }
+.diary-summary-card strong { grid-column: 2; grid-row: 1 / span 2; font-size: 25px; font-weight: 750; }
+.diary-summary-amount { color: var(--text-main); font-size: 12px; font-weight: 650; }
+.diary-summary-overdue .diary-summary-amount,
+.diary-overdue-text { color: #b42318 !important; }
+
+.diary-tabs {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    margin-bottom: 14px;
+    padding: 4px;
+    background: color-mix(in srgb, var(--bg-surface) 75%, transparent);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+}
+
+.diary-tabs a {
+    flex: 0 0 auto;
+    padding: 9px 12px;
+    color: var(--text-muted);
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.diary-tabs a:hover { color: var(--text-main); background: var(--bg-canvas); }
+.diary-tabs a.active { color: var(--color-primary); background: var(--color-primary-light); }
+
+.diary-panel {
+    min-width: 0;
+    padding: 17px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .035);
+}
+
+.diary-panel-heading { margin-bottom: 14px; }
+.diary-panel-heading h2 { margin: 0; color: var(--text-main); font-size: 15px; font-weight: 750; }
+.diary-panel-heading p { font-size: 11px; }
+.diary-filter select,
+.diary-form-field input,
+.diary-form-field select,
+.diary-form-field textarea,
+.diary-account-picker input {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    color: var(--text-main);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.diary-filter select { min-width: 145px; }
+.diary-form-field input:focus,
+.diary-form-field select:focus,
+.diary-form-field textarea:focus,
+.diary-account-picker input:focus,
+.diary-filter select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), .12); }
+.diary-form-field textarea { min-height: 88px; resize: vertical; }
+.diary-form-field input[readonly] { color: var(--text-muted); }
+
+.diary-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+.diary-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 12px; }
+.diary-table th {
+    padding: 10px 12px;
+    color: var(--text-muted);
+    background: var(--bg-canvas);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .055em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.diary-table td { padding: 11px 12px; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+.diary-table tbody tr:last-child td { border-bottom: 0; }
+.diary-table tbody tr:hover { background: color-mix(in srgb, var(--color-primary-light) 24%, var(--bg-surface)); }
+.diary-table td small,
+.diary-entry-cell small { display: block; margin-top: 3px; color: var(--text-muted); font-size: 10px; line-height: 1.45; }
+.diary-entry-cell { min-width: 205px; }
+.diary-entry-cell strong { display: block; margin-top: 5px; font-size: 12px; font-weight: 700; }
+.diary-kind {
+    display: inline-flex;
+    align-items: center;
+    min-height: 19px;
+    padding: 2px 7px;
+    color: var(--text-muted);
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .02em;
+}
+.diary-kind-payable { color: #b54708; background: #fffaeb; border-color: #fedf89; }
+.diary-kind-receivable { color: #027a48; background: #ecfdf3; border-color: #abefc6; }
+.diary-kind-task { color: #175cd3; background: #eff8ff; border-color: #b2ddff; }
+.diary-kind-note { color: #6941c6; background: #f4f3ff; border-color: #d9d6fe; }
+.diary-pinned { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; color: var(--color-primary); font-size: 10px; font-weight: 650; }
+.diary-status { display: inline-block; padding: 4px 7px; color: var(--text-muted); background: var(--bg-canvas); border-radius: 5px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.diary-status-open { color: #344054; background: #f2f4f7; }
+.diary-status-paid, .diary-status-received, .diary-status-done { color: #027a48; background: #ecfdf3; }
+.diary-status-settled { color: #175cd3; background: #eff8ff; }
+.diary-status-cancelled { color: #b42318; background: #fef3f2; }
+.diary-actions-heading { min-width: 175px; }
+.diary-row-actions { min-width: 175px; white-space: nowrap; }
+.diary-icon-button {
+    width: 30px;
+    height: 30px;
+    margin: 0 2px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.diary-icon-button:hover { color: var(--color-primary); background: var(--color-primary-light); border-color: var(--border-color); }
+.diary-icon-button.diary-icon-danger:hover { color: #b42318; background: #fef3f2; }
+.diary-action-link { padding: 5px 7px; color: var(--color-primary); background: transparent; border: 0; border-radius: 5px; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.diary-action-link:hover { background: var(--color-primary-light); }
+.diary-empty-cell { height: 120px; color: var(--text-muted) !important; text-align: center; }
+.diary-limit-note { margin: 10px 0 0; color: var(--text-muted); font-size: 11px; }
+.diary-muted { color: var(--text-muted); font-size: 12px; }
+
+.diary-modal-overlay {
+    position: fixed;
+    z-index: 9000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, .56);
+    backdrop-filter: blur(2px);
+}
+.diary-modal-overlay[hidden] { display: none !important; }
+.diary-modal {
+    width: min(620px, 100%);
+    max-height: min(90vh, 800px);
+    overflow: auto;
+    color: var(--text-main);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 13px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .22);
+}
+.diary-modal-compact { width: min(465px, 100%); }
+.diary-history-modal { width: min(760px, 100%); }
+.diary-modal-header { position: sticky; top: 0; z-index: 1; padding: 17px 19px; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); }
+.diary-modal-header h2 { font-size: 17px; }
+.diary-modal-close { display: grid; place-items: center; width: 32px; height: 32px; color: var(--text-muted); background: transparent; border: 1px solid var(--border-color); border-radius: 7px; cursor: pointer; }
+.diary-modal-close:hover { color: var(--text-main); background: var(--bg-canvas); }
+.diary-modal-form { padding: 17px 19px 19px; }
+.diary-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.diary-form-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; margin-bottom: 13px; }
+.diary-form-grid .diary-form-field { margin: 0; }
+.diary-form-field-full { grid-column: 1 / -1; }
+.diary-form-field label { color: var(--text-main); font-size: 11px; font-weight: 700; }
+.diary-account-picker { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.diary-account-picker input[type="hidden"] { display: none; }
+.diary-check-field { display: inline-flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 11px; font-weight: 650; cursor: pointer; }
+.diary-check-field input { width: 15px; height: 15px; accent-color: var(--color-primary); }
+.diary-action-balance { margin-bottom: 14px; padding: 10px 12px; color: var(--text-main); background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: 7px; font-size: 12px; font-weight: 700; }
+.diary-form-error { margin-top: 12px; padding: 9px 10px; color: #b42318; background: #fef3f2; border: 1px solid #fecdca; border-radius: 7px; font-size: 11px; }
+.diary-modal-footer { justify-content: flex-end; margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--border-color); }
+.diary-history-content { max-height: 60vh; overflow: auto; padding: 14px 19px; }
+.diary-history-list { display: grid; gap: 9px; }
+.diary-history-row { display: grid; grid-template-columns: minmax(110px, .75fr) minmax(0, 2fr) auto; gap: 10px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--border-color); font-size: 11px; }
+.diary-history-row:last-child { border-bottom: 0; }
+.diary-history-action { color: var(--text-main); font-weight: 700; }
+.diary-history-note { margin-top: 3px; color: var(--text-muted); line-height: 1.5; }
+.diary-history-time { color: var(--text-muted); white-space: nowrap; }
+.diary-history-meta { color: var(--text-muted); text-align: right; white-space: nowrap; }
+.diary-toast { position: fixed; z-index: 100001; right: 22px; bottom: 22px; max-width: min(390px, calc(100vw - 44px)); padding: 11px 14px; color: #fff; background: #344054; border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, .18); font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .18s ease, transform .18s ease; }
+.diary-toast.is-visible { opacity: 1; transform: translateY(0); }
+.diary-toast.is-error { background: #b42318; }
+.diary-csrf-source { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Keep the shared account search modal visually aligned with the active ERP theme. */
+#gsm-title::before { content: none !important; }
+#gsm-overlay .product-modal { color: var(--text-main); background: var(--bg-surface); }
+#gsm-overlay .modal-header { background: var(--color-primary); }
+#gsm-overlay .modal-header h3 { color: #fff; }
+#gsm-overlay .modal-footer { color: var(--text-muted); background: var(--bg-surface); border-color: var(--border-color); }
+
+@media (max-width: 760px) {
+    .diary-page { padding: 16px 12px 24px; }
+    .diary-header { align-items: flex-start; }
+    .diary-summary { gap: 8px; }
+    .diary-summary-card { padding: 12px; }
+    .diary-summary-card strong { font-size: 20px; }
+    .diary-tabs { margin-right: -3px; }
+    .diary-panel { padding: 12px; }
+    .diary-panel-heading { align-items: flex-start; flex-direction: column; }
+    .diary-filter { width: 100%; }
+    .diary-filter select { width: 100%; }
+}
+
+@media (max-width: 520px) {
+    .diary-header { flex-direction: column; }
+    .diary-header > .diary-button { width: 100%; }
+    .diary-summary { grid-template-columns: 1fr; }
+    .diary-summary-card { grid-template-columns: 1fr auto; }
+    .diary-summary-card strong { grid-column: 2; grid-row: 1 / span 2; }
+    .diary-form-grid { grid-template-columns: 1fr; }
+    .diary-form-field-full { grid-column: auto; }
+    .diary-history-row { grid-template-columns: 1fr auto; }
+    .diary-history-note { grid-column: 1 / -1; }
+    .diary-history-meta { grid-column: 2; grid-row: 1; }
+    .diary-account-picker { grid-template-columns: 1fr; }
+}
