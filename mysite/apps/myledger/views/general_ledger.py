@@ -23,8 +23,8 @@ def general_ledger(request):
         {"key": "vno", "label": "VCH #", "width": "64px"},
         {"key": "desc", "label": "DESCRIPTION", "width": "auto"},
         # {"key": "amount", "label": "AMOUNT", "width": "150px"},
-        {"key": "debit", "label": "DEBIT (+)", "width": "150px"},
-        {"key": "credit", "label": "CREDIT (-)", "width": "150px"},
+        {"key": "debit", "label": "DEBIT(+) / IN", "width": "150px"},
+        {"key": "credit", "label": "CREDIT(−) / OUT", "width": "150px"},
         {"key": "balance", "label": "BALANCE", "width": "150px"},
     ]
     return render(request, "myledger/general_ledger.html", {"columns": columns})    

@@ -218,35 +218,132 @@ document.addEventListener("keydown", function (e) {
     }
   }
 
-  // _______________________ Cart Arrow Navigation (Vertical Column) _______________________
-  const activeCartRow = document.activeElement?.closest(".cart-item-row");
-  if (activeCartRow && (e.key === "ArrowDown" || e.key === "ArrowUp") && document.activeElement.tagName !== "SELECT") {
+  // _______________________ Cart Arrow Navigation (VFP Style) _______________________
+
+  const activeElement = document.activeElement;
+  const activeCartRow = activeElement?.closest(".cart-item-row");
+
+  if (
+    activeCartRow &&
+    ["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(e.key)
+  ) {
     const rowList = Array.from(rows);
     const rowIndex = rowList.indexOf(activeCartRow);
 
     if (rowIndex !== -1) {
-      const targetIndex = e.key === "ArrowDown" ? rowIndex + 1 : rowIndex - 1;
+      if (activeElement.tagName === "INPUT" && activeElement.type === "number") {
+        try {
+          activeElement.type = "text";
+          activeElement.inputMode = "decimal";
+        } catch (err) {}
+      }
 
-      if (targetIndex >= 0 && targetIndex < rowList.length) {
-        e.preventDefault();
+      const isSelect = activeElement.tagName === "SELECT";
 
-        const targetRow = rowList[targetIndex];
-        const currentCell = document.activeElement.closest("td");
-        const cellIndex = currentCell ? currentCell.cellIndex : -1;
+      const getRowInputs = (row) =>
+        Array.from(
+          row.querySelectorAll(
+            "input:not([type='hidden']):not([readonly]):not(:disabled), select:not(:disabled), textarea:not(:disabled)",
+          ),
+        ).filter((el) => el.getClientRects().length > 0);
 
-        const targetInput = cellIndex !== -1
-          ? targetRow.cells[cellIndex]?.querySelector("input:not([type='hidden']):not([readonly]), select")
-          : null;
+      const moveToField = (field) => {
+        if (!field) return;
 
-        const finalInput = targetInput || targetRow.querySelector(".qty-input");
+        rowList.forEach((row) => row.classList.remove("selected-row"));
+        field.closest(".cart-item-row")?.classList.add("selected-row");
 
-        rowList.forEach((r) => r.classList.remove("selected-row"));
-        targetRow.classList.add("selected-row");
-        targetRow.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        field.focus();
 
-        if (finalInput) {
-          finalInput.focus();
-          finalInput.select?.();
+        if (
+          field.tagName === "INPUT" &&
+          ![
+            "checkbox",
+            "radio",
+            "button",
+            "hidden",
+            "submit",
+            "reset",
+          ].includes(field.type)
+        ) {
+          field.select?.();
+        }
+
+        field.closest(".cart-item-row")?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      };
+
+      // _______________________ Left / Right: Same Row _______________________
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        const rowInputs = getRowInputs(activeCartRow);
+        const currentIndex = rowInputs.indexOf(activeElement);
+
+        if (currentIndex !== -1) {
+          let canMove = false;
+
+          if (isSelect) {
+            canMove = true;
+          } else {
+            const value = activeElement.value ?? "";
+            const start = activeElement.selectionStart;
+            const end = activeElement.selectionEnd;
+
+            const hasSelection =
+              typeof start === "number" &&
+              typeof end === "number" &&
+              start !== end;
+
+            if (!hasSelection) {
+              if (e.key === "ArrowLeft") {
+                canMove = start === 0 || typeof start !== "number";
+              } else if (e.key === "ArrowRight") {
+                canMove = end === value.length || typeof end !== "number";
+              }
+            }
+          }
+
+          if (canMove) {
+            const targetIndex =
+              e.key === "ArrowRight" ? currentIndex + 1 : currentIndex - 1;
+
+            if (targetIndex >= 0 && targetIndex < rowInputs.length) {
+              e.preventDefault();
+              moveToField(rowInputs[targetIndex]);
+            }
+          }
+        }
+      }
+
+      // _______________________ Up / Down: Between Rows _______________________
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        const targetRowIndex =
+          e.key === "ArrowDown" ? rowIndex + 1 : rowIndex - 1;
+
+        if (targetRowIndex >= 0 && targetRowIndex < rowList.length) {
+          const targetRow = rowList[targetRowIndex];
+          const currentCell = activeElement.closest("td");
+          const cellIndex = currentCell ? currentCell.cellIndex : -1;
+
+          let targetInput =
+            cellIndex !== -1
+              ? targetRow.cells[cellIndex]?.querySelector(
+                  "input:not([type='hidden']):not([readonly]):not(:disabled), select:not(:disabled), textarea:not(:disabled)",
+                )
+              : null;
+
+          if (!targetInput) {
+            const currentInputs = getRowInputs(activeCartRow);
+            const currentIdx = currentInputs.indexOf(activeElement);
+            const targetInputs = getRowInputs(targetRow);
+            targetInput = targetInputs[currentIdx] || targetInputs[0];
+          }
+
+          if (targetInput) {
+            e.preventDefault();
+            moveToField(targetInput);
+          }
         }
       }
     }

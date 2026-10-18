@@ -125,7 +125,7 @@
                 {% if 'view_own_sales' in user_perm_codes or 'create_invoice' in user_perm_codes %}
                 <a href="{% url 'sale:main_sale' %}" class="nav-item" data-tip="POS">
                     <span class="nav-icon"><i class="fa-solid fa-receipt"></i></span>
-                    <span class="sb-label ml-2.5">POS</span>
+                    <span class="sb-label ml-2.5">POS / Sale</span>
                 </a>
                 {% endif %}
 
@@ -229,7 +229,7 @@
                 </a> -->
 
                 {% if 'view_ledger' in user_perm_codes or 'create_vouchers' in user_perm_codes or 'create_accounts' in user_perm_codes or 'edit_accounts' in user_perm_codes %}
-                <div class="sb-section-label sb-label">Finance</div>
+                <div class="sb-section-label sb-label">Accounts & Finance</div>
                 {% endif %}
 
                 {% if 'view_ledger' in user_perm_codes %}
@@ -314,7 +314,7 @@
                         <a href="{%url 'invoice_designer:designer_default'%}">Invoice Designer</a>
                         <a href="{% url 'company' %}">Company</a>
                         <a href="{% url 'branch' %}">Branch</a>
-                        <a href="{% url 'posterminal' %}">Posterminal</a>
+                        <a href="{% url 'posterminal' %}">Posterminal / Cash Counter</a>
                         <a href="{% url 'permissions' %}">Permissions</a>
                         <a href="{% url 'users' %}">Users</a>
                     </div>

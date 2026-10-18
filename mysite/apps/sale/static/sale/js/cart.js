@@ -486,23 +486,23 @@ function renderCart(cartItems) {
           <input type="hidden" value="${item.id}" name="item_id" />
         </td>
         <td>
-          <input type="number" value="${item.qty}" min="0" class="cart-input qty-input" />
+          <input type="text" inputmode="decimal" value="${item.qty}" class="cart-input qty-input" />
         </td>
         <td>
           ${packingModeDropdown}
         </td>
         <td>
-          <input type="number" value="${item.rate}" min="0" class="cart-input rate-input" />
+          <input type="text" inputmode="decimal" value="${item.rate}" class="cart-input rate-input" />
         </td>
         ${(window.companyConfigurations?.pos?.row_discount_allowed !== false) ? `
         <td>
-          <input type="number" value="${item.discount_percent_per_item || 0}" min="0" class="cart-input discount_percent_per_item-input" />
+          <input type="text" inputmode="decimal" value="${item.discount_percent_per_item || 0}" class="cart-input discount_percent_per_item-input" />
         </td>
         <td>
-          <input type="number" value="${item.discount || 0}" min="0" class="cart-input discount_per_item-input" />
+          <input type="text" inputmode="decimal" value="${item.discount || 0}" class="cart-input discount_per_item-input" />
         </td>` : ``}
         <td>
-          <input type="number" value="${amount.toFixed(2)}" readonly class="cart-input amount-input" />
+          <input type="text" value="${amount.toFixed(2)}" readonly class="cart-input amount-input" />
         </td>
         ${dynamicCells}
         <td>
