@@ -6,6 +6,7 @@ from django.db.models import Q, Sum
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.dateparse import parse_date as parse_query_date
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.diary.models import DiaryHistory, DiaryItem
@@ -231,6 +232,27 @@ def diary_home(request):
     if selected_view not in valid_views:
         selected_view = "today"
 
+    from_date_value = request.GET.get("from_date", "").strip()
+    to_date_value = request.GET.get("to_date", "").strip()
+    try:
+        from_date = parse_query_date(from_date_value) if from_date_value else None
+    except ValueError:
+        from_date = None
+    try:
+        to_date = parse_query_date(to_date_value) if to_date_value else None
+    except ValueError:
+        to_date = None
+
+    date_filter_errors = []
+    if selected_view == "diary":
+        if from_date_value and from_date is None:
+            date_filter_errors.append("Enter a valid from date.")
+        if to_date_value and to_date is None:
+            date_filter_errors.append("Enter a valid to date.")
+        if from_date and to_date and from_date > to_date:
+            date_filter_errors.append("The from date must be on or before the to date.")
+    date_filter_error = " ".join(date_filter_errors)
+
     report_rows = []
     if selected_view == "report":
         report_rows = _delay_report(request, active, today)
@@ -261,6 +283,11 @@ def diary_home(request):
         else:
             # The diary view includes open entries and completed items for context.
             items_query = items_query.exclude(status=DiaryItem.Status.CANCELLED)
+            if not date_filter_error:
+                if from_date:
+                    items_query = items_query.filter(scheduled_date__gte=from_date)
+                if to_date:
+                    items_query = items_query.filter(scheduled_date__lte=to_date)
 
         kind_filter = request.GET.get("kind", "").upper()
         if kind_filter in DiaryItem.Kind.values:
@@ -287,6 +314,9 @@ def diary_home(request):
             "items": items,
             "selected_view": selected_view,
             "kind_filter": request.GET.get("kind", ""),
+            "from_date_value": from_date_value,
+            "to_date_value": to_date_value,
+            "date_filter_error": date_filter_error,
             "report_rows": report_rows,
             "summary": summary,
             "today": today,

@@ -145,7 +145,16 @@
 .diary-panel-heading { margin-bottom: 14px; }
 .diary-panel-heading h2 { margin: 0; color: var(--text-main); font-size: 15px; font-weight: 750; }
 .diary-panel-heading p { font-size: 11px; }
+.diary-filter { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 8px; }
+.diary-filter > label { display: flex; flex-direction: column; gap: 4px; color: var(--text-muted); font-size: 10px; font-weight: 700; }
+.diary-filter-type { min-width: 145px; }
+.diary-filter-date { flex: 0 1 145px; }
+.diary-filter-apply { min-height: 38px; }
+.diary-filter-clear { align-self: center; padding: 7px 2px; color: var(--text-muted); font-size: 11px; font-weight: 650; text-decoration: none; white-space: nowrap; }
+.diary-filter-clear:hover { color: var(--color-primary); text-decoration: underline; }
+.diary-filter-error { margin: -5px 0 13px; color: #b42318; font-size: 11px; }
 .diary-filter select,
+.diary-filter input[type="date"],
 .diary-form-field input,
 .diary-form-field select,
 .diary-form-field textarea,
@@ -167,7 +176,8 @@
 .diary-form-field select:focus,
 .diary-form-field textarea:focus,
 .diary-account-picker input:focus,
-.diary-filter select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), .12); }
+.diary-filter select:focus,
+.diary-filter input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), .12); }
 .diary-form-field textarea { min-height: 88px; resize: vertical; }
 .diary-form-field input[readonly] { color: var(--text-muted); }
 
