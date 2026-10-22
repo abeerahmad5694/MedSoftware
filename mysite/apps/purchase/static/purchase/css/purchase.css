@@ -910,10 +910,16 @@
     flex: none !important;
 }
 
+#date{
+    max-width: 50%;
+}
+
 .input-center {
     text-align: center;
     font-weight: 600;
-    max-width: 120px;
+    /* max-width: 70%; */
+    font-size: 1rem;
+    width: 70%;
 }
 
 .divider {

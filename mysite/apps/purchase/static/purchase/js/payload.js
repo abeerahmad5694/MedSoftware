@@ -22,11 +22,12 @@ export function buildBillPayload({
   header_unload_acc_code,
   bill_no,
   billTypeRadioButton,
+  invoiceType,
   // mapPaymentMode,
 }) {
 
   billTypeRadioButton = document.querySelector('input[name="bill_type"]:checked');
-  const is_return = billTypeRadioButton?.value === "return";
+  const is_return =  invoiceType === "pr";
 
   const totalItemCount = cart.length;
   const totalAmountBeforeDiscount = cart.reduce((sum, item) => sum + (item.amount), 0);
@@ -110,6 +111,7 @@ export function buildBillPayload({
     header_freight_acc_code,
     header_labour_acc_code,
     header_unload_acc_code,
+    header_pur_type: invoiceType,
 
 
     // Row-level Items Mapping

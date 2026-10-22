@@ -134,15 +134,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const freightRow = document.getElementById("freight-charges-row");
   const labourRow = document.getElementById("labour-charges-row");
   const unloadRow = document.getElementById("unload-charges-row");
-
-  if (freightRow && purConfig.freight_charges_allowed === false) {
-    freightRow.style.display = "none";
+  
+  if (freightRow && purConfig.freight_charges_allowed === true) {
+    freightRow.classList.remove('hidden');
   }
-  if (labourRow && purConfig.labour_charges_allowed === false) {
-    labourRow.style.display = "none";
+  if (labourRow && purConfig.labour_charges_allowed === true) {
+    labourRow.classList.remove('hidden');
   }
-  if (unloadRow && purConfig.unload_charges_allowed === false) {
-    unloadRow.style.display = "none";
+  if (unloadRow && purConfig.unload_charges_allowed === true) {
+    unloadRow.classList.remove('hidden');
   }
 
   // 2. Direct / Silent Printing toggle default

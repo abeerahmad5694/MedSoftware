@@ -251,8 +251,11 @@ window.getDefaultAccount = function(key, fallback = 112000001) {
 document.addEventListener('DOMContentLoaded', async () => {
     // Automatically load company configurations on page load
     if(!window.companyConfigurations){
-        window.loadCompanyConfigurations();
+        await window.loadCompanyConfigurations();
+
     }
+    console.log('companny name',companyConfigurations?._meta?.company?.name);
+    document.getElementById('company-name').textContent = companyConfigurations?._meta?.company?.name;
     
 });
 

@@ -61,6 +61,12 @@ class InventoryForm(forms.ModelForm):
                     'lang': 'ur',
                     'style': 'font-family: "Jameel Noori Nastaleeq", serif; text-align: right;'
                 })
+            if field_name == 'alias_name':
+                field.widget.attrs.update({
+                    
+                    'placeholder': 'Part Number or Alias Name',
+
+                })
 
 
 

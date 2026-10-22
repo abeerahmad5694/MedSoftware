@@ -58,6 +58,7 @@ export const freightAccCode = document.getElementById('freight_acc_code')
 
 
 export const purchaseReturnRadio = document.getElementById('return')
+export const invoiceType = document.getElementById('invoice-type')
 export const purchaseRadio = document.getElementById('purchase')
 export const btnDeleteBill = document.getElementById('btnDeleteBill')
 

@@ -219,7 +219,7 @@ else:
             'PASSWORD': _db_pass,
             'HOST': _db_host,
             'PORT': _db_port,
-            'CONN_MAX_AGE': 60,
+            'CONN_MAX_AGE': 3600,
             'OPTIONS': {
                 'connect_timeout': 10,
                 'read_timeout': 30,

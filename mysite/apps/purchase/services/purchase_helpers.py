@@ -51,7 +51,7 @@ def json_to_invoice(item=None, header_fields=None, fields_will_update=None, syst
         # THIS IS YOUR REAL COST - PROFESSIONAL
         "row_total_cost_per_base_unit": row_data.get("row_total_cost", Decimal('0')),
 
-        "row_bonus": row_data["bonus"],
+        # "row_bonus": row_data["bonus"],
         "row_bonus_amount": item.get("row_bonus_amount", 0),
 
         "row_notes": item.get("row_notes", ""),

@@ -24,6 +24,7 @@ class Migration(migrations.Migration):
             ("INV", 0, "Invoice Voucher"),
             ("QOT", 0, "Quotation Voucher"),
             ("PUR", 0, "Purchase Voucher"),
+            ("PO", 0, "Purchase Order Voucher"),
             ("IRTN", 0, "Invoice Return Voucher"),
             ("PRTN", 0, "Purchase Return Voucher"),
             

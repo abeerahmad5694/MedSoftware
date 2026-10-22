@@ -5,14 +5,28 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Enterprise ERP Core</title>
+        <title>Alpha Technologies</title>
         <link rel="stylesheet" href="{% static 'css/style.css' %}">
         <link rel="stylesheet" href="{% static 'css/main.css' %}">
         <link rel="stylesheet" href="{% static 'vendor/font-awesome/css/all.min.css' %}">
         <link rel="stylesheet" href="{% static 'vendor/inter/inter.css' %}">
         <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+        <style>
+            .clogo{
+                font-size:1.2rem;
+                padding-left :5px;
 
+            }
+            #company-name{
+                font-size:1rem;
+                font-weight:bold;
+                color:white;
+
+            }
+        </style>
     </head>
+
+    
 
     <body class="flex h-screen overflow-hidden">
         {% block extra_css %}
@@ -27,7 +41,7 @@
                 class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--color-primary-light)] cursor-pointer">
                 <i class="fa-solid fa-bars text-base"></i>
             </button>
-            <span class="text-sm font-bold text-[var(--text-main)] tracking-wide">ERP Core</span>
+            <span class="text-sm font-bold text-[var(--text-main)] tracking-wide">Alpha POS</span>
             <button onclick="openThemePanel()"
                 class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--color-primary-light)] cursor-pointer">
                 <i class="fa-solid fa-palette text-base"></i>
@@ -43,13 +57,34 @@
         <aside id="sidebar" class="flex flex-col flex-shrink-0 z-40 h-full relative">
 
             <!-- Logo -->
-            <div class="flex items-center h-12 px-2.5 flex-shrink-0 border-b border-white/[0.06]">
+            {% comment %} <div class="flex items-center h-12 px-2.5 flex-shrink-0 border-b border-white/[0.06]">
                 <div class="nav-icon flex-shrink-0">
-                    <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs"
-                        style="background:var(--accent-indicator);">E</div>
+                    <div class="w-11 h-9 rounded-lg flex items-center justify-center font-bold text-white text-xs"
+                        style="background:white"><img width= "50px" height="50px" style='color:white;' src="{% static 'images/AlphaTechLogo.png' %}"></div>
                 </div>
-                <span class="sb-label ml-2.5 font-bold text-white text-sm tracking-wide">ERP Core</span>
-            </div>
+                <span class="sb-label ml-4.5 font-bold text-white text-sm tracking-wide clogo">Alpha POS</span>
+            </div> {% endcomment %}
+            
+<!-- Logo -->
+<div class="flex items-center h-14 px-3 flex-shrink-0 border-b border-white/[0.08]">
+
+    <!-- Logo image -->
+    <div class="nav-icon flex-shrink-0 w-20 h-20 rounded-xl bg-white flex items-center justify-center overflow-hidden" style="background: #ffffffff;">
+        <img
+            src="{% static 'images/favicon.ico' %}"
+            alt="AlphaTech Logo"
+            style='padding:1px;'
+            width= '100px'
+            height='100px'
+        >
+    </div>
+
+    <!-- Brand name -->
+    <span class="sb-label ml-3 font-bold text-white text-base tracking-wide clogo whitespace-nowrap">
+        Alpha POS
+    </span>
+
+</div>
 
             <!-- Search -->
             <div class="sb-search mt-1" style="position:relative;">
@@ -341,10 +376,10 @@
 
                 <!-- User -->
                 <div class="flex items-center h-11 px-2.5 mb-0.5 overflow-hidden">
-                    <img class="sb-user-avatar" src="" alt="User">
+                    {% comment %} <img class="sb-user-avatar" src="" alt="User"> {% endcomment %}
                     <div class="sb-label ml-2.5 min-w-0">
-                        <p class="text-xs font-semibold text-white truncate leading-tight">Abeer Ahmad</p>
-                        <p class="text-[0.625rem] truncate leading-tight" style="color: var(--text-sidebar); opacity:.7;">
+                        <p  id = 'company-name'></p>
+                        <p class="text-[0.725rem] truncate leading-tight" style="color: var(--text-sidebar); opacity:.7;">
                             Admin</p>
                     </div>
 

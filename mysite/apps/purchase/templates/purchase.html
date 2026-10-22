@@ -102,27 +102,27 @@
 
         <span style="text-align: center;font-size: small;font-weight: bold;">Additional Amount Given or Paid To Third Party</span>
 
-        <div class="card-row charges-row" id="freight-charges-row">
+        <div class="card-row charges-row hidden" id="freight-charges-row">
           <div class="charge-label">Freight</div>
           <input type="text" value="" placeholder="Freight Code" class="charge-code" id="freight_acc_code">
           <button type="button" class="clear-btn" id="freight_acc_code_search_btn">🔍</button>
-          <input type="text" class="charge-desc" id="freight_acc_code_desc">
+          <input type="text" class="charge-desc" id="freight_acc_code_desc" placeholder='Account Name'>
           <input type="text" value="0.00" id="freight-amt" class="charge-amount input-red">
         </div>
 
-        <div class="card-row charges-row" id="labour-charges-row">
+        <div class="card-row charges-row hidden" id="labour-charges-row">
           <div class="charge-label">Labour</div>
           <input type="text" value="" placeholder="Labour Code" class="charge-code" id="labour_acc_code">
           <button type="button" class="clear-btn" id="labour_acc_code_search_btn">🔍</button>
-          <input type="text" class="charge-desc" id="labour_acc_code_desc">
+          <input type="text" class="charge-desc" id="labour_acc_code_desc" placeholder='Account Name'>
           <input type="text" value="0.00" id="labour-amt" class="charge-amount input-red">
         </div>
 
-        <div class="card-row charges-row" id="unload-charges-row">
+        <div class="card-row charges-row hidden" id="unload-charges-row">
           <div class="charge-label">Unload</div>
           <input type="text" value="" placeholder="Unload Code" class="charge-code" id="unload_acc_code">
           <button type="button" class="clear-btn" id="unload_acc_code_search_btn">🔍</button>
-          <input type="text" class="charge-desc" id="unload_acc_code_desc">
+          <input type="text" class="charge-desc" id="unload_acc_code_desc" placeholder='Account Name'>
           <input type="text" value="0.00" id="unload-amt" class="charge-amount input-red">
         </div>
 
@@ -134,8 +134,13 @@
       <!-- Card 3: Invoice Summary -->
       <div class="header-card summary-card">
         <div class="card-row">
-          <label>Invoice#</label>
-          <input type="text" value="0" class="input-center">
+          <label>Type:</label>
+          <select name="invoice_type" id="invoice-type" class="input-center">
+            <option value="p">Purchase</option>
+            <option value="pr">Purchase Return</option>
+            {% comment %} <option value="po">Purchase Order</option> {% endcomment %}
+            {% comment %} <option value="cin">Consignment In</option> {% endcomment %}
+          </select>
         </div>
         <div class="card-row">
           <label>Date:</label>
@@ -375,7 +380,7 @@
         
       </div>
 
-      <div class="bill-type-section">
+      <div class="bill-type-section hidden">
         <input type="radio" name="bill_type" value="purchase" id="purchase" checked/>
         <label class="pur_or_return" for='purchase'>Pur Bill (alt+p)</label>
         <div style="width: 2px;display: inline-block;"></div>

@@ -60,6 +60,7 @@ import {
   labourAccCode,
   billTypeRadioButton,
   purchaseReturnRadio,
+  invoiceType,
   btnDeleteBill,
 } from "./dom_elements.js";
 
@@ -117,7 +118,7 @@ async function save_bill(event) {
   const header_labour_acc_code = labourAccCode.value || 0
 
 
-  if(!purchaseReturnRadio.checked && (header_freight_amount < 0 || header_labour_amount < 0 || header_unload_amount < 0 )){
+  if(!invoiceType.value=='pr' && (header_freight_amount < 0 || header_labour_amount < 0 || header_unload_amount < 0 )){
     return alert('In Purchase Negative Amount Not Allowed')
   }
 
@@ -157,6 +158,7 @@ async function save_bill(event) {
 
     bill_no: hidden_bill_no.value,
     billTypeRadioButton,
+    invoiceType: invoiceType.value,
     // mapPaymentMode,
   });
 
@@ -255,6 +257,8 @@ function New_bill(event) {
 
   document.getElementById("bill-header-form")?.reset();
 
+  if(date) date.value = new Date().toISOString().split('T')[0]
+
   // Reset default account codes dynamically from Default Accounts configuration
   if (typeof window.getDefaultAccount === "function") {
     const freightCodeInput = document.getElementById("freight_acc_code");
@@ -264,6 +268,7 @@ function New_bill(event) {
     if (freightCodeInput) freightCodeInput.value = window.getDefaultAccount('freight_payable_acc', 231000124);
     if (labourCodeInput) labourCodeInput.value = window.getDefaultAccount('labour_payable_acc', 231000123);
     if (unloadCodeInput) unloadCodeInput.value = window.getDefaultAccount('unload_payable_acc', 231000125);
+    if (invoiceType) invoiceType.value = "p";
   }
 
   startNewBill();
@@ -329,11 +334,12 @@ function load_prv_bill(load_old_bill = true) {
 
 
 async function fetchBill(voucherNo = null, load_old_bill = false) {
+
   const url = voucherNo
     ? window.app_constants.get_purchase_bill_api 
-      ? window.app_constants.get_purchase_bill_api + `${encodeURIComponent(voucherNo)}` 
-      : `/purchase/api/get_bill/${encodeURIComponent(voucherNo)}/`
-    : window.app_constants.get_purchase_bill_api;
+      ? window.app_constants.get_purchase_bill_api + `${encodeURIComponent(voucherNo)}?invoice_type=${invoiceType.value}`
+      : `/purchase/api/get_bill/${encodeURIComponent(voucherNo)}/?invoice_type=${invoiceType.value}`
+    : window.app_constants.get_purchase_bill_api + `?invoice_type=${invoiceType.value}`;
 
   if (loader) loader.style.display = 'flex';
 

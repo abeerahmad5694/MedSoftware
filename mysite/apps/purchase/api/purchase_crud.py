@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from decimal import Decimal
 import json
-from apps.purchase.models import Purchase
+from apps.purchase.models import Purchase , PurchaseOrder
 from apps.myglobal.services.helpers import get_next_voucher
 from django.http import JsonResponse
 from apps.purchase.services.purchase_helpers import json_to_invoice, now_karachi
@@ -75,7 +75,17 @@ def save_bill(request):
             return JsonResponse({"success": False, "message": "No items provided"})
             
         landed_calcs = calculate_landed_cost(items, data)
-        is_return = data.get('is_return', False)
+        pur_type = data.get('header_pur_type',"p")
+        is_return = False
+        is_po = False
+        table = Purchase
+
+        if pur_type == "pr":
+            is_return = True
+        if pur_type == "po":
+            is_po = True
+            table = PurchaseOrder
+        
         
         if is_return:
             if not has_return_permission:
@@ -85,7 +95,8 @@ def save_bill(request):
         bill_no_input = data.get('bill_no')
         if not bill_no_input:
             with transaction.atomic():
-                bill_no = get_next_voucher('PUR')
+                # bill_no = get_next_voucher('PUR' if not is_po else 'PO')
+                bill_no = get_next_voucher('PUR') # no need for seperate po number
         else:
             bill_no = int(bill_no_input)
             update = True
@@ -97,7 +108,7 @@ def save_bill(request):
                         transaction.set_rollback(True)
                         return JsonResponse({'success': False, 'message': edit_message}, status=200)
                     
-                    old_bill = Purchase.objects.filter(bill_no=bill_no, company=user.userprofile.company, branch=user.userprofile.branch)
+                    old_bill = table.objects.filter(bill_no=bill_no, company=user.userprofile.company, branch=user.userprofile.branch)
                     if not old_bill:
                         transaction.set_rollback(True)
                         return JsonResponse({"success": False, "message": "Bill not found"})
@@ -187,53 +198,55 @@ def save_bill(request):
                         batch_no = item.get('row_batch_no') or None
                         stock_rows.append((inv_id, base_qty, unit_cost_per_base, expiry_date, batch_no, index))
 
-                Purchase.objects.bulk_create(invoices)
-
-                if valuation_method == 'LAST_PUR_PRICE':
-                    for (item, landed, (inv_id, base_qty, unit_cost, expiry, batch_no, row_idx)) in zip(items, landed_calcs, stock_rows):
-                        if base_qty == 0:
-                            continue
-                        
-                        old_base_qty = 0
-                        if update:
-                            old_base_qty = int(items[row_idx].get('row_old_total_base_qty') or 0)
-                        
-                        row_cost = landed.get('row_total_cost', 0) or 0
-
-                        try:
-                            handle_inventory_valuation(
-                                inv_id,
-                                base_qty,
-                                row_cost,
-                                called_from='PUR',
-                                old_base_qty=old_base_qty,
-                                update=update
-                            )
-                        except Exception as e:
-                            print(f'[PUR LAST_PUR_PRICE] Error inv_id={inv_id}: {e}')
-                else:    
-                    created_rows = list(Purchase.objects.filter(bill_no=bill_no, company_id= user.userprofile.company, branch_id= user.userprofile.branch).order_by('id'))
-                    for idx, (inv_id, base_qty, unit_cost, expiry, batch_no, _) in enumerate(stock_rows):
-                        if base_qty == 0:
-                            continue
-                        try:
-                            STOCK_IN(
-                                company_id=user.userprofile.company.id,
-                                branch_id=user.userprofile.branch.id,
-                                inventory_item_id=inv_id,
-                                base_quantity=base_qty,
-                                rate_cost_per_unit=unit_cost,
-                                voucher_date=purchase_date,
-                                voucher_type='PURCHASE_RETURN' if base_qty < 0 else 'PURCHASE',
-                                voucher_bill_no=bill_no,
-                                voucher_row_id=created_rows[idx].id,
-                                expiry_date=expiry,
-                                batch_no=batch_no,
-                                is_update=False,
-                            )
-                        except Exception as stock_err:
-                            print(f'[STOCK_IN] Error for inv_id={inv_id}: {stock_err}')
+                table.objects.bulk_create(invoices)
                 
+                
+                if not is_po:   # dont update stock if is po
+                    if valuation_method == 'LAST_PUR_PRICE':
+                        for (item, landed, (inv_id, base_qty, unit_cost, expiry, batch_no, row_idx)) in zip(items, landed_calcs, stock_rows):
+                            if base_qty == 0:
+                                continue
+                            
+                            old_base_qty = 0
+                            if update:
+                                old_base_qty = int(items[row_idx].get('row_old_total_base_qty') or 0)
+                            
+                            row_cost = landed.get('row_total_cost', 0) or 0
+
+                            try:
+                                handle_inventory_valuation(
+                                    inv_id,
+                                    base_qty,
+                                    row_cost,
+                                    called_from='PUR',
+                                    old_base_qty=old_base_qty,
+                                    update=update
+                                )
+                            except Exception as e:
+                                print(f'[PUR LAST_PUR_PRICE] Error inv_id={inv_id}: {e}')
+                    else:    
+                        created_rows = list(table.objects.filter(bill_no=bill_no, company_id= user.userprofile.company, branch_id= user.userprofile.branch).order_by('id'))
+                        for idx, (inv_id, base_qty, unit_cost, expiry, batch_no, _) in enumerate(stock_rows):
+                            if base_qty == 0:
+                                continue
+                            try:
+                                STOCK_IN(
+                                    company_id=user.userprofile.company.id,
+                                    branch_id=user.userprofile.branch.id,
+                                    inventory_item_id=inv_id,
+                                    base_quantity=base_qty,
+                                    rate_cost_per_unit=unit_cost,
+                                    voucher_date=purchase_date,
+                                    voucher_type='PURCHASE_RETURN' if base_qty < 0 else 'PURCHASE',
+                                    voucher_bill_no=bill_no,
+                                    voucher_row_id=created_rows[idx].id,
+                                    expiry_date=expiry,
+                                    batch_no=batch_no,
+                                    is_update=False,
+                                )
+                            except Exception as stock_err:
+                                print(f'[STOCK_IN] Error for inv_id={inv_id}: {stock_err}')
+                    
                 synced_bills.append(bill_no)
                 
                 paid = Decimal(str(data.get('header_total_paid') or "0"))
@@ -255,6 +268,7 @@ def save_bill(request):
                         'dateent': fields_will_update.get('dateent'),
                         'update': update,
                         'is_return': is_return,
+                        'is_po' : is_po
                     })
                 else:
                     print(f"[PUR] paid=0, skip Gledg for bill {bill_no} - credit purchase")
@@ -278,7 +292,10 @@ def save_bill(request):
             update = job['update']
             dateent = job['dateent']
             is_return = job['is_return']
-            
+            is_po = job['is_po']
+            gledg_description = 'PUR# '
+            if is_po:
+                gledg_description = 'Advance Given For PO# '            
             try:
                 with transaction.atomic():
                     my_counter_account = DEFAULT_MY_CASH_ACCOUNT if not str(data.get('header_payment_mode')).startswith('111') else int(data.get('header_payment_mode'))
@@ -291,7 +308,7 @@ def save_bill(request):
                         GledgLineDTO(
                             accCode=int(data.get('header_acc_code') or 0),
                             head=data.get('head') or "",
-                            notes= f"PUR# {bill_no}" if not is_return else f"PUR RETURN# {bill_no}",
+                            notes= f"{gledg_description} {bill_no}" if not is_return else f"{gledg_description.replace('#', ' RETURN# ')} {bill_no}",
                             receiptNo = 0,
                             chqNo = '0',
                             amount = Decimal(abs(Decimal(data.get('header_total_paid') or 0))).quantize(Decimal("0.000")),
@@ -305,7 +322,7 @@ def save_bill(request):
                             GledgLineDTO(
                                 accCode=int(DEFAULT_FREIGHT_PAYABLE_ACCOUNT or 0) if not data.get('header_freight_acc_code') else int(data.get('header_freight_acc_code')),
                                 head=data.get('head') or "",
-                                notes= f"PUR# {bill_no}",
+                                notes= f"{gledg_description} {bill_no}",
                                 receiptNo = 0,
                                 chqNo = '0',
                                 amount = Decimal(abs(Decimal(data.get('header_freight_amount')))).quantize(Decimal("0.000")),
@@ -319,7 +336,7 @@ def save_bill(request):
                             GledgLineDTO(
                                 accCode=int(DEFAULT_LABOUR_PAYABLE_ACCOUNT or 0) if not data.get('header_labour_acc_code') else int(data.get('header_labour_acc_code')),
                                 head=data.get('head') or "",
-                                notes= f"PUR# {bill_no}",
+                                notes= f"{gledg_description} {bill_no}",
                                 receiptNo = 0,
                                 chqNo = '0',
                                 amount = Decimal(abs(Decimal(data.get('header_labour_amount')))).quantize(Decimal("0.000")),
@@ -333,7 +350,7 @@ def save_bill(request):
                             GledgLineDTO(
                                 accCode=int(DEFAULT_UNLOAD_PAYABLE_ACCOUNT or 0) if not data.get('header_unload_acc_code') else int(data.get('header_unload_acc_code')),
                                 head=data.get('head') or "",
-                                notes= f"PUR# {bill_no}",
+                                notes= f"{gledg_description} {bill_no}",
                                 receiptNo = 0,
                                 chqNo = '0',
                                 amount = Decimal(abs(Decimal(data.get('header_unload_amount')))).quantize(Decimal("0.000")),
@@ -385,15 +402,18 @@ def get_bill(request,bill_no):
         return JsonResponse({'success': False, 'message': message}, status=200)
 
     user = request.user
+    invoice_type = request.GET.get("invoice_type", "p")
+    table = Purchase if invoice_type != "po" else PurchaseOrder
     bill_no = int(bill_no)
+    vchno_type = "PUR" if invoice_type != "po" else "PO"
     if bill_no < 0:
-        bill_no = Vchno.objects.filter(TYPE = 'PUR').first().VCHNO
+        bill_no = Vchno.objects.filter(TYPE = vchno_type).first().VCHNO
         
     if not bill_no:
         return JsonResponse({"success": False, "message": "Invalid bill_no"})
 
     try:
-        bill = Purchase.objects.filter(bill_no=bill_no,company = user.userprofile.company,branch = user.userprofile.branch)
+        bill = table.objects.filter(bill_no=bill_no,company = user.userprofile.company,branch = user.userprofile.branch)
         # print('bill=============================',bill)
         if not bill:
             return JsonResponse({"success": False, "message": "Bill not found"})
@@ -405,6 +425,7 @@ def get_bill(request,bill_no):
         item_list = []
         for item in bill:
             if item.is_header:
+                
                 data_list = {
                 "bill_no":item.bill_no,
                 "branch":str(item.branch),
@@ -444,6 +465,7 @@ def get_bill(request,bill_no):
                 "salesman" :item.salesman,
                 "is_header":item.is_header,
                 "header_acc_code":item.header_acc_code,
+                "header_pur_type":item.header_pur_type,
             }
             item_qty = Decimal(str(item.qty or 0))
             item_foc = Decimal(str(item.foc_qty or 0))
