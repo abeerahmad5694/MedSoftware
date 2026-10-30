@@ -91,7 +91,10 @@ def company_config_view(request):
             'allow_negative_stock': request.POST.get('inventory_allow_negative_stock') == 'on',
             'enable_expiry_tracking': request.POST.get('inventory_enable_expiry_tracking') == 'on',
             'enable_low_stock_alerts': request.POST.get('inventory_enable_low_stock_alerts') == 'on',
-            'pictures_allowed': request.POST.get('inventory_pictures_allowed') == 'on',
+            'pictures_allowed': (request.POST.get('inventory_pictures_allowed') or request.POST.get('pictures_allowed')) == 'on',
+            'carton_pack_name': (request.POST.get('inventory_carton_pack_name') or request.POST.get('carton_pack_name') or '').strip() or None,
+            'dzn_pack_name': (request.POST.get('inventory_dzn_pack_name') or request.POST.get('dzn_pack_name') or '').strip() or None,
+            'allow_stock_variation': (request.POST.get('inventory_allow_stock_variation') or request.POST.get('allow_stock_variation')) == 'on',
         }
         
         

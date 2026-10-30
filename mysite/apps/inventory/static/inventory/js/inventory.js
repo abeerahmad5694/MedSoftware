@@ -97,4 +97,27 @@ document.addEventListener('DOMContentLoaded', async function() {
         const identityCard = document.querySelector('.identity-card');
         identityCard.style.gridTemplateColumns = '1fr';
     }
+
+
+    if(window.companyConfigurations?.inventory?.dzn_pack_name && window.companyConfigurations?.inventory?.dzn_pack_name != ''){
+        // console.log('This si running')
+        document.getElementById('dzn_pack_box').classList.remove('hidden');
+        document.getElementById('dzn_pack_label').innerText = `${window.companyConfigurations?.inventory?.dzn_pack_name || 'Dozen'}`;
+    }
+    if(window.companyConfigurations?.inventory?.carton_pack_name && window.companyConfigurations?.inventory?.carton_pack_name != ''){
+        // console.log('This si running')
+        document.getElementById('carton_pack_box').classList.remove('hidden');
+        document.getElementById('carton_pack_label').innerText = window.companyConfigurations?.inventory?.carton_pack_name || 'Carton';
+    }
+
+
+
+
+
+    
+
+
+
+
+
 });

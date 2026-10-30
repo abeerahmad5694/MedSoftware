@@ -44,6 +44,9 @@ DEFAULT_CONFIG_DATA = {
         'enable_expiry_tracking': True,
         'enable_low_stock_alerts': True,
         'pictures_allowed': False,
+        'carton_pack_name': None,
+        'dzn_pack_name': None,
+        'allow_stock_variation':False,
     },
     'dashboard': {
         'default_period': 'today',

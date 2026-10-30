@@ -731,6 +731,9 @@
                             <span class="slider"></span>
                         </label>
                     </div>
+
+
+
                     <div class="toggle-row">
                         <div class="toggle-info">
                             <span>Pictures Allowed</span>
@@ -741,6 +744,39 @@
                             <span class="slider"></span>
                         </label>
                     </div>
+                    
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Stock Variation Allowed</span>
+                            <small>Allow Stock Variation Or Serial Number Tracking</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="inventory_allow_stock_variation" {% if config.inventory.allow_stock_variation %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>Carton Pack Name</span>
+                            <small>If None then hidden</small>
+                        </div>
+                        <input type="text" name="inventory_carton_pack_name" class="config-input" style="max-width: 180px;" value="{{ config.inventory.carton_pack_name|default:'' }}" placeholder="e.g. Carton">
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <span>DZN Pack Name</span>
+                            <small>If None then hidden</small>
+                        </div>
+                        <input type="text" name="inventory_dzn_pack_name" class="config-input" style="max-width: 180px;" value="{{ config.inventory.dzn_pack_name|default:'' }}" placeholder="e.g. DZN">
+                    </div>
+
+
+
+
+
+
+
 
                     <div class="toggle-row hidden">
                         <div class="toggle-info">
