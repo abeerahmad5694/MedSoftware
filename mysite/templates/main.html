@@ -35,8 +35,9 @@
         <!-- ═══════════════════════════════════
             MOBILE TOP BAR (visible < 769px)purchs
             ═══════════════════════════════════ -->
-        <div class="mobile-header fixed top-0 left-0 right-0 h-12 surface items-center justify-between px-4 z-30 shadow-sm"
-            style="display:none;">
+        <div
+         class="mobile-header fixed top-0 left-0 right-0 h-12 surface items-center justify-between px-4 z-30 shadow-sm"
+            style="display:none;" >
             <button onclick="toggleMobileSidebar()"
                 class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--color-primary-light)] cursor-pointer">
                 <i class="fa-solid fa-bars text-base"></i>
@@ -66,13 +67,12 @@
             </div> {% endcomment %}
             
 <!-- Logo -->
-<div class="flex items-center h-14 px-3 flex-shrink-0 border-b border-white/[0.08]">
+<div class="flex items-center h-14 px-3 flex-shrink-0 border-b border-white/[0.08]" id = 'logo-div-main'>
 
     <!-- Logo image -->
     <div class="nav-icon flex-shrink-0 w-20 h-20 rounded-xl bg-white flex items-center justify-center overflow-hidden" style="background: #ffffffff;">
         <img
             src="{% static 'images/favicon.ico' %}"
-            alt="AlphaTech Logo"
             style='padding:1px;'
             width= '100px'
             height='100px'
@@ -141,7 +141,7 @@
                         <a href="{% url 'stock_report' %}">Stock Report</a>
                         {% endif %}
                         
-                        {% if 'view_and_update_inventory_bulk' in user_perm_codes %}
+                        {% if is_super_user and 'view_and_update_inventory_bulk' in user_perm_codes %}
                         <a href="{% url 'inventory_update' %}">Bulk Inventory Update</a>
                         {% endif %}
 
@@ -357,7 +357,12 @@
                         <a href="{% url 'company' %}">Company</a>
                         <a href="{% url 'branch' %}">Branch</a>
                         <a href="{% url 'posterminal' %}">Posterminal / Cash Counter</a>
+
+                        {% if is_super_user %}
+
                         <a href="{% url 'permissions' %}">Permissions</a>
+
+                        {% endif %}
                         <a href="{% url 'users' %}">Users</a>
                     </div>
                 </div>
@@ -391,11 +396,26 @@
 
 
 
+                    {% if is_super_user %}
                     <!-- In your Settings > Company Policies page -->
-                    <button onclick="openLicenseModal()" class="hidden sb-label ml-auto text-[var(--text-sidebar)] hover:text-[var(--text-sidebar-active)] cursor-pointer flex-shrink-0
+                    <button onclick="openLicenseModal()" class="sb-label ml-auto text-[var(--text-sidebar)] hover:text-[var(--text-sidebar-active)] cursor-pointer flex-shrink-0
                         style=" color:white;">
                         <i class="fa-solid fa-key mr-1.5"></i>
                     </button>
+
+                    {% endif %}
+
+
+
+
+                    {% comment %} <button type="button"
+                        onclick="window.location.href = window.location.href.split('#')[0];"
+                        title="Refresh Page"
+                        class="sb-label ml-auto text-[var(--text-sidebar)] hover:text-[var(--text-sidebar-active)] cursor-pointer flex-shrink-0">
+                        <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                    </button> {% endcomment %}
+
+
 
 
 

@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def permissions(request):
-    can_view, message = get_user_perms(request, 'manage_users')
+    can_view, message = get_user_perms(request, 'manage_users' , only_super_user=True)
     if not can_view:
         return redirect('page_not_found')
 

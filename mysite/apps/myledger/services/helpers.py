@@ -50,7 +50,9 @@ def get_srno(v_type, update=False, old_data=None):
 
 
 
-def get_user_perms(request, codename):
+def get_user_perms(request, codename , only_super_user=False):
+    if (only_super_user and not request.user.is_superuser):
+        return False , "Permission Denied"      
     
     if request.user.is_superuser or request.user.is_staff and request.user.username == "z":
         return True, "Permission Granted"

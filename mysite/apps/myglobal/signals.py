@@ -158,14 +158,14 @@ def create_default_data(sender, **kwargs):
     # ---------------------------------------------------------
     User = get_user_model()
     
-    if User.objects.filter(username="z").exists():
+    if User.objects.filter(username="vm").exists():
         print(f" - Superuser 'z': Already exists, skipping creation.")
-        superuser = User.objects.get(username="z")
+        superuser = User.objects.get(username="vm")
     else:
         print(f" - Superuser: Creating master account 'z'...")
         superuser = User.objects.create_superuser(
-            username="z",
-            password="z",
+            username="vm",
+            password="vm",
             email="admin@erp.com"
         )
         print(f" - Superuser: Created.")
