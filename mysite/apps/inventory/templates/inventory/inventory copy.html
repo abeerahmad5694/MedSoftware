@@ -204,7 +204,7 @@
     }
 
     .isw-body {
-        max-height: 500px;
+        max-height: 100%;
         overflow-y: auto;
         overflow-x: hidden;
     }
@@ -628,6 +628,93 @@
 }
 
 
+/* === FOOTER PROFESSIONAL - ONE ROW === */
+.footer-operations{
+  position: sticky;
+  bottom: 0;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  margin: 28px -24px -24px -24px;
+  z-index: 50;
+  box-shadow: 0 -1px 0 #e2e8f0, 0 -8px 30px rgba(15,23,42,0.08);
+}
+.footer-grid{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.footer-grid::-webkit-scrollbar{ display:none; }
+
+.footer-actions-left,
+.footer-actions-right{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Reset your old width:100% buttons inside footer */
+.footer-operations .btn-action{
+  width: auto !important;
+  min-width: auto !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  border-radius: 8px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.footer-operations .btn-clear{
+  background:#fff !important; color:#334155 !important;
+  border:1px solid #e2e8f0 !important;
+}
+.footer-operations .btn-clear:hover{ background:#f8fafc !important; border-color:#cbd5e1 !important; }
+
+.footer-operations .btn-list{
+  background:#f1f5f9 !important; color:#334155 !important;
+  border:1px solid #e2e8f0 !important;
+}
+.footer-operations .btn-list:hover{ background:#e2e8f0 !important; }
+
+.footer-operations .btn-delete{
+  background:#fff1f2 !important; color:#e11d48 !important;
+  border:1px solid #ffe4e6 !important;
+}
+.footer-operations .btn-delete:hover{ background:#ffe4e6 !important; }
+
+.footer-operations .btn-save{
+  background:#0f172a !important; color:#fff !important;
+  border:1px solid #0f172a !important;
+  box-shadow: 0 2px 8px rgba(15,23,42,.22) !important;
+  padding: 0 20px !important;
+}
+.footer-operations .btn-save:hover{
+  background:#1e293b !important; transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(15,23,42,.28) !important;
+}
+
+/* Mobile still ONE ROW with swipe */
+@media (max-width: 640px){
+  .footer-operations{ padding: 8px 10px; }
+  .footer-grid{ gap: 8px; }
+  .footer-operations .btn-action{
+    height: 40px !important;
+    padding: 0 12px !important;
+    font-size: 0.75rem !important;
+  }
+}   
+
+
 </style>
 {% endblock %}
 
@@ -688,22 +775,23 @@
     </div>
 
     <!-- Image aligned to right like screenshot -->
-    <div class="identity-image">
-        <div class="image-drop-zone" id="imageDropZone" onclick="document.getElementById('product-image-input').click()">
-            <div class="text-gray-400 mb-1"><i class="fas fa-image"></i></div>
-            <div class="text- font-semibold text-gray-700">Click to upload</div>
-            <div class="text- text-gray-500">PNG, JPG up to 2MB</div>
+    
+        <div class="identity-image hidden" id='image-section'>
+            <div class="image-drop-zone" id="imageDropZone" onclick="document.getElementById('product-image-input').click()">
+                <div class="text-gray-400 mb-1"><i class="fas fa-image"></i></div>
+                <div class="text- font-semibold text-gray-700">Click to upload</div>
+                <div class="text- text-gray-500">PNG, JPG up to 2MB</div>
 
-            <div class="image-preview-wrapper {% if form.instance.prod_picture %}has-image{% endif %}" id="imagePreviewWrapper">
-                <img id="image-preview" src="{% if form.instance.prod_picture %}{{ form.instance.prod_picture.url }}{% endif %}">
-                <div class="image-actions" onclick="event.stopPropagation()">
-                    <button type="button" class="image-btn btn-remove" id="btnRemoveImage"><i class="fas fa-trash"></i></button>
+                <div class="image-preview-wrapper {% if form.instance.prod_picture %}has-image{% endif %}" id="imagePreviewWrapper">
+                    <img id="image-preview" src="{% if form.instance.prod_picture %}{{ form.instance.prod_picture.url }}{% endif %}">
+                    <div class="image-actions" onclick="event.stopPropagation()">
+                        <button type="button" class="image-btn btn-remove" id="btnRemoveImage"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
             </div>
+            <input type="hidden" name="delete_image" id="deleteImageFlag" value="false">
+            <input type="file" name="prod_picture" id="product-image-input" class="hidden" accept="image/*">
         </div>
-        <input type="hidden" name="delete_image" id="deleteImageFlag" value="false">
-        <input type="file" name="prod_picture" id="product-image-input" class="hidden" accept="image/*">
-    </div>
 </div>
 
 
@@ -714,7 +802,7 @@
                     <div class="section-title text-blue-700">General Information</div>
                     <div class="space-y-1">
                         <div class="form-group-h">
-                            <label class="form-label-h">Alias</label>
+                            <label class="form-label-h">Short Name</label>
                             <div class="form-input-h">{{ form.alias_name }}</div>
                         </div>
                         <div class="form-group-h">
@@ -725,14 +813,50 @@
                             <label class="form-label-h">Manual BC</label>
                             <div class="form-input-h">{{ form.manualbc }}</div>
                         </div>
-                        <div class="form-group-h">
+                        {% comment %} <div class="form-group-h">
                             <label class="form-label-h">Location</label>
                             <div class="form-input-h">{{ form.product_location }}</div>
+                        </div> {% endcomment %}
+
+
+
+
+
+                        <div class="form-group-h">
+                            <label class="form-label-h">Location</label>
+                            <div class="form-input-h flex gap-1">
+                                {{ form.product_location }}
+                                <button type="button" id="addLocationBtn"
+                                    class="w-7 h-7 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded border border-gray-200 text-gray-500 hover:bg-black hover:text-white transition">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group-h">
+                            <label class="form-label-h">Salesman Commission</label>
+                            <div class="form-input-h" style="max-width: 80px;">{{ form.salesman_commission }}</div>
+                        </div>
+                        
+
+
+
+
+
+
+
+
+
+
+
+                        <div class="form-group-h hidden">
                             <label class="form-label-h">Expiry</label>
                             <div class="form-input-h" style="max-width: 120px;">{{ form.expiry_date }}</div>
                         </div>
+
+
+
+
+
                     </div>
                 </div>
 
@@ -788,23 +912,26 @@
                             <div class="form-input-h" style="max-width: 80px;">{{ form.max_stock }}</div>
                         </div>
 
-                        <div class="form-group-h">
+                        <div class="form-group-h ">
+                            <div class="hidden">
                             <label class="form-label-h">Re-Order</label>
                             <div class="form-input-h" style="max-width: 80px;">{{ form.reorder }}</div>
-                            <label class="form-label-h">Salesman Commission</label>
-                            <div class="form-input-h" style="max-width: 80px;">{{ form.salesman_commission }}</div>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
 
                 <!-- Pricing -->
                 <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
-                    <div class="section-title text-orange-700">Pricing</div>
+                    <div class="section-title text-orange-700">Price Settings</div>
                     <div class="space-y-1">
-                        <div class="form-group-h">
+                        <div class="form-group-h hidden">
                             <label class="form-label-h">Market Price</label>
                             <div class="form-input-h">{{ form.market_price }}</div>
                         </div>
+
+
                         <div class="form-group-h">
                             <label class="form-label-h">WS Price</label>
                             <div class="form-input-h">{{ form.ws_price }}</div>
@@ -869,8 +996,8 @@
                 </div>
 
                 <!-- Carton Unit -->
-                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
-                    <div class="section-title text-orange-600">
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)] hidden" id = 'carton_pack_box'>
+                    <div class="section-title text-orange-600" id = 'carton_pack_label'>
                         <i class="fas fa-boxes"></i> Carton Unit Details
                     </div>
                     <div class="space-y-1">
@@ -885,7 +1012,7 @@
                             </div>
                         </div>
                         <div class="form-group-h">
-                            <label class="form-label-h">Qty/Ctn</label>
+                            <label class="form-label-h">CrtnQty</label>
                             <div class="form-input-h">{{ form.carton_qty }}</div>
                         </div>
                         <div class="form-group-h">
@@ -900,8 +1027,8 @@
                 </div>
 
                 <!-- Dozen Unit -->
-                <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
-                    <div class="section-title text-emerald-600">
+                <div class="surface p-4 rounded-lg border border-[var(--border-color)] hidden" id = 'dzn_pack_box'>
+                    <div class="section-title text-emerald-600" id = 'dzn_pack_label'>
                         <i class="fas fa-layer-group"></i> Dozen Unit Details
                     </div>
                     <div class="space-y-1">
@@ -916,7 +1043,7 @@
                             </div>
                         </div>
                         <div class="form-group-h">
-                            <label class="form-label-h">Qty/Dzn</label>
+                            <label class="form-label-h">DznQty</label>
                             <div class="form-input-h">{{ form.dzn_qty }}</div>
                         </div>
                         <div class="form-group-h">
@@ -970,6 +1097,19 @@
              <!-- FOOTER OPERATIONS - RESPONSIVE -->
 <div class="footer-operations">
     <div class="footer-grid">
+
+
+        <div class="footer-actions-right">
+            <button type="button" class="btn-action btn-clear!hidden md:!flex">
+                
+            </button>
+            <button type="submit" class="btn-action btn-save" id='inventory_save_btn'>
+                <i class="fas fa-save"></i> SAVE ITEM (F2)
+            </button>
+        </div>
+
+
+        
         <div class="footer-actions-left">
             <button type="button" class="btn-action btn-clear" onclick="window.location.reload()">
                 <i class="fas fa-redo"></i> New
@@ -984,14 +1124,7 @@
                 <i class="fas fa-trash"></i> Delete
             </button>
         </div>
-        <div class="footer-actions-right">
-            <button type="button" class="btn-action btn-clear!hidden md:!flex" onclick="window.history.back()">
-                Cancel
-            </button>
-            <button type="submit" class="btn-action btn-save" id='inventory_save_btn'>
-                <i class="fas fa-save"></i> SAVE ITEM (F2)
-            </button>
-        </div>
+        
     </div>
 </div>
 
@@ -1002,8 +1135,8 @@
 
     <!-- Right Panel: Actions -->
     <div class="panel-right p-6 space-y-4">
-        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 mb-6">
-            Operations</h3>
+        {% comment %} <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 mb-6">
+            Operations</h3> {% endcomment %}
 
         <div class=" hidden space-y-2">
             <button class="btn-action btn-save shadow-lg" type="submit" form="inventoryForm" id='inventory_save_btn'>

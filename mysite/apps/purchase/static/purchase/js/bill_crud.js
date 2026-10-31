@@ -242,12 +242,14 @@ async function save_bill(event) {
 }
 
 function New_bill(event) {
+  
   discountInput.value = 0;
   deliveryCharges.value = 0;
   receivedAmount.value = 0;
   remarksInput.value = "";
   changeAmount.textContent = "0.00";
   if (hidden_bill_no) hidden_bill_no.value = "";
+  if (accCode) accCode.value = "";
   if (cardDetails) cardDetails.style.display = "none";
   if (cardNumber) cardNumber.value = "";
   paymentMode.value = window.getDefaultAccount('default_cash_acc', 110000001);

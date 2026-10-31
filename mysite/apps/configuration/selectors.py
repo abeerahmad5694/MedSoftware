@@ -47,6 +47,23 @@ DEFAULT_CONFIG_DATA = {
         'carton_pack_name': None,
         'dzn_pack_name': None,
         'allow_stock_variation':False,
+        
+        'serial_fields_config': {
+            # Example defaults for Laptop (category_id will be replaced)
+            "0": [  # 0 = For All SERIAL items
+                {"field_name": "serial_no", "label": "Serial / IMEI 1 / Chassis", "is_required": True, "is_visible_in_purchase": True, "sort_order": 1},
+                {"field_name": "serial_no2", "label": "IMEI 2 / Engine No", "is_required": False, "is_visible_in_purchase": True, "sort_order": 2},
+                {"field_name": "color", "label": "Color", "is_required": False, "is_visible_in_purchase": True, "sort_order": 3},
+                {"field_name": "processor", "label": "Processor / Variant", "is_required": False, "is_visible_in_purchase": True, "sort_order": 4},
+                {"field_name": "ram", "label": "RAM", "is_required": False, "is_visible_in_purchase": True, "sort_order": 5},
+                {"field_name": "storage", "label": "Storage / CC", "is_required": False, "is_visible_in_purchase": True, "sort_order": 6},
+                {"field_name": "condition", "label": "Condition", "is_required": True, "is_visible_in_purchase": True, "sort_order": 7},
+                {"field_name": "model_year", "label": "Model Year", "is_required": False, "is_visible_in_purchase": False, "sort_order": 8},
+                {"field_name": "warranty_end", "label": "Warranty End", "is_required": False, "is_visible_in_purchase": True, "sort_order": 9},
+            ]
+        },
+        
+        
     },
     'dashboard': {
         'default_period': 'today',

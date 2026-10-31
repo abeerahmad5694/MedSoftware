@@ -1,74 +1,94 @@
-import re
-import requests
-from deep_translator import GoogleTranslator
 
-# This Google API is free, no key needed
-def transliterate_word(word):
-    """ LIGHT -> لائٹ, PANEL -> پینل """
-    if not word or len(word) <= 2: # Don't translate SR, VM, DB etc
-        return f"{transliterate_abbr(word)} ({word})" if word.isalpha() else word
 
-    try:
-        # itc=ur-t-i0-und is Urdu transliteration
-        url = "https://inputtools.google.com/request"
-        params = {
-            "itc": "ur-t-i0-und",
-            "num": 1,
-            "cp": 0, "cs": 1, "ie": "utf-8", "oe": "utf-8",
-            "app": "demopage",
-            "text": word.lower()
-        }
-        r = requests.get(url, params=params, timeout=5)
-        data = r.json()
-        # response is like [[ "light", ["لائٹ"] ]]
-        if data[0] == "SUCCESS":
-            return data[1][0][1][0]
-    except:
-        pass
+import sys, re, pathlib
 
-    # fallback to Google Translator if transliteration fails
-    try:
-        return GoogleTranslator(source='en', target='ur').translate(word)
-    except:
-        return word
+def fix_content(text):
+    # 1. Fix Django broken: ="" ="
+    # Example: {% if config.pos.default_page_size="" ="thermal_80" %}
+    # -> {% if config.pos.default_page_size == "thermal_80" %}
+    text = re.sub(r'=\s*""\s*=\s*"', '== "', text)
+    text = re.sub(r'=\s*""\s*=\s*'', "== '", text)
+    
+    # 2. Fix Django missing space before == :  default_page== "A5"  -> default_page == "A5"
+    # Only inside {% if ... %} blocks, but safe globally for == 
+    text = re.sub(r'(\w)==\s*"', r'\1 == "', text)
+    text = re.sub(r"(\w)==\s*'", r"\1 == '", text)
+    text = re.sub(r'"==', '" ==', text)  # just in case
+    
+    # 3. Fix JS broken ===  ->  Antigravity makes "== =" into "== ="
+    # a) == =  -> ===
+    # Examples:
+    #   typeof x == = 'string'  -> typeof x === 'string'
+    #   opt.value == =f.field_name -> opt.value === f.field_name
+    text = re.sub(r'==\s*=\s*', '=== ', text)
+    
+    # 4. Fix missing space after ===  :  ===f  -> === f
+    text = re.sub(r'===([a-zA-Z_\$])', r'=== \1', text)
+    text = re.sub(r'==([a-zA-Z_\$])', r'== \1', text)
+    
+    # 5. Fix double equals still broken like "== ="
+    text = text.replace('== =', '===')
+    
+    # 6. Specific: company.id="" ="c.id" is rare case but same as #1
+    # Already fixed by #1
+    
+    return text
 
-def transliterate_abbr(abbr):
-    # VM -> وی ایم, SR -> ایس آر
-    map_abbr = {
-        'A':'اے','B':'بی','C':'سی','D':'ڈی','E':'ای','F':'ایف',
-        'G':'جی','H':'ایچ','I':'آئی','J':'جے','K':'کے','L':'ایل',
-        'M':'ایم','N':'این','O':'او','P':'پی','Q':'کیو','R':'آر',
-        'S':'ایس','T':'ٹی','U':'یو','V':'وی','W':'ڈبلیو','X':'ایکس',
-        'Y':'وائی','Z':'زیڈ'
-    }
-    return " ".join([map_abbr.get(c, c) for c in abbr.upper()])
+if __name__ == "__main__":
+    file_arg = sys.argv[1] if len(sys.argv) > 1 else "company_config.html"
+    p = pathlib.Path(file_arg)
+    if not p.exists():
+        # Try to find in current dir
+        print(f"File not found: {p}")
+        sys.exit(1)
+    original = p.read_text(encoding='utf-8')
+    fixed = fix_content(original)
+    
+    # Count fixes
+    changes = 0
+    if original != fixed:
+        p.write_text(fixed, encoding='utf-8')
+        print(f"Fixed: {p}")
+        # Show diff summary
+        import difflib
+        for line in difflib.unified_diff(original.splitlines(), fixed.splitlines(), lineterm=''):
+            if line.startswith('+') or line.startswith('-'):
+                if '==' in line or '===' in line:
+                    print(line[:200])
+        print("\nDone. Now reload page with Ctrl+F5. Tabs and category combo will work.")
+    else:
+        print("No changes needed - file already clean")
 
-def convert_inventory_auto(text):
-    """
-    007=24WAY 3LIGHT+3VM PANEL SR
-    -> 007=24-وے 3-لائٹ + 3-وی ایم (VM) پینل ایس آر (SR)
-    """
-    # split keeping numbers
-    def repl(match):
-        token = match.group(0)
-        # 24WAY -> 24 + WAY
-        m = re.match(r'^(\d+)([A-Z]+)$', token)
-        if m:
-            num, word = m.groups()
-            return f"{num}-{transliterate_word(word)}"
+# import re, pathlib
+# # CHANGE THIS to your actual file location
+# p = pathlib.Path("apps/configuration/templates/configuration/company_config.html")
+# # or if your structure is templates/configuration/company_config.html
+# if not p.exists():
+#     p = pathlib.Path("templates/configuration/company_config.html")
+# if not p.exists():
+#     # try find recursively
+#     for f in pathlib.Path(".").rglob("company_config.html"):
+#         p = f
+#         break
 
-        if token.isalpha():
-            # keep small codes as وی ایم (VM)
-            if len(token) <= 3 and token.isupper():
-                ur = transliterate_abbr(token)
-                return f"{ur} ({token})"
-            return transliterate_word(token)
-        return token
+# print(f"Fixing {p}")
+# text = p.read_text(encoding="utf-8", errors="ignore")
 
-    pattern = r'\d+[A-Z]+|[A-Z]+'
-    result = re.sub(pattern, repl, text.upper())
-    result = result.replace("+", " + ")
-    return re.sub(r'\s+', ' ', result).strip()
+# # === CORE FIX ===
+# # Antigravity breaks == into ="" ="
+# text = text.replace('="" ="', ' == ')
+# text = text.replace('= "" =', ' == ')
+# text = text.replace('=""=""', ' == ')
+# text = text.replace('==""', ' == ')
+# text = text.replace('""=', ' == ')
 
-# TEST
-print(convert_inventory_auto("O12 BULB 12W OSAKA"))
+# # Normalize any == without spaces
+# text = re.sub(r'\s*==\s*', ' == ', text)
+
+# # Fix double spaces inside {% if %}
+# text = re.sub(r'{%\s+if\s+', '{% if ', text)
+# text = re.sub(r'\s{2,}selected', ' selected', text)
+
+# p.write_text(text, encoding="utf-8")
+# print("DONE - All {% if a == \"b\" %} fixed")
+# print("Check with: git diff", p)

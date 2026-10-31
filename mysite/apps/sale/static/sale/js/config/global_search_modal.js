@@ -34,13 +34,13 @@ GlobalSearchModal.init([
         ],
 
         // Exclude items matching these from local results
-        excludeFilters: { active: false },
+        excludeFilters: { active: false, tracking_type: "SERIAL" },
 
         pageSize: 14,
 
         // Called when user selects an item (Enter / double-click)
         onSelect: function (item) {
-            console.log(item)
+            // console.log(item)
             // console.log('Inventory item selected:', item);
             document.getElementById('product-search').focus();
             const cart = addToLocalCart(item);

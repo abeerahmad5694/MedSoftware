@@ -33,7 +33,7 @@ GlobalSearchModal.init([
         ],
 
         // Exclude items matching these from local results
-        excludeFilters: { active: false },
+        excludeFilters: { active: false, is_variant: true },
 
         pageSize: 50,
 

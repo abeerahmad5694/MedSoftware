@@ -351,7 +351,10 @@
                         </span>
                     </button>
                     <div class="submenu">
+
+                        {% if is_super_user %}
                         <a href="{% url 'company_config' %}">Company Policies</a>
+                        {% endif %}
                         <a href="{% url 'default_accounts' %}">Default Accounts</a>
                         <a href="{%url 'invoice_designer:designer_default'%}">Invoice Designer</a>
                         <a href="{% url 'company' %}">Company</a>

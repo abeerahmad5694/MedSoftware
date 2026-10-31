@@ -24,7 +24,11 @@ software.exe
 
 *mysite-MedSoft
 *mysite - MedSoft
+*mysite - Copy
 
+mysite - Copy/
+*mysite*Copy*/
+company_config copy.html
 
 # Environment variables
 .env

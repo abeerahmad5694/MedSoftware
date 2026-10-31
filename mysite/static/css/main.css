@@ -34,6 +34,28 @@ body {
     --accent-indicator: #3b82f6;
 }
 
+
+[data-theme="orange"] {
+    --bg-canvas: #f1f2f6;        /* #aab3c5 light */
+    --bg-surface: #ffffff;
+    --bg-sidebar: #0b0f19;       /* #0b0f19 */
+    --bg-sidebar-hover: #1a2332;
+    --bg-sidebar-active: rgba(254, 88, 2, 0.15); /* #fe5802 */
+    --text-main: #0b0f19;        /* #0b0f19 */
+    --text-muted: #aab3c5;       /* #aab3c5 */
+    --text-sidebar: #aab3c5;     /* #aab3c5 */
+    --text-sidebar-active: #ffffff;
+    --color-primary: #fe5802;    /* #fe5802 */
+    --color-primary-hover: #e04d00;
+    --color-primary-light: #ffedd5;
+    --color-primary-rgb: 254, 88, 2;
+    --border-color: #e2e6ed;
+    --shadow-color: rgba(11, 15, 25, 0.08);
+    --accent-indicator: #fe5802;
+}
+
+
+
 /* 2. Eclipse Dark */
 [data-theme="dark"] {
     --bg-canvas: #0b0f19;

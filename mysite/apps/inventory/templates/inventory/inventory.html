@@ -801,6 +801,15 @@
                 <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
                     <div class="section-title text-blue-700">General Information</div>
                     <div class="space-y-1">
+
+
+                        <div class="form-group-h">
+                            <label class="form-label-h">Variation</label>
+                            <div class="form-input-h">{{ form.tracking_type }}</div>
+                        </div>
+
+
+
                         <div class="form-group-h">
                             <label class="form-label-h">Short Name</label>
                             <div class="form-input-h">{{ form.alias_name }}</div>
@@ -809,10 +818,11 @@
                             <label class="form-label-h">Barcode</label>
                             <div class="form-input-h">{{ form.barcode }}</div>
                         </div>
-                        <div class="form-group-h">
+                        <div class="form-group-h hidden">
                             <label class="form-label-h">Manual BC</label>
                             <div class="form-input-h">{{ form.manualbc }}</div>
                         </div>
+                        
                         {% comment %} <div class="form-group-h">
                             <label class="form-label-h">Location</label>
                             <div class="form-input-h">{{ form.product_location }}</div>

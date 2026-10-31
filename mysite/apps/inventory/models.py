@@ -197,13 +197,12 @@ class Inventory(models.Model):
     #   NONE = Mouse, Charger, Keyboard - Simple qty stock like 50 pcs
     #   SERIAL = Laptop, Mobile, Car - Each piece has unique Serial/IMEI/Chassis, qty always 1
     TRACKING_CHOICES = [
-        ('NONE', 'Simple Item - Qty Based'),
-        ('SERIAL', 'Serial / IMEI / Chassis Based'),
+        # ('NONE', 'Simple Item - Qty Based'),
+        ('SERIAL', 'Serial / IMEI / Chassis Based '),
     ]
     tracking_type = models.CharField(
         max_length=10, 
         choices=TRACKING_CHOICES, 
-        default='NONE',
         null=True, blank=True,
         help_text="NONE for Accessories, SERIAL for Laptop/Mobile/Car"
     )
@@ -332,7 +331,18 @@ class Inventory(models.Model):
 
 
 
-
+class InvVariationFields(models.Model):
+    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+    category = models.ForeignKey(ItemCategory, on_delete=models.CASCADE, null=True, blank=True) # e.g. Laptop, Mobile, Car
+    # If category = Laptop, show these fields
+    field_name = models.CharField(max_length=50) # e.g. processor, ram, storage, color, serial_no, serial_no2, condition, warranty_end, model_year
+    label = models.CharField(max_length=50) # What user sees: "Processor", "IMEI 1", "Chassis No"
+    is_required = models.BooleanField(default=False)
+    is_visible_in_purchase = models.BooleanField(default=True)
+    is_visible_in_sale = models.BooleanField(default=False) # For sale you only need serial search
+    sort_order = models.IntegerField(default=0)
+    
+    
 
 class ItemExpense(models.Model):
     """

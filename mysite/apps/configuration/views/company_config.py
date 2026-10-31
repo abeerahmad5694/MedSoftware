@@ -1,6 +1,8 @@
+import json
 # import requests_oauthlib
+from apps.inventory.models import ItemCategory
 from apps.myledger.services.helpers import get_user_perms
-from django.shortcuts import redirect
+# from django.shortcuts import redirect
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -8,6 +10,7 @@ from django.http import JsonResponse
 
 from apps.configuration.models import CompanyConfiguration, Branch, Company
 from apps.configuration.selectors import get_company_config, get_default_accounts, DEFAULT_CONFIG_DATA
+
 
 
 @login_required
@@ -98,6 +101,15 @@ def company_config_view(request):
         }
         
         
+        raw_serial_config = request.POST.get('serial_fields_config_json')
+        try:
+            serial_fields_config = json.loads(raw_serial_config) if raw_serial_config else {}
+        except:
+            serial_fields_config = config_instance.config_data.get('inventory', {}).get('serial_fields_config', {}) if config_instance and config_instance.config_data else DEFAULT_CONFIG_DATA['inventory']['serial_fields_config']
+        inventory_config['serial_fields_config'] = serial_fields_config
+
+
+        
         stock_valuation_method = request.POST.get(
             'stock_valuation_method'
         ) or config_instance.stock_valuation_method or 'LAST_PUR_PRICE'
@@ -182,17 +194,26 @@ def company_config_view(request):
 
     # On GET: load merged configurations
     merged_config, _ = get_company_config(company.id if company else None, branch.id if branch else None)
+    serial_fields_json_str = json.dumps(merged_config.get('inventory', {}).get('serial_fields_config', {}))
+
     companies = list(Company.objects.all().order_by('name')) if request.user.is_superuser else [company]
     branches = list(Branch.objects.filter(company=company).order_by('name')) if company else []
+    
+    categories_list = ItemCategory.objects.filter(company=company).values('id','name')
+
     print('merged_config',merged_config)
+    
     context = {
         'company': company,
         'branch': branch,
         'companies': companies,
         'branches': branches,
         'config': merged_config,
+        'categories_list': categories_list,
+        'serial_fields_json_str': serial_fields_json_str,  # NEW
         'is_superuser': request.user.is_superuser,
     }
+    
     return render(request, 'configuration/company_config.html', context)
 
 

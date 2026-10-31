@@ -7,6 +7,14 @@ const themes = [
     desc: "Cool blue, light canvas",
   },
   {
+    id: "orange",
+    name: "Default Orange",
+    color: "#fe5802",
+    desc: "Warm orange, light canvas",
+  },
+
+  
+  {
     id: "dark",
     name: "Eclipse Dark",
     color: "#1e293b",

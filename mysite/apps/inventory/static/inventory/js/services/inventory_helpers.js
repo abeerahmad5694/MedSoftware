@@ -14,6 +14,8 @@ class InventoryHelpers {
             alert(data.message || 'Some error occured while fetching the record')
         }
     }
+
+    
     fillInventoryData = function (data) {
         for (let field in data) {
             const element = document.getElementById(`id_${field}`)

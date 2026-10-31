@@ -1,3 +1,4 @@
+from apps.sale.models import Features
 from django.shortcuts import render
 from datetime import datetime
 

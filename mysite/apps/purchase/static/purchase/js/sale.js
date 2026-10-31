@@ -170,6 +170,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!(window.companyConfigurations?.purchase?.foc_allowed || false)) {
     delete window.PURCHASE_CART_ROW_FIELDS.foc_qty ;
   }
+
+
+  if (window.companyConfigurations?.inventory?.carton_pack_name && window.companyConfigurations?.inventory?.carton_pack_name !='Packing unit') {
+    document.getElementById('carton-mode-radio').classList.remove('hidden');
+  }
+  if (window.companyConfigurations?.inventory?.dzn_pack_name && window.companyConfigurations?.inventory?.dzn_pack_name !='Dozen unit') {
+    document.getElementById('dzn-mode-radio').classList.remove('hidden');
+  }
   
   
   Setup_Listeners();

@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 import json
 from apps.purchase.models import Purchase , PurchaseOrder
+from apps.inventory.models import Inventory
 from apps.myglobal.services.helpers import get_next_voucher
 from django.http import JsonResponse
 from apps.purchase.services.purchase_helpers import json_to_invoice, now_karachi
@@ -68,13 +69,12 @@ def save_bill(request):
     
     for data in payload:
         items = data.get("items", [])
+        serial_items = data.get("serial_items", [])
         
-        print('itemsssssssssssssssssss',items)
+        print('itemsssssssssssssssssss', items)
         
-        if not items:
+        if not items and not serial_items:
             return JsonResponse({"success": False, "message": "No items provided"})
-            
-        landed_calcs = calculate_landed_cost(items, data)
         pur_type = data.get('header_pur_type',"p")
         is_return = False
         is_po = False
@@ -151,11 +151,109 @@ def save_bill(request):
                     "posterminal": user.userprofile.terminal,
                 }
                 
-                data.pop('local_id',None)
-                data.pop('items',None)
-                data.pop('date',None)
-                data.pop('is_return',None)
-                
+                if serial_items:
+                    # 1. In-memory duplicate check in payload
+                    serial_nos = [str(s.get('serial_no', '')).strip() for s in serial_items if s.get('serial_no')]
+                    if len(serial_nos) != len(set(serial_nos)):
+                        transaction.set_rollback(True)
+                        return JsonResponse({'success': False, 'message': 'Duplicate serial numbers found in purchase items.'})
+
+                    # 2. Check DB for active duplicates (bal_qty > 0)
+                    existing_active_serials = list(Inventory.objects.filter(
+                        company=user.userprofile.company,
+                        serial_no__in=serial_nos,
+                        bal_qty__gt=0
+                    ).values_list('serial_no', flat=True))
+                    if existing_active_serials:
+                        transaction.set_rollback(True)
+                        msg = 'Serial number already exists in stock with balance: ' + ', '.join(existing_active_serials)
+                        return JsonResponse({'success': False, 'message': msg})
+
+                    # 3. Bulk fetch parent products
+                    parent_ids = {s['parent_inv_id'] for s in serial_items if s.get('parent_inv_id')}
+                    parents_map = {
+                        p.inv_id: p for p in Inventory.objects.filter(
+                            inv_id__in=parent_ids,
+                            company=user.userprofile.company
+                        )
+                    }
+
+                    # 4. Prepare child Inventory rows
+                    new_child_records = []
+                    for s in serial_items:
+                        p_id = s.get('parent_inv_id')
+                        parent = parents_map.get(p_id)
+                        if not parent:
+                            transaction.set_rollback(True)
+                            return JsonResponse({'success': False, 'message': f'Parent item {p_id} not found'})
+
+                        cost_dec = Decimal(str(s.get('cost') or 0))
+                        sn = str(s.get('serial_no', '')).strip()
+
+                        child_inv = Inventory(
+                            company=user.userprofile.company,
+                            branch=user.userprofile.branch,
+                            parent_item=parent,
+                            is_variant=True,
+
+                            status='IN_STOCK',
+                            prod_name=f"{parent.prod_name} - {str(s.get('processor') or '').strip()}" if sn else f"{parent.prod_name} - {sn}",
+                            prod_name_ur=parent.prod_name_ur,
+                            alias_name=parent.alias_name,
+                            category=parent.category,
+                            subcategory=parent.subcategory,
+                            brand=parent.brand,
+                            manufacturer=parent.manufacturer,
+                            base_uom=parent.base_uom,
+                            base_price=parent.base_price,
+                            # cost=cost_dec,
+                            # last_pur_price=cost_dec,
+                            serial_no=sn,
+                            serial_no2=str(s.get('serial_no2') or '').strip() or None,
+                            color=str(s.get('color') or '').strip() or None,
+                            processor=str(s.get('processor') or '').strip() or None,
+                            ram=str(s.get('ram') or '').strip() or None,
+                            storage=str(s.get('storage') or '').strip() or None,
+                            condition=s.get('condition') or 'NEW',
+                            model_year=str(s.get('model_year') or '').strip() or None,
+                            warranty_end=s.get('warranty_end') or None,
+                            user=user.username if hasattr(user, 'username') else str(user),
+                            active=True,
+                            is_deleted=False,
+                        )
+                        new_child_records.append((child_inv, s))
+
+                    # 5. Bulk create child Inventory records
+                    Inventory.objects.bulk_create([rec[0] for rec in new_child_records])
+
+                    # 6. For each new child, append to items
+                    for child_inv, s in new_child_records:
+                        cost_dec = Decimal(str(s.get('cost') or 0))
+                        items.append({
+                            'inv_id': child_inv.inv_id,
+                            'prod_name': child_inv.prod_name,
+                            'product_name_ur': child_inv.prod_name_ur or "",
+                            'qty': 1,
+                            'rate': float(cost_dec),
+                            'packing_mode': 1,
+                            'pack_qty': 1,
+                            'uom': child_inv.base_uom.name if child_inv.base_uom else None,
+                            'row_discount_percent': 0,
+                            'row_discount_amount': 0,
+                            'row_net_total': float(cost_dec),
+                            'row_batch_no': "",
+                            'row_expiry_dt': str(child_inv.warranty_end) if child_inv.warranty_end else None,
+                            'row_old_total_base_qty': 0,
+                        })
+
+                data.pop('serial_items', None)
+                data.pop('local_id', None)
+                data.pop('items', None)
+                data.pop('date', None)
+                data.pop('is_return', None)
+
+                landed_calcs = calculate_landed_cost(items, data)
+
                 invoices = []
                 stock_rows = []
                 return_amount = Decimal("0")
