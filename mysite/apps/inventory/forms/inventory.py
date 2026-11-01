@@ -8,6 +8,8 @@ class InventoryForm(forms.ModelForm):
         widgets = {
             'expiry_date': forms.DateInput(attrs={'type': 'date'}),
             'date': forms.DateInput(attrs={'type': 'date'}),
+            'warranty_start': forms.DateInput(attrs={'type': 'date'}),
+            'warranty_end': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):

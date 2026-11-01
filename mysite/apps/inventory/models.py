@@ -331,43 +331,43 @@ class Inventory(models.Model):
 
 
 
-class InvVariationFields(models.Model):
-    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
-    category = models.ForeignKey(ItemCategory, on_delete=models.CASCADE, null=True, blank=True) # e.g. Laptop, Mobile, Car
-    # If category = Laptop, show these fields
-    field_name = models.CharField(max_length=50) # e.g. processor, ram, storage, color, serial_no, serial_no2, condition, warranty_end, model_year
-    label = models.CharField(max_length=50) # What user sees: "Processor", "IMEI 1", "Chassis No"
-    is_required = models.BooleanField(default=False)
-    is_visible_in_purchase = models.BooleanField(default=True)
-    is_visible_in_sale = models.BooleanField(default=False) # For sale you only need serial search
-    sort_order = models.IntegerField(default=0)
+# class InvVariationFields(models.Model):
+#     company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+#     category = models.ForeignKey(ItemCategory, on_delete=models.CASCADE, null=True, blank=True) # e.g. Laptop, Mobile, Car
+#     # If category = Laptop, show these fields
+#     field_name = models.CharField(max_length=50) # e.g. processor, ram, storage, color, serial_no, serial_no2, condition, warranty_end, model_year
+#     label = models.CharField(max_length=50) # What user sees: "Processor", "IMEI 1", "Chassis No"
+#     is_required = models.BooleanField(default=False)
+#     is_visible_in_purchase = models.BooleanField(default=True)
+#     is_visible_in_sale = models.BooleanField(default=False) # For sale you only need serial search
+#     sort_order = models.IntegerField(default=0)
     
     
 
-class ItemExpense(models.Model):
-    """
-    Purpose: Track every extra rupee spent on a single serial piece
-    Real Example: 
-      Laptop SN-001 bought for 80k (USED)
-      Expense 1: Battery 7000
-      Expense 2: 8GB RAM 6000
-      Expense 3: Servicing 2000
-      Total extra_cost = 15000
-      Final cost = 95000
-    """
-    company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
-    branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
-    inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='expenses', help_text="Which serial piece this expense is for")
+# class ItemExpense(models.Model):
+#     """
+#     Purpose: Track every extra rupee spent on a single serial piece
+#     Real Example: 
+#       Laptop SN-001 bought for 80k (USED)
+#       Expense 1: Battery 7000
+#       Expense 2: 8GB RAM 6000
+#       Expense 3: Servicing 2000
+#       Total extra_cost = 15000
+#       Final cost = 95000
+#     """
+#     company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE)
+#     branch = models.ForeignKey('configuration.Branch', on_delete=models.CASCADE)
+#     inventory_item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='expenses', help_text="Which serial piece this expense is for")
     
-    expense_type = models.CharField(max_length=100, help_text="e.g. RAM Upgrade, Battery, SSD, Denting, Painting, Servicing")
-    description = models.CharField(max_length=255, null=True, blank=True)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    date = models.DateField(auto_now_add=True)
-    # Link to Gledg for accounting
-    gledg_ref = models.IntegerField(null=True, blank=True)
+#     expense_type = models.CharField(max_length=100, help_text="e.g. RAM Upgrade, Battery, SSD, Denting, Painting, Servicing")
+#     description = models.CharField(max_length=255, null=True, blank=True)
+#     amount = models.DecimalField(max_digits=12, decimal_places=2)
+#     date = models.DateField(auto_now_add=True)
+#     # Link to Gledg for accounting
+#     gledg_ref = models.IntegerField(null=True, blank=True)
 
-    def __str__(self):
-        return f"{self.inventory_item.serial_no} - {self.expense_type} - {self.amount}"
+#     def __str__(self):
+#         return f"{self.inventory_item.serial_no} - {self.expense_type} - {self.amount}"
     
     
 
@@ -421,6 +421,9 @@ class StockLot(models.Model):
     def __str__(self):
         return f"Lot {self.id} - {self.inventory_item.prod_name} - Rem {self.quantity_remaining}/{self.quantity_received}"
 
+
+
+
 class StockLedger(models.Model):
     """Immutable history for 5 valuations. NEVER update. Only INSERT and REVERSE."""
     company = models.ForeignKey('configuration.Company', on_delete=models.CASCADE, db_index=True)
@@ -455,6 +458,12 @@ class StockLedger(models.Model):
     adj_type = models.CharField(max_length=20, null=True,blank = True,db_column='adj_type' ,default= '') # OPENING, DAMAGE, LEAKAGE
     voucher_date = models.DateField(db_index=True, db_column='date')
     dateent = models.DateTimeField(auto_now_add=True)
+    
+    
+    upgrade_no = models.CharField(max_length=30, null=True, blank=True, db_index=True, help_text="Same for all items in one assembly/upgrade e.g. ASM-001") 
+    linked_item = models.ForeignKey(Inventory, on_delete=models.SET_NULL, null=True, blank=True, related_name='linked_ledgers', help_text="For component OUT, which final product it went to")
+
+
 
     class Meta:
         db_table = 'stock_ledger'

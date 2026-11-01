@@ -803,8 +803,8 @@
                     <div class="space-y-1">
 
 
-                        <div class="form-group-h">
-                            <label class="form-label-h">Variation</label>
+                        <div class="form-group-h hidden" id = 'variation-type-group'>
+                            <label class="form-label-h ">Variation or Serial Tracking</label>
                             <div class="form-input-h">{{ form.tracking_type }}</div>
                         </div>
 
@@ -972,6 +972,105 @@
                 </div>
             </div>
 
+
+
+            
+            <!-- Variant & Serial Tracking Details (Hidden by default, shown if is_variant == true) -->
+            <div id="variantFieldsCard" class="hidden space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Variant & Specifications -->
+                    <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                        <div class="section-title text-indigo-700">
+                            <i class="fas fa-layer-group"></i> Variant &amp; Specs
+                        </div>
+                        <div class="space-y-1">
+                            <div class="form-group-h hidden">
+                                <label class="form-label-h">Parent Item</label>
+                                <div class="form-input-h">{{ form.parent_item }}</div>
+                            </div>
+                            <div class="form-group-h hidden">
+                                <label class="form-label-h">Variant Title</label>
+                                <div class="form-input-h">{{ form.variant_title }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Processor</label>
+                                <div class="form-input-h">{{ form.processor }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">RAM</label>
+                                <div class="form-input-h">{{ form.ram }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Storage</label>
+                                <div class="form-input-h">{{ form.storage }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Color</label>
+                                <div class="form-input-h">{{ form.color }}</div>
+                            </div>
+                            <div class="form-group-h hidden">
+                                <label class="form-label-h">Model Year</label>
+                                <div class="form-input-h">{{ form.model_year }}</div>
+                            </div>
+                            <div class="form-group-h hidden">
+                                <label class="form-label-h">Is Variant</label>
+                                <div class="form-input-h">{{ form.is_variant }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Serial / IMEI & Status -->
+                    <div class="surface p-4 rounded-lg border border-[var(--border-color)]">
+                        <div class="section-title text-purple-700">
+                            <i class="fas fa-barcode"></i> Serial &amp; Status
+                        </div>
+                        <div class="space-y-1">
+                            <div class="form-group-h">
+                                <label class="form-label-h">Serial / IMEI 1</label>
+                                <div class="form-input-h">{{ form.serial_no }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">IMEI 2 / Engine</label>
+                                <div class="form-input-h">{{ form.serial_no2 }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Condition</label>
+                                <div class="form-input-h">{{ form.condition }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Status</label>
+                                <div class="form-input-h">{{ form.status }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Piece Cost & Warranty -->
+                    <div class="hidden surface p-4 rounded-lg border border-[var(--border-color)]">
+                        <div class="section-title text-amber-700">
+                            <i class="fas fa-file-invoice-dollar"></i> Piece Cost &amp; Warranty
+                        </div>
+                        <div class="space-y-1">
+                            <div class="form-group-h">
+                                <label class="form-label-h">Indiv. Cost</label>
+                                <div class="form-input-h">{{ form.individual_cost }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Extra Cost</label>
+                                <div class="form-input-h">{{ form.extra_cost }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Warranty Start</label>
+                                <div class="form-input-h">{{ form.warranty_start }}</div>
+                            </div>
+                            <div class="form-group-h">
+                                <label class="form-label-h">Warranty End</label>
+                                <div class="form-input-h">{{ form.warranty_end }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Unit Groups -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <!-- Base Unit -->
@@ -1067,6 +1166,8 @@
                     </div>
                 </div>
             </div>
+
+
 
 
 {% comment %} 
