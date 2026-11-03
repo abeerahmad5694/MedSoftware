@@ -109,6 +109,22 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('carton_pack_box').classList.remove('hidden');
         document.getElementById('carton_pack_label').innerText = window.companyConfigurations?.inventory?.carton_pack_name || 'Carton';
     }
+    // console.log(window.companyConfigurations?.inventory?.allow_stock_variation)
+    // console.log(typeof(window.companyConfigurations?.inventory?.allow_stock_variation))
+
+    const allowVariation =
+    window.companyConfigurations?.inventory?.allow_stock_variation;
+
+    const variationGroup = document.getElementById('variation-type-group');
+
+    console.log('This is variation logic..',{
+        allowVariation,
+        type: typeof allowVariation,
+        variationGroup
+    });
+
+
+
     if(window.companyConfigurations?.inventory?.allow_stock_variation){
         // console.log('This si running')
         document.getElementById('variation-type-group').classList.remove('hidden');
