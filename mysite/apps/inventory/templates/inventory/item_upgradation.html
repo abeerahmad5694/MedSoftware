@@ -1,0 +1,1391 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --upg-primary: var(--color-primary, #fe5802);
+    --upg-primary-hover: var(--color-primary-hover, #e04d00);
+    --upg-primary-light: var(--color-primary-light, #ffedd5);
+    --upg-primary-border: var(--border-color, #fed7aa);
+    --upg-border: var(--border-color, #e2e8f0);
+    --upg-bg-card: var(--bg-surface, #ffffff);
+    --upg-bg-soft: var(--bg-canvas, #f8fafc);
+    --upg-text-main: var(--text-main, #0f172a);
+    --upg-text-muted: var(--text-muted, #64748b);
+    --upg-blue: #2563eb;
+    --upg-green: #16a34a;
+    --upg-red: #dc2626;
+
+    /* Theme alias */
+    --upg-orange: var(--upg-primary);
+    --upg-orange-light: var(--upg-primary-light);
+    --upg-orange-border: var(--upg-primary-border);
+  }
+
+  .upg-container {
+    padding: 16px 24px 100px 24px;
+    max-width: 1500px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* ── Header ── */
+  .upg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: var(--upg-bg-card);
+    border: 1px solid var(--upg-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .upg-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .upg-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--upg-primary), var(--upg-primary-hover));
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 254, 88, 2), 0.25);
+  }
+
+  .upg-header-title h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--upg-text-main);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .upg-header-title p {
+    margin: 2px 0 0 0;
+    font-size: 12px;
+    color: var(--upg-text-muted);
+  }
+
+  .upg-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .tech-select-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--upg-text-main);
+  }
+
+  .tech-select {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--upg-border);
+    border-radius: 8px;
+    background: var(--upg-bg-card);
+    color: var(--upg-text-main);
+    outline: none;
+    cursor: pointer;
+    min-width: 150px;
+  }
+
+  /* Mode Toggle Pills */
+  .mode-pills {
+    display: inline-flex;
+    background: var(--upg-bg-soft);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+    border: 1px solid var(--upg-border);
+  }
+
+  .mode-pill {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--upg-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .mode-pill:hover {
+    color: var(--upg-text-main);
+  }
+
+  .mode-pill.active {
+    background: var(--upg-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(var(--color-primary-rgb, 254, 88, 2), 0.3);
+  }
+
+  /* ── Cards General ── */
+  .upg-card {
+    background: var(--upg-bg-card);
+    border: 1px solid var(--upg-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  }
+
+  .upg-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--upg-text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* ── Search Bar Section ── */
+  .search-bar-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .search-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-input-wrap i {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    font-size: 15px;
+  }
+
+  .search-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px 0 42px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--upg-border);
+    border-radius: 8px;
+    outline: none;
+    background: var(--upg-bg-card);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+  }
+
+  .search-input:focus {
+    border-color: var(--upg-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 254, 88, 2), 0.15);
+  }
+
+  .btn-search {
+    height: 42px;
+    padding: 0 20px;
+    background: var(--upg-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .btn-search:hover {
+    background: var(--upg-primary-hover);
+  }
+
+  .btn-catalog {
+    height: 42px;
+    padding: 0 16px;
+    background: var(--upg-bg-soft);
+    color: var(--upg-text-main);
+    border: 1px solid var(--upg-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .btn-catalog:hover {
+    background: var(--upg-border);
+  }
+
+  /* ── Selected Product Banner ── */
+  .product-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 14px 18px;
+    background: var(--upg-bg-soft);
+    border: 1px solid var(--upg-border);
+    border-radius: 10px;
+  }
+
+  .product-info-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .product-brand-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--upg-bg-card);
+    border: 1px solid var(--upg-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #2563eb;
+    font-weight: 800;
+  }
+
+  .product-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--upg-text-main);
+    margin: 0 0 4px 0;
+  }
+
+  .product-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .prod-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: var(--upg-border);
+    color: var(--upg-text-main);
+    border-radius: 4px;
+  }
+
+  .prod-tag.serial {
+    background: #dbeafe;
+    color: #1e40af;
+    font-family: monospace;
+    font-weight: 700;
+  }
+
+  .product-cost-stats {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .cost-stat-item {
+    text-align: right;
+  }
+
+  .cost-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--upg-text-muted);
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
+  }
+
+  .cost-stat-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--upg-text-main);
+  }
+
+  .cost-stat-val.extra {
+    color: var(--upg-primary);
+  }
+
+  .cost-stat-val.final {
+    color: var(--upg-text-main);
+    font-size: 20px;
+  }
+
+  /* ── Two Columns Grid (Parts IN & Parts OUT) ── */
+  .upg-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .upg-grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .parts-table-wrap {
+    border: 1px solid var(--upg-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--upg-bg-card);
+    margin-bottom: 12px;
+  }
+
+  .parts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .parts-table th {
+    background: var(--upg-bg-soft);
+    color: var(--upg-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--upg-border);
+    text-align: left;
+  }
+
+  .parts-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--upg-border);
+    vertical-align: middle;
+  }
+
+  .parts-table tr:hover {
+    background: var(--upg-bg-soft);
+  }
+
+  .table-input {
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 12px;
+    border: 1px solid var(--upg-border);
+    border-radius: 4px;
+    outline: none;
+    background: var(--upg-bg-card);
+    box-sizing: border-box;
+  }
+
+  .table-input:focus {
+    border-color: var(--upg-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb, 254, 88, 2), 0.15);
+  }
+
+  .btn-table-action {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    background: #fee2e2;
+    color: #dc2626;
+    transition: all 0.15s;
+  }
+
+  .btn-table-action:hover {
+    background: #dc2626;
+    color: #ffffff;
+  }
+
+  /* Dotted Add Button */
+  .btn-dotted-add {
+    width: 100%;
+    height: 38px;
+    border: 2px dashed var(--upg-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--upg-text-muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+
+  .btn-dotted-add:hover {
+    border-color: var(--upg-primary);
+    color: var(--upg-primary);
+    background: var(--upg-orange-light);
+  }
+
+  .btn-dotted-add.parts-out:hover {
+    border-color: var(--upg-red);
+    color: var(--upg-red);
+    background: #fef2f2;
+  }
+
+  /* ── Technician & Charges ── */
+  .charges-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1.6fr 1fr 1.6fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 1024px) {
+    .charges-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .charges-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .charge-field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--upg-text-muted);
+    margin-bottom: 4px;
+  }
+
+  /* ── Bottom Sticky Bar ── */
+  .upg-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--upg-bg-card);
+    border-top: 2px solid var(--upg-border);
+    padding: 12px 105px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+    z-index: 100;
+  }
+
+  .summary-metrics {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 14px;
+    color: var(--upg-text-main);
+  }
+
+  .summary-metric-val {
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--upg-text-main);
+  }
+
+  .summary-metric-val.extra {
+    color: var(--upg-primary);
+  }
+
+  .summary-metric-val.final {
+    color: #16a34a;
+    font-size: 19px;
+  }
+
+  .bottom-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-save-draft {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--upg-bg-soft);
+    color: var(--upg-text-main);
+    border: 1px solid var(--upg-border);
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .btn-save-draft:hover {
+    background: var(--upg-border);
+  }
+
+  .btn-complete {
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 800;
+    background: var(--upg-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb, 254, 88, 2), 0.3);
+    transition: all 0.15s;
+  }
+
+  .btn-complete:hover {
+    background: var(--upg-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Spec Upgrade Inputs (Optional inline tweak) */
+  .spec-edit-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 8px;
+    border-top: 1px dashed var(--upg-border);
+  }
+
+  .spec-pill-input {
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid var(--upg-border);
+    border-radius: 4px;
+    background: var(--upg-bg-card);
+    width: 100px;
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="upg-container">
+  
+  <!-- Header Bar -->
+  <div class="upg-header">
+    <div class="upg-header-title">
+      <div class="hidden upg-header-icon">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+      </div>
+      <div>
+        <h1 id="screenTitle">Item Upgradation &amp; Assembly</h1>
+        <p hidden>Upgrade laptops, assemble PCs from components, or service customer hardware</p>
+      </div>
+    </div>
+
+    <div class="upg-header-actions">
+      <!-- Technician -->
+      <div class="tech-select-group hidden">
+        <span>Technician:</span>
+        <select id="technicianSelect" class="tech-select">
+          <option value="">-- Select Technician --</option>
+          {% for tech in technicians %}
+            <option value="{{ tech }}" {% if forloop.first %}selected{% endif %}>{{ tech }}</option>
+          {% endfor %}
+          <option value="Ali Tech">Ali Tech</option>
+          <option value="Workshop Lead">Workshop Lead</option>
+        </select>
+      </div>
+
+      <!-- Mode Pills -->
+      <div class="mode-pills">
+        <button type="button" class="mode-pill active" data-mode="UPGRADE" onclick="switchMode('UPGRADE')">
+          Upgrade
+        </button>
+        <button type="button" class="mode-pill" data-mode="ASSEMBLY" onclick="switchMode('ASSEMBLY')">
+          Assembly
+        </button>
+        <button type="button" class="mode-pill" data-mode="REPAIR" onclick="switchMode('REPAIR')">
+          Repair
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Product Search Card -->
+  <div class="upg-card">
+    <div class="upg-card-title hidden">
+      <span class="badge-dot" style="background: var(--upg-orange);"></span>
+      <span id="searchLabel">Search Laptop / Product by Serial, Barcode or ID</span>
+    </div>
+
+    <div class="search-bar-row">
+      <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          id="productSearchInput"
+          class="search-input"
+          placeholder="Search Item"
+          autocomplete="off"
+        />
+      </div>
+      <button type="button" class="hidden btn-search" id="btnSearchProduct" onclick="searchMainProduct()">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span>Search</span>
+      </button>
+      <button type="button" class="btn-catalog" id="btnBrowseCatalog">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Search (F3)</span>
+      </button>
+    </div>
+
+    <!-- Product Card View (Populated when item is selected) -->
+    <div id="selectedProductBanner" class="product-banner" style="display: none;">
+      <div class="product-info-left">
+        <div class="product-brand-box" id="bannerBrandIcon">
+          <i class="fa-solid fa-laptop"></i>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 class="product-name" id="bannerProdName">Dell Inspiron 3530</h3>
+            <button type="button" onclick="clearSelectedProduct()" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 13px;" title="Clear & choose another">
+              <i class="fa-solid fa-rotate-left"></i> Change
+            </button>
+          </div>
+          <div class="product-tags">
+            <span class="prod-tag serial" id="bannerSerialNo">SN: 8XJ9K43</span>
+            <span class="prod-tag" id="bannerProcessor">i5 12th</span>
+            <span class="prod-tag" id="bannerRam">8GB</span>
+            <span class="prod-tag" id="bannerStorage">512GB</span>
+            <span class="prod-tag" id="bannerCondition" style="background: #ecfdf5; color: #047857;">GOOD</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Stats Right -->
+      <div class="product-cost-stats">
+        <div class="cost-stat-item">
+          <div class="cost-stat-label">Bought / Base</div>
+          <div class="cost-stat-val" id="bannerBoughtCost">Rs. 0.00</div>
+        </div>
+        <div class="cost-stat-item">
+          <div class="cost-stat-label">Extra Cost</div>
+          <div class="cost-stat-val extra" id="bannerExtraCost">Rs. 0.00</div>
+        </div>
+        <div class="cost-stat-item">
+          <div class="cost-stat-label">Current Final</div>
+          <div class="cost-stat-val final" id="bannerFinalCost">Rs. 0.00</div>
+        </div>
+      </div>
+
+      <!-- Optional Spec Upgrade Tweak Bar -->
+      <div class="spec-edit-group" id="specEditGroup">
+        <span style="font-size: 11px; font-weight: 700; color: #475569;">Update Specs:</span>
+        <label style="font-size: 11px; color: #64748b;">RAM:</label>
+        <input type="text" id="editRamInput" class="spec-pill-input" placeholder="e.g. 16GB" />
+        <label style="font-size: 11px; color: #64748b;">Storage:</label>
+        <input type="text" id="editStorageInput" class="spec-pill-input" placeholder="e.g. 1TB SSD" />
+        <label style="font-size: 11px; color: #64748b;">Condition:</label>
+        <select id="editConditionInput" class="spec-pill-input" style="width: 90px;">
+          <option value="NEW">New</option>
+          <option value="USED">Used</option>
+          <option value="REFURB">Refurb</option>
+          <option value="FAULTY">Faulty</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two Columns: Parts IN & Parts OUT -->
+  <div class="upg-grid-2">
+    
+    <!-- Parts IN Card -->
+    <div class="upg-card" style="margin-bottom: 0;">
+      <div class="upg-card-title" style="color: var(--upg-green);">
+        <i class="fa-solid fa-circle-plus"></i>
+        <span id="partsInHeader">Parts IN</span>
+      </div>
+
+      <div class="parts-table-wrap">
+        <table class="parts-table" id="partsInTable">
+          <thead>
+            <tr>
+              <th style="width: 35%;">Part Name</th>
+              <th style="width: 15%; text-align: center;">Qty</th>
+              <th style="width: 25%; text-align: right;">Cost (Rs.)</th>
+              <th style="width: 15%;">Condition</th>
+              <th style="width: 10%; text-align: center;">▲</th>
+            </tr>
+          </thead>
+          <tbody id="partsInBody">
+            <tr id="partsInEmptyRow">
+              <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">
+                <i class="fa-solid fa-box-open" style="font-size: 24px; margin-bottom: 6px; display: block;"></i>
+                No components added yet. Click <strong>+ Add Part</strong> below.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" class="btn-dotted-add" id="btnAddPartIn" onclick="openPartInModal()">
+        <i class="fa-solid fa-plus"></i>
+        <span>Add Part</span>
+      </button>
+    </div>
+
+    <!-- Parts OUT Card -->
+    <div class="upg-card" style="margin-bottom: 0;">
+      <div class="upg-card-title" style="color: var(--upg-red);">
+        <i class="fa-solid fa-circle-minus"></i>
+        <span id="partsOutHeader">Parts OUT </span>
+      </div>
+
+      <div class="parts-table-wrap">
+        <table class="parts-table" id="partsOutTable">
+          <thead>
+            <tr>
+              <th style="width: 40%;">Part Name</th>
+              <th style="width: 15%; text-align: center;">Qty</th>
+              <th style="width: 35%;">Action / Destination</th>
+              <th style="width: 10%; text-align: center;">▲</th>
+            </tr>
+          </thead>
+          <tbody id="partsOutBody">
+            <tr id="partsOutEmptyRow">
+              <td colspan="4" style="text-align: center; color: #94a3b8; padding: 24px;">
+                <i class="fa-solid fa-arrow-right-from-bracket" style="font-size: 24px; margin-bottom: 6px; display: block;"></i>
+                No parts removed from this unit.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" class="btn-dotted-add parts-out" id="btnAddPartOut" onclick="openPartOutModal()">
+        <i class="fa-solid fa-minus"></i>
+        <span>Remove Part</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Technician & Charges Card -->
+  <div class="upg-card">
+    <div class="upg-card-title">
+      <i class="fa-solid fa-calculator" style="color: var(--upg-primary);"></i>
+      <span>Technician &amp; Service Charges</span>
+    </div>
+
+    <div class="charges-grid">
+      <div class="hidden charge-field-group">
+        <label>Technician Assigned</label>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input type="text" id="technicianNameInput" class="table-input" style="height: 38px; font-weight: 600;" value="{% if technicians %}{{ technicians.0 }}{% else %}Workshop Tech{% endif %}" placeholder="Technician Name" />
+          {% if technicians %}
+          <select id="technicianQuickSelect" class="table-input" style="width: 40px; height: 38px; padding: 0 4px; cursor: pointer;" onchange="if(this.value) document.getElementById('technicianNameInput').value = this.value;" title="Quick Select Staff">
+            <option value="">▼</option>
+            {% for tech in technicians %}
+              <option value="{{ tech }}">{{ tech }}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="charge-field-group">
+        <label>Technition Account <span style="color: var(--upg-primary); font-weight: 700;">*</span></label>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input type="text" id="technicianAccCodeInput" class="table-input" style="width: 110px; height: 38px; font-weight: 700; text-align: center;" value="{{ default_cash_acc|default:'110000001' }}" placeholder="Acc Code" />
+          <button type="button" class="btn btn-search-acc" id="search-technician" title="Find Account (F4)" style="height: 38px; width: 38px; border: 1px solid var(--upg-border); border-radius: 6px; background: var(--upg-bg-card); color: var(--upg-text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease;">
+            <i class="fa-solid fa-search"></i>
+          </button>
+          <input type="text" id="expenseAccNameInput" class="table-input" style="flex: 1; height: 38px; background: var(--upg-bg-soft); font-weight: 600;" readonly value="{{ default_cash_acc_name|default:'Cash in Hand' }}" placeholder="Account Name" />
+        </div>
+      </div>
+
+      <div class="charge-field-group">
+        <label>Labor Charges (Rs.)</label>
+        <input type="number" id="laborChargesInput" class="table-input" style="height: 38px; font-weight: 700; text-align: right;" value="0" min="0" oninput="calculateTotals()" />
+      </div>
+
+      <div class="charge-field-group">
+        <label>Additional Expense Description &amp; Amount (Rs.)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="addExpenseDescInput" class="table-input" style="height: 38px; flex: 1.8;" placeholder="e.g. Thermal paste / Cleaning" />
+          <input type="number" id="addExpenseAmountInput" class="table-input" style="height: 38px; flex: 1.2; font-weight: 700; text-align: right;" value="0" min="0" oninput="calculateTotals()" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom Sticky Action Bar -->
+<div class="upg-bottom-bar">
+  <div class="summary-metrics">
+    <div>
+      <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">New Added Cost</span>
+      <span class="summary-metric-val extra" id="summaryAddedCost">Rs. 0.00</span>
+    </div>
+    <div style="border-left: 1px solid #cbd5e1; height: 32px;"></div>
+    <div>
+      <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">Total Extra Cost</span>
+      <span class="summary-metric-val" id="summaryTotalExtraCost">Rs. 0.00</span>
+    </div>
+    <div style="border-left: 1px solid #cbd5e1; height: 32px;"></div>
+    <div>
+      <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; display: block;">New Final Cost</span>
+      <span class="summary-metric-val final" id="summaryNewFinalCost">Rs. 0.00</span>
+    </div>
+  </div>
+
+  <div class="bottom-btn-group">
+    <button type="button" class="btn-save-draft" onclick="saveUpgrade(true)">
+      <i class="fa-solid fa-floppy-disk"></i>
+      <span>Save Draft</span>
+    </button>
+    <button type="button" class="btn-complete" id="btnCompleteUpgrade" onclick="saveUpgrade(false)">
+      <i class="fa-solid fa-circle-check"></i>
+      <span id="completeBtnText">Complete Upgradation</span>
+    </button>
+  </div>
+</div>
+
+<!-- Include Global Search Modal Component -->
+{% include 'mysearch/global_search_modal.html' %}
+{% endblock content %}
+
+{% block extra_js %}
+<script type="module">
+  import { GlobalSearchModal } from '/static/mysearch/js/global_search_modal.js';
+
+  // ── State ──
+  let currentMode = 'UPGRADE'; // 'UPGRADE' | 'ASSEMBLY' | 'REPAIR'
+  let selectedMainItem = null;
+  let partsInList = [];
+  let partsOutList = [];
+
+  // Expose to window for inline onclick handlers
+  window.switchMode = switchMode;
+  window.searchMainProduct = searchMainProduct;
+  window.clearSelectedProduct = clearSelectedProduct;
+  window.openPartInModal = openPartInModal;
+  window.openPartOutModal = openPartOutModal;
+  window.removePartInRow = removePartInRow;
+  window.removePartOutRow = removePartOutRow;
+  window.calculateTotals = calculateTotals;
+  window.saveUpgrade = saveUpgrade;
+
+  // ── Initialize Global Search Modals ──
+  document.addEventListener('DOMContentLoaded', () => {
+    GlobalSearchModal.init([
+      {
+        modalId: 'searchMainProductModal',
+        triggerSelector: '#btnBrowseCatalog',
+        triggerKey: 'F3',
+        title: 'Find Main Product / Device',
+        placeholder: 'Search laptop, PC, IMEI, Serial, Barcode or ID...',
+        appLabel: 'inventory',
+        modelName: 'Inventory',
+        primaryKey: 'inv_id',
+        indexdbStore: 'inventory',
+
+        searchFields: ['prod_name', 'alias_name', 'barcode', 'serial_no', 'inv_id'],
+        displayColumns: [
+          { key: 'inv_id', header: 'ID', width: '70px' },
+          { key: 'prod_name', header: 'Product Name' },
+          { key: 'serial_no', header: 'Serial / IMEI', width: '130px' },
+          { key: 'cost', header: 'Cost', width: '90px' },
+        ],
+
+        excludeFilters: { is_deleted: true },
+        pageSize: 50,
+        onSelect: function (item) {
+          fetchAndSetProduct(item.inv_id);
+        }
+      },
+      {
+        modalId: 'searchPartInModal',
+        triggerSelector: '#btnAddPartIn',
+        title: 'Select Component / Part to Add',
+        placeholder: 'Search RAM, SSD, Processor, Motherboard, etc...',
+        appLabel: 'inventory',
+        modelName: 'Inventory',
+        primaryKey: 'inv_id',
+        indexdbStore: 'inventory',
+        searchFields: ['prod_name', 'alias_name', 'barcode', 'inv_id'],
+        displayColumns: [
+          { key: 'inv_id', header: 'ID', width: '70px' },
+          { key: 'prod_name', header: 'Part Name' },
+          { key: 'cost', header: 'Cost', width: '100px' },
+          { key: 'bal_qty', header: 'In Stock', width: '80px' },
+        ],
+        excludeFilters: { is_deleted: true },
+        pageSize: 50,
+        onSelect: function (item) {
+          addPartInItem(item);
+        }
+      },
+      {
+        modalId: 'searchPartOutModal',
+        triggerSelector: '#btnAddPartOut',
+        title: 'Select Component to Remove',
+        placeholder: 'Search component being removed...',
+        appLabel: 'inventory',
+        modelName: 'Inventory',
+        primaryKey: 'inv_id',
+        indexdbStore: 'inventory',
+        searchFields: ['prod_name', 'alias_name', 'barcode', 'inv_id'],
+        displayColumns: [
+          { key: 'inv_id', header: 'ID', width: '70px' },
+          { key: 'prod_name', header: 'Part Name' },
+          { key: 'cost', header: 'Cost', width: '100px' },
+        ],
+        excludeFilters: { is_deleted: true },
+        pageSize: 50,
+        onSelect: function (item) {
+          addPartOutItem(item);
+        }
+      },
+      {
+        modalId: 'select-account',
+        triggerSelector: '#search-technician',
+        triggerKey: 'F4',
+        title: 'Select Payment / Expense Account',
+        placeholder: 'Search by account head, name, code ...',
+        appLabel: 'myaccounts',
+        modelName: 'Accounts',
+        primaryKey: 'ACC_CODE',
+        indexdbStore: null,
+        searchFields: ['ACC_CODE', 'ACC_NAME'],
+        displayColumns: [
+          { key: 'ACC_CODE', header: 'Code', width: '90px' },
+          { key: 'ACC_NAME', header: 'Account Name' },
+        ],
+        excludeFilters: { 'TYPE__exact': 'Group' },
+        pageSize: 15,
+        onSelect: function (item) {
+          const codeEl = document.getElementById('technicianAccCodeInput');
+          const nameEl = document.getElementById('expenseAccNameInput');
+          if (codeEl) codeEl.value = item.ACC_CODE;
+          if (nameEl) nameEl.value = item.ACC_NAME;
+        }
+      }
+    ]);
+
+    // Handle enter key on top search input
+    document.getElementById('productSearchInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchMainProduct();
+      }
+    });
+
+    // Sync technician select with technician name input
+    document.getElementById('technicianSelect')?.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val) {
+        document.getElementById('technicianNameInput').value = val;
+      }
+    });
+  });
+
+  // ── Switch Mode (UPGRADE / ASSEMBLY / REPAIR) ──
+  function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+
+    const titleEl = document.getElementById('screenTitle');
+    const searchLabel = document.getElementById('searchLabel');
+    const partsInHeader = document.getElementById('partsInHeader');
+    const completeBtnText = document.getElementById('completeBtnText');
+
+    if (mode === 'ASSEMBLY') {
+      titleEl.textContent = 'PC / Item Assembly';
+      searchLabel.textContent = 'Select Target Finished Product to Build (e.g. Gaming PC)';
+      partsInHeader.textContent = 'Components to Consume (Motherboard, CPU, RAM, etc.)';
+      completeBtnText.textContent = 'Build & Stock In';
+    } else if (mode === 'REPAIR') {
+      titleEl.textContent = 'Device Maintenance & Repair';
+      searchLabel.textContent = 'Search Device / Laptop under Repair';
+      partsInHeader.textContent = 'Replacement Parts (New Parts Added)';
+      completeBtnText.textContent = 'Complete Repair';
+    } else {
+      titleEl.textContent = 'Item Upgradation & Assembly';
+      searchLabel.textContent = 'Search Laptop / Product by Serial, Barcode or ID';
+      partsInHeader.textContent = 'Parts IN (Add to Laptop / Device)';
+      completeBtnText.textContent = 'Complete Upgradation';
+    }
+
+    calculateTotals();
+  }
+
+  // ── Search Main Product by Input ──
+  async function searchMainProduct() {
+    const input = document.getElementById('productSearchInput');
+    const q = input?.value?.trim();
+    if (!q) {
+      alert('Please enter a Serial Number, Barcode, or Product ID');
+      input?.focus();
+      return;
+    }
+
+    try {
+      const resp = await fetch(`/inventory/api/item-upgradation/search/?q=${encodeURIComponent(q)}`);
+      const res = await resp.json();
+      if (res.success && res.item) {
+        setMainProduct(res.item);
+      } else {
+        alert(res.message || 'Item not found');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error searching product');
+    }
+  }
+
+  async function fetchAndSetProduct(invId) {
+    try {
+      const resp = await fetch(`/inventory/api/item-upgradation/search/?q=${invId}`);
+      const res = await resp.json();
+      if (res.success && res.item) {
+        setMainProduct(res.item);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function setMainProduct(item) {
+    selectedMainItem = item;
+
+    document.getElementById('selectedProductBanner').style.display = 'flex';
+    document.getElementById('bannerProdName').textContent = item.prod_name || 'Product';
+    document.getElementById('bannerSerialNo').textContent = item.serial_no ? `SN: ${item.serial_no}` : `ID: ${item.inv_id}`;
+    document.getElementById('bannerProcessor').textContent = item.processor || 'Standard';
+    document.getElementById('bannerRam').textContent = item.ram || '-';
+    document.getElementById('bannerStorage').textContent = item.storage || '-';
+    document.getElementById('bannerCondition').textContent = item.condition || 'NEW';
+
+    document.getElementById('bannerBoughtCost').textContent = `Rs. ${Number(item.bought_cost || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    document.getElementById('bannerExtraCost').textContent = `Rs. ${Number(item.extra_cost || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    document.getElementById('bannerFinalCost').textContent = `Rs. ${Number(item.final_cost || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+    // Fill edit fields with current specs
+    document.getElementById('editRamInput').value = item.ram || '';
+    document.getElementById('editStorageInput').value = item.storage || '';
+    document.getElementById('editConditionInput').value = item.condition || 'NEW';
+
+    calculateTotals();
+  }
+
+  function clearSelectedProduct() {
+    selectedMainItem = null;
+    document.getElementById('selectedProductBanner').style.display = 'none';
+    document.getElementById('productSearchInput').value = '';
+    document.getElementById('productSearchInput').focus();
+    calculateTotals();
+  }
+
+  // ── Parts IN Management ──
+  function openPartInModal() {
+    GlobalSearchModal.open('searchPartInModal');
+  }
+
+  function addPartInItem(item) {
+    const existing = partsInList.find(p => p.item_id === item.inv_id);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      partsInList.push({
+        item_id: item.inv_id,
+        name: item.prod_name,
+        qty: 1,
+        cost: Number(item.cost || item.last_pur_price || 0),
+        condition: 'NEW',
+        notes: ''
+      });
+    }
+    renderPartsInTable();
+    calculateTotals();
+  }
+
+  function renderPartsInTable() {
+    const tbody = document.getElementById('partsInBody');
+    if (partsInList.length === 0) {
+      tbody.innerHTML = `
+        <tr id="partsInEmptyRow">
+          <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">
+            <i class="fa-solid fa-box-open" style="font-size: 24px; margin-bottom: 6px; display: block;"></i>
+            No components added yet. Click <strong>+ Add Part</strong> below.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tbody.innerHTML = partsInList.map((p, idx) => `
+      <tr>
+        <td>
+          <div style="font-weight: 700; color: #1e293b;">${p.name}</div>
+          <small style="color: #64748b;">ID: ${p.item_id}</small>
+        </td>
+        <td style="text-align: center;">
+          <input type="number" min="1" step="1" value="${p.qty}" class="table-input" style="width: 60px; text-align: center;" onchange="updatePartInQty(${idx}, this.value)" />
+        </td>
+        <td style="text-align: right;">
+          <input type="number" step="any" min="0" value="${p.cost}" class="table-input" style="width: 100px; text-align: right; font-weight: 700;" onchange="updatePartInCost(${idx}, this.value)" />
+        </td>
+        <td>
+          <select class="table-input" onchange="updatePartInCondition(${idx}, this.value)">
+            <option value="NEW" ${p.condition === 'NEW' ? 'selected' : ''}>New</option>
+            <option value="USED" ${p.condition === 'USED' ? 'selected' : ''}>Used</option>
+            <option value="REFURB" ${p.condition === 'REFURB' ? 'selected' : ''}>Refurb</option>
+          </select>
+        </td>
+        <td style="text-align: center;">
+          <button type="button" class="btn-table-action" onclick="removePartInRow(${idx})" title="Remove Part">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  window.updatePartInQty = function(idx, val) {
+    if (partsInList[idx]) {
+      partsInList[idx].qty = Math.max(1, Number(val) || 1);
+      calculateTotals();
+    }
+  };
+
+  window.updatePartInCost = function(idx, val) {
+    if (partsInList[idx]) {
+      partsInList[idx].cost = Math.max(0, Number(val) || 0);
+      calculateTotals();
+    }
+  };
+
+  window.updatePartInCondition = function(idx, val) {
+    if (partsInList[idx]) {
+      partsInList[idx].condition = val;
+    }
+  };
+
+  function removePartInRow(idx) {
+    partsInList.splice(idx, 1);
+    renderPartsInTable();
+    calculateTotals();
+  }
+
+  // ── Parts OUT Management ──
+  function openPartOutModal() {
+    GlobalSearchModal.open('searchPartOutModal');
+  }
+
+  function addPartOutItem(item) {
+    partsOutList.push({
+      item_id: item.inv_id,
+      name: item.prod_name,
+      qty: 1,
+      cost: Number(item.cost || 0),
+      action: 'RETURN_TO_STOCK',
+      notes: ''
+    });
+    renderPartsOutTable();
+  }
+
+  function renderPartsOutTable() {
+    const tbody = document.getElementById('partsOutBody');
+    if (partsOutList.length === 0) {
+      tbody.innerHTML = `
+        <tr id="partsOutEmptyRow">
+          <td colspan="4" style="text-align: center; color: #94a3b8; padding: 24px;">
+            <i class="fa-solid fa-arrow-right-from-bracket" style="font-size: 24px; margin-bottom: 6px; display: block;"></i>
+            No parts removed from this unit.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tbody.innerHTML = partsOutList.map((p, idx) => `
+      <tr>
+        <td>
+          <div style="font-weight: 700; color: #1e293b;">${p.name}</div>
+          <small style="color: #64748b;">ID: ${p.item_id}</small>
+        </td>
+        <td style="text-align: center;">
+          <input type="number" min="1" step="1" value="${p.qty}" class="table-input" style="width: 60px; text-align: center;" onchange="updatePartOutQty(${idx}, this.value)" />
+        </td>
+        <td>
+          <select class="table-input" onchange="updatePartOutAction(${idx}, this.value)">
+            <option value="RETURN_TO_STOCK" ${p.action === 'RETURN_TO_STOCK' ? 'selected' : ''}>Return to Stock (Stock In)</option>
+            <option value="SCRAP" ${p.action === 'SCRAP' ? 'selected' : ''}>Scrap / Damaged</option>
+            <option value="RETURN_TO_CUSTOMER" ${p.action === 'RETURN_TO_CUSTOMER' ? 'selected' : ''}>Return to Customer</option>
+          </select>
+        </td>
+        <td style="text-align: center;">
+          <button type="button" class="btn-table-action" onclick="removePartOutRow(${idx})" title="Remove">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  window.updatePartOutQty = function(idx, val) {
+    if (partsOutList[idx]) {
+      partsOutList[idx].qty = Math.max(1, Number(val) || 1);
+    }
+  };
+
+  window.updatePartOutAction = function(idx, val) {
+    if (partsOutList[idx]) {
+      partsOutList[idx].action = val;
+    }
+  };
+
+  function removePartOutRow(idx) {
+    partsOutList.splice(idx, 1);
+    renderPartsOutTable();
+  }
+
+  // ── Calculation ──
+  function calculateTotals() {
+    let partsInTotal = 0;
+    partsInList.forEach(p => {
+      partsInTotal += (Number(p.cost) || 0) * (Number(p.qty) || 1);
+    });
+
+    const labor = Number(document.getElementById('laborChargesInput')?.value) || 0;
+    const addExpense = Number(document.getElementById('addExpenseAmountInput')?.value) || 0;
+
+    const newAddedTotal = partsInTotal + labor + addExpense;
+    const currentBought = selectedMainItem ? Number(selectedMainItem.bought_cost || 0) : 0;
+    const currentExtra = selectedMainItem ? Number(selectedMainItem.extra_cost || 0) : 0;
+
+    const totalExtraCost = currentExtra + newAddedTotal;
+    const newFinalCost = currentMode === 'ASSEMBLY' ? newAddedTotal : (currentBought + totalExtraCost);
+
+    document.getElementById('summaryAddedCost').textContent = `Rs. ${newAddedTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    document.getElementById('summaryTotalExtraCost').textContent = `Rs. ${totalExtraCost.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    document.getElementById('summaryNewFinalCost').textContent = `Rs. ${newFinalCost.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+  }
+
+  // ── Save / Complete ──
+  async function saveUpgrade(isDraft = false) {
+    if (!selectedMainItem) {
+      alert('Please select or search the main product first.');
+      document.getElementById('productSearchInput')?.focus();
+      return;
+    }
+
+    if (partsInList.length === 0 && partsOutList.length === 0 && Number(document.getElementById('laborChargesInput')?.value || 0) <= 0) {
+      if (!confirm('No parts or labor charges have been added. Do you still want to proceed?')) {
+        return;
+      }
+    }
+
+    const payload = {
+      mode: currentMode,
+      main_item_id: selectedMainItem.inv_id,
+      main_serial: selectedMainItem.serial_no || '',
+      technician: document.getElementById('technicianNameInput')?.value || document.getElementById('technicianSelect')?.value || '',
+      acc_code: document.getElementById('technicianAccCodeInput')?.value.trim() || '',
+      labor_charges: Number(document.getElementById('laborChargesInput')?.value) || 0,
+      additional_expense_desc: document.getElementById('addExpenseDescInput')?.value || '',
+      additional_expense_amount: Number(document.getElementById('addExpenseAmountInput')?.value) || 0,
+      parts_in: partsInList,
+      parts_out: partsOutList,
+      update_specs: {
+        ram: document.getElementById('editRamInput')?.value || '',
+        storage: document.getElementById('editStorageInput')?.value || '',
+        condition: document.getElementById('editConditionInput')?.value || '',
+      }
+    };
+
+    const completeBtn = document.getElementById('btnCompleteUpgrade');
+    if (completeBtn) {
+      completeBtn.disabled = true;
+      completeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    }
+
+    try {
+      const resp = await fetch('/inventory/api/item-upgradation/save/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: JSON.stringify(payload)
+      });
+      const res = await resp.json();
+
+      if (res.success) {
+        alert(res.message);
+        // Refresh product stats
+        fetchAndSetProduct(selectedMainItem.inv_id);
+        partsInList = [];
+        partsOutList = [];
+        renderPartsInTable();
+        renderPartsOutTable();
+        document.getElementById('laborChargesInput').value = '0';
+        document.getElementById('addExpenseAmountInput').value = '0';
+        document.getElementById('addExpenseDescInput').value = '';
+        calculateTotals();
+      } else {
+        alert('Error: ' + (res.message || 'Failed to save upgrade.'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error while saving upgradation.');
+    } finally {
+      if (completeBtn) {
+        completeBtn.disabled = false;
+        completeBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${document.getElementById('completeBtnText')?.textContent || 'Complete'}</span>`;
+      }
+    }
+  }
+
+  function getCsrfToken() {
+    return document.cookie.split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1] || '';
+  }
+</script>
+{% endblock extra_js %}

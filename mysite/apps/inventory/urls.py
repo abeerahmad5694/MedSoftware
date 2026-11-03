@@ -3,6 +3,7 @@ from .views.inventory import inventory, get_item_by_id
 from apps.inventory.api import inventory as api
 from .views.stock_audit import stock_audit, stock_audit_items, save_stock_audit
 from .views import stock_adjustment
+from .views import item_upgradation
 from apps.inventory.views.item_ledger import item_ledger
 
 
@@ -25,4 +26,8 @@ urlpatterns += [
     path('api/stock-adjustment/save/', stock_adjustment.save_stock_adjustment, name='save_stock_adjustment'),
     
     path('item-ledger/', item_ledger, name='item_ledger'),
+    
+    path('item-upgradation/', item_upgradation.item_upgradation_page, name='item_upgradation'),
+    path('api/item-upgradation/search/', item_upgradation.search_item_by_serial_or_barcode, name='search_item_upgradation'),
+    path('api/item-upgradation/save/', item_upgradation.save_item_upgradation, name='save_item_upgradation'),
 ]

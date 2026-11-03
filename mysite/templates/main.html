@@ -136,6 +136,9 @@
                         {% if 'view_stock_report' in user_perm_codes %}
                         <a href="{% url 'item_ledger' %}">Item Ledger</a> 
                         {% endif %}
+                        {% if 'view_stock_report' in user_perm_codes %}
+                        <a href="{% url 'item_upgradation' %}">Item Maintenance</a> 
+                        {% endif %}
 
                         {% if 'view_stock_report' in user_perm_codes %}
                         <a href="{% url 'stock_report' %}">Stock Report</a>
