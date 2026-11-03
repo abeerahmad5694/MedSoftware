@@ -1416,53 +1416,13 @@
 
 
         
-    document.addEventListener('DOMContentLoaded', function () {
+    {% comment %} document.addEventListener('DOMContentLoaded', function () {
 
-        const form = document.getElementById('inventoryForm');
-
-        if (!form) return;
-
-        form.addEventListener('keydown', function (e) {
-
-            if (e.key !== 'Enter') return;
-
-            // Allow Enter inside textareas
-            if (e.target.tagName === 'TEXTAREA') return;
-
-            // Prevent form submission
-            e.preventDefault();
-
-            // Get all visible, enabled form fields
-            const fields = Array.from(form.querySelectorAll(
-                'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="file"]), select, textarea, button'
-            )).filter(field =>
-                !field.disabled &&
-                field.offsetParent !== null &&
-                field.type !== 'button'
-            );
-
-            const currentIndex = fields.indexOf(e.target);
-
-            if (currentIndex !== -1) {
-
-                // Move to next field
-                const nextField = fields[currentIndex + 1];
-
-                if (nextField) {
-                    nextField.focus();
-
-                    // Select text in input fields
-                    if (nextField.tagName === 'INPUT' &&
-                        ['text', 'number', 'search'].includes(nextField.type)) {
-                        nextField.select();
-                    }
-                }
-            }
-        });
+        
 
     });
 
-
+ {% endcomment %}
 
 
 </script>
