@@ -125,10 +125,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 
 
-    if(window.companyConfigurations?.inventory?.allow_stock_variation){
-        // console.log('This si running')
-        document.getElementById('variation-type-group').classList.remove('hidden');
-        // document.getElementById('carton_pack_label').innerText = window.companyConfigurations?.inventory?.carton_pack_name || 'Carton';
+    if (window.companyConfigurations?.inventory?.allow_stock_variation) {
+        if (variationGroup) {
+            variationGroup.classList.remove('hidden');
+        }
     }
 
 

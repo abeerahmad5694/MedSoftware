@@ -346,6 +346,16 @@ document.addEventListener("keydown", function (e) {
             targetInput = targetInputs[currentIdx] || targetInputs[0];
           }
 
+          // Fallback into nested serial table if target row is a serial parent
+          if (!targetInput && targetRow.classList.contains("serial-parent-row")) {
+            const parentId = targetRow.dataset.rowId;
+            const nestedRow = document.querySelector(`.serial-nested-row[data-parent-row-id="${parentId}"]`);
+            if (nestedRow) {
+              const serialInputs = Array.from(nestedRow.querySelectorAll(".serial-child-input")).filter(el => !el.disabled);
+              targetInput = e.key === "ArrowUp" ? serialInputs[serialInputs.length - 1] : serialInputs[0];
+            }
+          }
+
           if (targetInput) {
             e.preventDefault();
             moveToField(targetInput);

@@ -24,6 +24,7 @@ import {
 
 const CART_STORE = "purchasecart";
 
+const main_serial_field = 'serial_no'
 // In-Memory Optimized Cart Cache and Map for O(1) operations
 let cachedCart = [];
 const cachedCartMap = new Map();
@@ -316,13 +317,13 @@ function ensureSerialStyles() {
 
 
         /* Group 0 - Green */
-    tr.cart-item-row.serial-parent-row.serial-group-0 td {
+    tr.cart-item-row.serial-parent-row.serial-group-2 td {
       background-color: #7ea978bd !important;
     }
-    tr.serial-nested-row.serial-group-0 td {
+    tr.serial-nested-row.serial-group-2 td {
       background-color: #7ea978bd !important;
     }
-    tr.serial-nested-row.serial-group-0 .serial-child-container {
+    tr.serial-nested-row.serial-group-2 .serial-child-container {
       background-color: #7ea978bd !important;
     }
 
@@ -338,13 +339,13 @@ function ensureSerialStyles() {
     }
 
     /* Group 2 - Purple */
-    tr.cart-item-row.serial-parent-row.serial-group-2 td {
+    tr.cart-item-row.serial-parent-row.serial-group-0 td {
       background-color: #d0bedbff !important;
     }
-    tr.serial-nested-row.serial-group-2 td {
+    tr.serial-nested-row.serial-group-0 td {
       background-color: #d0bedbff !important;
     }
-    tr.serial-nested-row.serial-group-2 .serial-child-container {
+    tr.serial-nested-row.serial-group-0 .serial-child-container {
       background-color: #c7b4d4ff !important;
     }
 
@@ -528,7 +529,7 @@ function createDefaultSerialChild(parentProduct, parentRate = 0) {
   };
 }
 
-function copySerialChild(parentId, childId) {
+function copySerialChild(parentId, childId, targetFieldName = null) {
   const item = cachedCartMap.get(String(parentId));
   if (!item || !Array.isArray(item.serial_items)) return;
   const idx = item.serial_items.findIndex(c => String(c.id) === String(childId));
@@ -548,7 +549,8 @@ function copySerialChild(parentId, childId) {
   setTimeout(() => {
     const row = cartBody?.querySelector(`.serial-child-row[data-child-id="${newChild.id}"]`);
     if (row) {
-      const inp = row.querySelector(".serial-child-input");
+      const fieldToFocus = targetFieldName || main_serial_field;
+      const inp = row.querySelector(`.serial-child-input[data-field-name="${fieldToFocus}"]`) || row.querySelector(".serial-child-input");
       if (inp) {
         inp.focus();
         if (inp.select) inp.select();
@@ -1355,6 +1357,27 @@ function handleSerialKeyNavigation(e, currentSerialRow) {
   if (e.key === "Enter") {
     if (activeEl.tagName === "BUTTON") {
       return; // standard button click handles it
+    }
+
+    const fieldName = activeEl.dataset?.fieldName;
+    const parentId = currentSerialRow.dataset?.parentId;
+    const childId = currentSerialRow.dataset?.childId;
+
+    // Fast Barcode Tracking: If on main_serial_field, Enter creates duplicate row and keeps focus on the same field
+    if (fieldName === main_serial_field) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const item = cachedCartMap.get(String(parentId));
+      if (item && Array.isArray(item.serial_items)) {
+        const child = item.serial_items.find(c => String(c.id) === String(childId));
+        if (child) {
+          child[fieldName] = activeEl.value;
+        }
+      }
+
+      copySerialChild(parentId, childId, main_serial_field);
+      return;
     }
 
     const isCostInput = activeEl.classList.contains("serial-cost-input") || (activeEl.dataset?.fieldName === "cost");

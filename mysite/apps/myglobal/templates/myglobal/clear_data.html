@@ -1,0 +1,1635 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --cd-primary: var(--color-primary, #fe5802);
+    --cd-primary-hover: var(--color-primary-hover, #e04d00);
+    --cd-primary-light: var(--color-primary-light, #ffedd5);
+    --cd-border: var(--border-color, #e2e8f0);
+    --cd-bg-card: var(--bg-surface, #ffffff);
+    --cd-bg-canvas: var(--bg-canvas, #f8fafc);
+    --cd-text-main: var(--text-main, #0f172a);
+    --cd-text-muted: var(--text-muted, #64748b);
+    --cd-danger: #dc2626;
+    --cd-danger-light: #fef2f2;
+    --cd-danger-border: #fecaca;
+    --cd-warning: #f59e0b;
+    --cd-success: #16a34a;
+  }
+
+  .cd-container {
+    padding: 20px 24px 100px 24px;
+    max-width: 1500px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--cd-text-main);
+  }
+
+  /* ── Header Bar ── */
+  .cd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 18px 24px;
+    background: var(--cd-bg-card);
+    border: 1px solid var(--cd-border);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .cd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .cd-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--cd-danger), #ef4444);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  }
+
+  .cd-header-title h1 {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.02em;
+    color: var(--cd-text-main);
+  }
+
+  .cd-header-title p {
+    margin: 3px 0 0 0;
+    font-size: 13px;
+    color: var(--cd-text-muted);
+  }
+
+  .cd-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .cd-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--cd-border);
+    background: var(--cd-bg-canvas);
+    color: var(--cd-text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cd-badge.danger {
+    background: var(--cd-danger-light);
+    color: var(--cd-danger);
+    border-color: var(--cd-danger-border);
+  }
+
+  .btn-refresh-counts {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--cd-border);
+    border-radius: 8px;
+    background: var(--cd-bg-card);
+    color: var(--cd-text-main);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .btn-refresh-counts:hover {
+    background: var(--cd-bg-canvas);
+    border-color: var(--cd-primary);
+  }
+
+  /* ── Tab Navigation ── */
+  .cd-nav-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--cd-border);
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+
+  .cd-tab-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cd-text-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .cd-tab-btn:hover {
+    color: var(--cd-text-main);
+  }
+
+  .cd-tab-btn.active {
+    color: var(--cd-primary);
+    border-bottom-color: var(--cd-primary);
+  }
+
+  .tab-count-badge {
+    background: var(--cd-bg-canvas);
+    border: 1px solid var(--cd-border);
+    color: var(--cd-text-muted);
+    padding: 1px 7px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .cd-tab-btn.active .tab-count-badge {
+    background: var(--cd-primary-light);
+    color: var(--cd-primary);
+    border-color: var(--cd-primary);
+  }
+
+  /* ── Tab Content Panes ── */
+  .cd-tab-pane {
+    display: none;
+  }
+
+  .cd-tab-pane.active {
+    display: block;
+  }
+
+  /* ── Cards Grid (Server Truncate) ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+
+  .truncate-card {
+    background: var(--cd-bg-card);
+    border: 1px solid var(--cd-border);
+    border-radius: 12px;
+    padding: 18px;
+    position: relative;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    user-select: none;
+  }
+
+  .truncate-card:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .truncate-card.selected {
+    border-color: var(--cd-danger);
+    background: var(--cd-danger-light);
+  }
+
+  .truncate-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .truncate-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .truncate-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--cd-danger);
+    cursor: pointer;
+  }
+
+  .truncate-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--cd-text-main);
+  }
+
+  .truncate-card.selected .truncate-card-title {
+    color: var(--cd-danger);
+  }
+
+  .live-count-badge {
+    font-size: 13px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: var(--cd-bg-canvas);
+    border: 1px solid var(--cd-border);
+    color: var(--cd-text-main);
+  }
+
+  .truncate-card.selected .live-count-badge {
+    background: #ffffff;
+    border-color: var(--cd-danger-border);
+    color: var(--cd-danger);
+  }
+
+  .truncate-card-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--cd-text-muted);
+    margin-bottom: 12px;
+  }
+
+  .truncate-auto-note {
+    font-size: 11px;
+    font-weight: 700;
+    color: #b91c1c;
+    background: rgba(220, 38, 38, 0.08);
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Voucher Pills ── */
+  .voucher-pills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .v-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--cd-bg-canvas);
+    border: 1px solid var(--cd-border);
+    color: var(--cd-text-main);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .v-pill:hover {
+    border-color: var(--cd-primary);
+  }
+
+  .v-pill.active {
+    background: var(--cd-danger);
+    border-color: var(--cd-danger);
+    color: #ffffff;
+  }
+
+  /* ── Truncate Actions Sticky Bar ── */
+  .truncate-actions-bar {
+    background: var(--cd-bg-card);
+    border: 1px solid var(--cd-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  .selection-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-select-ctrl {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--cd-border);
+    border-radius: 6px;
+    background: var(--cd-bg-canvas);
+    color: var(--cd-text-main);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-select-ctrl:hover {
+    background: var(--cd-border);
+  }
+
+  .btn-danger-execute {
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 800;
+    border: none;
+    border-radius: 8px;
+    background: var(--cd-danger);
+    color: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    transition: all 0.15s;
+  }
+
+  .btn-danger-execute:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+  }
+
+  .btn-danger-execute:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── Offline Section Styling ── */
+  .offline-card {
+    background: var(--cd-bg-card);
+    border: 1px solid var(--cd-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  }
+
+  .offline-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--cd-border);
+  }
+
+  .offline-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--cd-text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .offline-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-clear-store {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--cd-danger-light);
+    color: var(--cd-danger);
+    border: 1px solid var(--cd-danger-border);
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .btn-clear-store:hover {
+    background: var(--cd-danger);
+    color: #ffffff;
+  }
+
+  .offline-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--cd-border);
+    border-radius: 8px;
+    background: var(--cd-bg-card);
+  }
+
+  .offline-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .offline-table th {
+    background: var(--cd-bg-canvas);
+    color: var(--cd-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--cd-border);
+    text-align: left;
+  }
+
+  .offline-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--cd-border);
+    color: var(--cd-text-main);
+    vertical-align: middle;
+  }
+
+  .offline-table tr:hover {
+    background: var(--cd-bg-canvas);
+  }
+
+  .btn-row-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--cd-border);
+    background: var(--cd-bg-card);
+    color: var(--cd-text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: all 0.15s;
+  }
+
+  .btn-row-action:hover {
+    background: var(--cd-bg-canvas);
+    color: var(--cd-text-main);
+  }
+
+  .btn-row-action.delete:hover {
+    background: var(--cd-danger-light);
+    color: var(--cd-danger);
+    border-color: var(--cd-danger-border);
+  }
+
+  /* Utility Carts Grid */
+  .carts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .cart-box {
+    background: var(--cd-bg-canvas);
+    border: 1px solid var(--cd-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── Modal Styles ── */
+  .cd-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+  }
+
+  .cd-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .cd-modal-box {
+    background: var(--cd-bg-card);
+    border: 1px solid var(--cd-border);
+    border-radius: 14px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+  }
+
+  .cd-modal-overlay.active .cd-modal-box {
+    transform: scale(1);
+  }
+
+  .cd-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--cd-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cd-modal-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--cd-text-main);
+  }
+
+  .cd-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 13px;
+  }
+
+  .cd-modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--cd-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .btn-modal-cancel {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--cd-bg-canvas);
+    color: var(--cd-text-main);
+    border: 1px solid var(--cd-border);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .btn-modal-confirm {
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 800;
+    background: var(--cd-danger);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="cd-container">
+
+  <!-- Header -->
+  <div class="cd-header">
+    <div class="cd-header-left">
+      <div class="cd-header-icon">
+        <i class="fa-solid fa-database"></i>
+      </div>
+      <div class="cd-header-title">
+        <h1>System Data &amp; Storage Management</h1>
+        <p>Truncate database modules, reset voucher sequences to 0, and inspect or clean offline IndexedDB queues</p>
+      </div>
+    </div>
+
+    <div class="cd-header-meta">
+      <span class="cd-badge">
+        <i class="fa-solid fa-server"></i>
+        <span>DB: {{ db_engine|default:'SQLITE3' }}</span>
+      </span>
+      <span class="cd-badge">
+        <i class="fa-solid fa-user-shield"></i>
+        <span>{{ user_name }}</span>
+      </span>
+      <button type="button" class="btn-refresh-counts" onclick="fetchLiveCounts(true)" title="Refresh all server and local counts">
+        <i class="fa-solid fa-rotate"></i>
+        <span>Refresh Counts</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="cd-nav-tabs">
+    <button type="button" class="cd-tab-btn active" data-tab="tabServer" onclick="switchTab('tabServer')">
+      <i class="fa-solid fa-server"></i>
+      <span>Server Database Truncate</span>
+      <span class="tab-count-badge" id="badgeServerTotal">0</span>
+    </button>
+    <button type="button" class="cd-tab-btn" data-tab="tabOffline" onclick="switchTab('tabOffline')">
+      <i class="fa-solid fa-hard-drive"></i>
+      <span>Offline Queues &amp; IndexedDB</span>
+      <span class="tab-count-badge" id="badgeOfflineTotal">0</span>
+    </button>
+    <button type="button" class="cd-tab-btn" data-tab="tabVouchers" onclick="switchTab('tabVouchers')">
+      <i class="fa-solid fa-hashtag"></i>
+      <span>Voucher Sequences (Vchno)</span>
+      <span class="tab-count-badge" id="badgeVouchersCount">0</span>
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 1: SERVER DATABASE TRUNCATE                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="cd-tab-pane active" id="tabServer">
+    
+    <!-- Cards Grid -->
+    <div class="cards-grid">
+      
+      <!-- Inventory -->
+      <div class="truncate-card" id="cardInventory" onclick="toggleCard('chkInventory')">
+        <div class="truncate-card-header">
+          <div class="truncate-checkbox-wrap">
+            <input type="checkbox" id="chkInventory" class="truncate-checkbox" onchange="syncCardSelection('chkInventory', 'cardInventory')" onclick="event.stopPropagation()" />
+            <span class="truncate-card-title">Inventory Master Items</span>
+          </div>
+          <span class="live-count-badge" id="countInventory">0</span>
+        </div>
+        <div class="truncate-card-desc">
+          Truncates the complete product catalog (items, barcodes, aliases, prices).
+        </div>
+        <div class="truncate-auto-note">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Auto-clears associated Stock Lots and Stock Ledger</span>
+        </div>
+      </div>
+
+      <!-- Purchases -->
+      <div class="truncate-card" id="cardPurchase" onclick="toggleCard('chkPurchase')">
+        <div class="truncate-card-header">
+          <div class="truncate-checkbox-wrap">
+            <input type="checkbox" id="chkPurchase" class="truncate-checkbox" onchange="syncCardSelection('chkPurchase', 'cardPurchase')" onclick="event.stopPropagation()" />
+            <span class="truncate-card-title">Purchases &amp; Purchase Orders</span>
+          </div>
+          <span class="live-count-badge" id="countPurchase">0</span>
+        </div>
+        <div class="truncate-card-desc">
+          Truncates all supplier purchase bills and purchase orders.
+        </div>
+        <div class="truncate-auto-note">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Auto-clears Stock Lots &amp; Stock Ledger</span>
+        </div>
+      </div>
+
+      <!-- Stock Lots & Ledger -->
+      <div class="truncate-card" id="cardStock" onclick="toggleCard('chkStock')">
+        <div class="truncate-card-header">
+          <div class="truncate-checkbox-wrap">
+            <input type="checkbox" id="chkStock" class="truncate-checkbox" onchange="syncCardSelection('chkStock', 'cardStock')" onclick="event.stopPropagation()" />
+            <span class="truncate-card-title">Stock Ledger &amp; Lots Only</span>
+          </div>
+          <span class="live-count-badge" id="countStock">0</span>
+        </div>
+        <div class="truncate-card-desc">
+          Resets stock quantities, FIFO valuation lots, and adjustment ledgers without deleting products.
+        </div>
+      </div>
+
+      <!-- Sales / Invoices -->
+      <div class="truncate-card" id="cardSale" onclick="toggleCard('chkSale')">
+        <div class="truncate-card-header">
+          <div class="truncate-checkbox-wrap">
+            <input type="checkbox" id="chkSale" class="truncate-checkbox" onchange="syncCardSelection('chkSale', 'cardSale')" onclick="event.stopPropagation()" />
+            <span class="truncate-card-title">Sales &amp; Invoices</span>
+          </div>
+          <span class="live-count-badge" id="countSale">0</span>
+        </div>
+        <div class="truncate-card-desc">
+          Truncates all retail and wholesale customer sales invoices and historical logs.
+        </div>
+      </div>
+
+      <!-- Quotations -->
+      <div class="truncate-card" id="cardQuotation" onclick="toggleCard('chkQuotation')">
+        <div class="truncate-card-header">
+          <div class="truncate-checkbox-wrap">
+            <input type="checkbox" id="chkQuotation" class="truncate-checkbox" onchange="syncCardSelection('chkQuotation', 'cardQuotation')" onclick="event.stopPropagation()" />
+            <span class="truncate-card-title">Quotations</span>
+          </div>
+          <span class="live-count-badge" id="countQuotation">0</span>
+        </div>
+        <div class="truncate-card-desc">
+          Truncates customer quotation estimates and historical records.
+        </div>
+      </div>
+
+      <!-- General Ledger (Gledg) -->
+      <div class="truncate-card" id="cardLedger" onclick="toggleCard('chkLedger')">
+        <div class="truncate-card-header">
+          <div class="truncate-checkbox-wrap">
+            <input type="checkbox" id="chkLedger" class="truncate-checkbox" onchange="syncCardSelection('chkLedger', 'cardLedger')" onclick="event.stopPropagation()" />
+            <span class="truncate-card-title">Financial Ledger</span>
+          </div>
+          <span class="live-count-badge" id="countLedger">0</span>
+        </div>
+        <div class="truncate-card-desc">
+          Truncates all journal vouchers, cash payments, receipts, and bank transactions.
+        </div>
+      </div>
+
+      <!-- Reset Voucher Counters -->
+      <div class="truncate-card" id="cardVouchers" onclick="toggleCard('chkVouchers')">
+        <div class="truncate-card-header">
+          <div class="truncate-checkbox-wrap">
+            <input type="checkbox" id="chkVouchers" class="truncate-checkbox" onchange="syncCardSelection('chkVouchers', 'cardVouchers')" onclick="event.stopPropagation()" />
+            <span class="truncate-card-title">Reset Voucher Sequences (Vchno)</span>
+          </div>
+          <span class="live-count-badge" id="countVouchersTotal">0</span>
+        </div>
+        <div class="truncate-card-desc">
+          Resets selected voucher counter sequences back to 0:
+        </div>
+        <div class="voucher-pills-wrap" id="voucherPillsContainer">
+          <!-- Populated dynamically: INV, PUR, CP, CR, BP, BR, JV, UPG, SRNO... -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Truncate Actions Bar -->
+    <div class="truncate-actions-bar">
+      <div class="selection-controls">
+        <button type="button" class="btn-select-ctrl" onclick="setAllCheckboxes(true)">
+          <i class="fa-solid fa-check-double"></i> Select All
+        </button>
+        <button type="button" class="btn-select-ctrl" onclick="setAllCheckboxes(false)">
+          <i class="fa-solid fa-xmark"></i> Deselect All
+        </button>
+        <span style="font-size: 12px; color: var(--cd-text-muted); margin-left: 6px;" id="selectedCountText">0 selected</span>
+      </div>
+
+      <button type="button" class="btn-danger-execute" id="btnExecuteTruncate" onclick="openConfirmationModal()" disabled>
+        <i class="fa-solid fa-trash-can"></i>
+        <span>Execute Truncate / Reset</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 2: OFFLINE LOCAL STORAGE (INDEXEDDB QUEUES & CARTS)         -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="cd-tab-pane" id="tabOffline">
+    
+    <!-- 1. Offline Invoices (pendingBills) -->
+    <div class="offline-card">
+      <div class="offline-card-header">
+        <div class="offline-card-title">
+          <i class="fa-solid fa-receipt" style="color: var(--cd-primary);"></i>
+          <span>Offline Sales Invoices</span>
+          <span class="live-count-badge" id="offlineSalesCount">0</span>
+        </div>
+        <div class="offline-actions">
+          <button type="button" class="btn-clear-store" onclick="clearOfflineStore('pendingBills', 'Offline Sales Invoices')">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Clear All Offline Invoices</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="offline-table-wrap">
+        <table class="offline-table" id="tableOfflineSales">
+          <thead>
+            <tr>
+              <th style="width: 70px;">Local ID</th>
+              <th style="width: 140px;">Bill No / Date</th>
+              <th>Customer / Account</th>
+              <th style="width: 90px; text-align: center;">Items</th>
+              <th style="width: 120px; text-align: right;">Net Total</th>
+              <th style="width: 90px; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyOfflineSales">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--cd-text-muted); padding: 18px;">
+                No offline sales pending in local storage.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. Offline Purchases (pendingPurchaseBills) -->
+    <div class="offline-card">
+      <div class="offline-card-header">
+        <div class="offline-card-title">
+          <i class="fa-solid fa-cart-flatbed" style="color: #0284c7;"></i>
+          <span>Offline Purchases</span>
+          <span class="live-count-badge" id="offlinePurchaseCount">0</span>
+        </div>
+        <div class="offline-actions">
+          <button type="button" class="btn-clear-store" onclick="clearOfflineStore('pendingPurchaseBills', 'Offline Purchases')">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Clear All Offline Purchases</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="offline-table-wrap">
+        <table class="offline-table" id="tableOfflinePurchases">
+          <thead>
+            <tr>
+              <th style="width: 70px;">Local ID</th>
+              <th style="width: 140px;">Bill No / Date</th>
+              <th>Supplier / Vendor</th>
+              <th style="width: 90px; text-align: center;">Items</th>
+              <th style="width: 120px; text-align: right;">Net Total</th>
+              <th style="width: 90px; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyOfflinePurchases">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--cd-text-muted); padding: 18px;">
+                No offline purchases pending in local storage.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. Offline Quotations (pendingQuotationBills) -->
+    <div class="offline-card">
+      <div class="offline-card-header">
+        <div class="offline-card-title">
+          <i class="fa-solid fa-file-invoice" style="color: #9333ea;"></i>
+          <span>Offline Quotations </span>
+          <span class="live-count-badge" id="offlineQuotationCount">0</span>
+        </div>
+        <div class="offline-actions">
+          <button type="button" class="btn-clear-store" onclick="clearOfflineStore('pendingQuotationBills', 'Offline Quotations')">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Clear All Offline Quotations</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="offline-table-wrap">
+        <table class="offline-table" id="tableOfflineQuotations">
+          <thead>
+            <tr>
+              <th style="width: 70px;">Local ID</th>
+              <th style="width: 140px;">Quote No / Date</th>
+              <th>Customer</th>
+              <th style="width: 90px; text-align: center;">Items</th>
+              <th style="width: 120px; text-align: right;">Net Total</th>
+              <th style="width: 90px; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyOfflineQuotations">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--cd-text-muted); padding: 18px;">
+                No offline quotations pending in local storage.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4. Draft Carts & Cache Stores -->
+    <div class="offline-card">
+      <div class="offline-card-header">
+        <div class="offline-card-title">
+          <i class="fa-solid fa-boxes-packing" style="color: #eab308;"></i>
+          <span>Active Draft Carts &amp; Local Product Cache</span>
+        </div>
+        <div class="offline-actions">
+          <button type="button" class="btn-clear-store" onclick="wipeAllClientOfflineData()">
+            <i class="fa-solid fa-radiation"></i>
+            <span>Wipe All Client Offline Storage</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="carts-grid">
+        <!-- Sale Cart -->
+        <div class="cart-box">
+          <div>
+            <div style="font-weight: 700;">POS Sale Cart</div>
+            <small style="color: var(--cd-text-muted);" id="saleCartCount">0 rows</small>
+          </div>
+          <button type="button" class="btn-select-ctrl" onclick="clearOfflineStore('salecart', 'POS Sale Cart')">
+            Clear
+          </button>
+        </div>
+
+        <!-- Purchase Cart -->
+        <div class="cart-box">
+          <div>
+            <div style="font-weight: 700;">Purchase Cart</div>
+            <small style="color: var(--cd-text-muted);" id="purchaseCartCount">0 rows</small>
+          </div>
+          <button type="button" class="btn-select-ctrl" onclick="clearOfflineStore('purchasecart', 'Purchase Cart')">
+            Clear
+          </button>
+        </div>
+
+        <!-- Quotation Cart -->
+        <div class="cart-box">
+          <div>
+            <div style="font-weight: 700;">Quotation Cart</div>
+            <small style="color: var(--cd-text-muted);" id="quotationCartCount">0 rows</small>
+          </div>
+          <button type="button" class="btn-select-ctrl" onclick="clearOfflineStore('quotationcart', 'Quotation Cart')">
+            Clear
+          </button>
+        </div>
+
+        <!-- Inventory IndexedDB Store -->
+        <div class="cart-box">
+          <div>
+            <div style="font-weight: 700;">Offline Products Cache</div>
+            <small style="color: var(--cd-text-muted);" id="cacheProductsCount">0 items</small>
+          </div>
+          <button type="button" class="btn-select-ctrl" onclick="purgeProductCache()">
+            Purge Cache
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 3: VOUCHER COUNTERS (VCHNO)                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="cd-tab-pane" id="tabVouchers">
+    <div class="offline-card">
+      <div class="offline-card-header">
+        <div class="offline-card-title">
+          <i class="fa-solid fa-hashtag" style="color: var(--cd-primary);"></i>
+          <span>Voucher Sequence Counters (Table: vchno)</span>
+        </div>
+        <div class="offline-actions">
+          <button type="button" class="btn-clear-store" onclick="quickResetVouchers(['ALL'])">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Reset All Vouchers to 0</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="offline-table-wrap">
+        <table class="offline-table">
+          <thead>
+            <tr>
+              <th style="width: 120px;">Voucher Type</th>
+              <th>Description / Purpose</th>
+              <th style="width: 140px; text-align: center;">Current VCHNO</th>
+              <th style="width: 120px; text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyVouchersList">
+            <!-- Populated via API -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- CONFIRMATION MODAL                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="cd-modal-overlay" id="confirmModal">
+  <div class="cd-modal-box">
+    <div class="cd-modal-header">
+      <div class="cd-modal-title" style="color: var(--cd-danger);">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Confirm Permanent Database Truncation</span>
+      </div>
+      <button type="button" onclick="closeConfirmationModal()" style="background:none; border:none; color:var(--cd-text-muted); cursor:pointer; font-size:16px;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="cd-modal-body">
+      <p style="margin-top:0; font-weight:600;">
+        You have selected the following database modules to be permanently truncated / reset:
+      </p>
+      <ul id="confirmList" style="margin: 10px 0; padding-left: 20px; line-height: 1.6; color: var(--cd-danger); font-weight: 700;">
+      </ul>
+      <div style="background: var(--cd-danger-light); border: 1px solid var(--cd-danger-border); padding: 12px; border-radius: 8px; color: #991b1b; font-size: 12px; margin-top: 14px;">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <strong>WARNING:</strong> This action physically truncates records from the database and resets primary key auto-increments. This operation CANNOT be undone!
+      </div>
+    </div>
+    <div class="cd-modal-footer">
+      <button type="button" class="btn-modal-cancel" onclick="closeConfirmationModal()">Cancel</button>
+      <button type="button" class="btn-modal-confirm" id="btnConfirmTruncate" onclick="executeTruncate()">
+        <i class="fa-solid fa-trash-can"></i> Yes, Permanently Truncate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PAYLOAD INSPECT MODAL                                           -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="cd-modal-overlay" id="payloadModal">
+  <div class="cd-modal-box" style="max-width: 750px;">
+    <div class="cd-modal-header">
+      <div class="cd-modal-title" id="payloadModalTitle">
+        <span>Offline Record Details</span>
+      </div>
+      <button type="button" onclick="closePayloadModal()" style="background:none; border:none; color:var(--cd-text-muted); cursor:pointer; font-size:16px;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="cd-modal-body" id="payloadModalContent">
+      <pre style="background: var(--cd-bg-canvas); padding: 12px; border-radius: 8px; font-size: 11px; overflow-x: auto; border: 1px solid var(--cd-border);" id="payloadJsonPre"></pre>
+    </div>
+    <div class="cd-modal-footer">
+      <button type="button" class="btn-modal-cancel" onclick="closePayloadModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script type="module">
+  import { getDB, deleteRecord, clearStore, getAllRecords } from '/static/myglobal/js/services/local_storage/session_storage_manager.js';
+
+  // State
+  let currentCounts = {};
+  let voucherList = [];
+  let selectedVoucherTypes = new Set(['INV', 'PUR', 'CP', 'CR', 'BP', 'BR', 'JV', 'SADJ', 'GSRNO', 'ISRNO', 'PSRNO', 'QOT', 'PO', 'IRTN', 'PRTN']);
+
+  // Expose functions to window
+  window.switchTab = switchTab;
+  window.fetchLiveCounts = fetchLiveCounts;
+  window.toggleCard = toggleCard;
+  window.syncCardSelection = syncCardSelection;
+  window.setAllCheckboxes = setAllCheckboxes;
+  window.openConfirmationModal = openConfirmationModal;
+  window.closeConfirmationModal = closeConfirmationModal;
+  window.executeTruncate = executeTruncate;
+  window.clearOfflineStore = clearOfflineStore;
+  window.deleteOfflineRow = deleteOfflineRow;
+  window.viewOfflinePayload = viewOfflinePayload;
+  window.closePayloadModal = closePayloadModal;
+  window.quickResetVouchers = quickResetVouchers;
+  window.purgeProductCache = purgeProductCache;
+  window.wipeAllClientOfflineData = wipeAllClientOfflineData;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await fetchLiveCounts(false);
+    await loadAllOfflineData();
+  });
+
+  // ── Tab Navigation ──
+  function switchTab(tabId) {
+    document.querySelectorAll('.cd-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+    document.querySelectorAll('.cd-tab-pane').forEach(pane => {
+      pane.classList.toggle('active', pane.id === tabId);
+    });
+    if (tabId === 'tabOffline') {
+      loadAllOfflineData();
+    }
+  }
+
+  // ── Fetch Live Server Counts & Vouchers ──
+  async function fetchLiveCounts(showToastNotice = false) {
+    try {
+      const res = await fetch('/myglobal/api/data-counts/');
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to fetch database counts.');
+      }
+
+      currentCounts = data.counts || {};
+      voucherList = data.vouchers || [];
+
+      // Update Card counts
+      document.getElementById('countInventory').textContent = (currentCounts.inventory || 0).toLocaleString();
+      document.getElementById('countPurchase').textContent = (currentCounts.purchase || 0).toLocaleString();
+      document.getElementById('countStock').textContent = `${(currentCounts.stock_lot || 0).toLocaleString()} lots / ${(currentCounts.stock_ledger || 0).toLocaleString()} rows`;
+      document.getElementById('countSale').textContent = (currentCounts.sale || 0).toLocaleString();
+      document.getElementById('countQuotation').textContent = (currentCounts.quotation || 0).toLocaleString();
+      document.getElementById('countLedger').textContent = (currentCounts.gledg || 0).toLocaleString();
+
+      const serverTotal = (currentCounts.inventory || 0) + (currentCounts.purchase || 0) + (currentCounts.stock_ledger || 0) + (currentCounts.sale || 0) + (currentCounts.quotation || 0) + (currentCounts.gledg || 0);
+      document.getElementById('badgeServerTotal').textContent = serverTotal.toLocaleString();
+      document.getElementById('badgeVouchersCount').textContent = voucherList.length;
+      document.getElementById('countVouchersTotal').textContent = `${voucherList.length} types`;
+
+      renderVoucherPills();
+      renderVouchersTable();
+
+      if (showToastNotice && window.showToast) {
+        window.showToast('Live counts updated successfully!', 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      if (window.showToast) {
+        window.showToast(err.message, 'error');
+      }
+    }
+  }
+
+  // ── Render Voucher Pills & Table ──
+  function renderVoucherPills() {
+    const container = document.getElementById('voucherPillsContainer');
+    if (!container) return;
+
+    if (voucherList.length === 0) {
+      container.innerHTML = '<span style="font-size:11px; color:var(--cd-text-muted);">No voucher sequences configured</span>';
+      return;
+    }
+
+    container.innerHTML = voucherList.map(v => {
+      const isSel = selectedVoucherTypes.has(v.type);
+      return `
+        <span class="v-pill ${isSel ? 'active' : ''}" onclick="toggleVoucherType(event, '${v.type}')" title="${v.remarks}: current vchno=${v.vchno}">
+          ${v.type} (${v.vchno})
+        </span>
+      `;
+    }).join('');
+  }
+
+  window.toggleVoucherType = function(e, type) {
+    e.stopPropagation();
+    if (selectedVoucherTypes.has(type)) {
+      selectedVoucherTypes.delete(type);
+    } else {
+      selectedVoucherTypes.add(type);
+    }
+    renderVoucherPills();
+  };
+
+  function renderVouchersTable() {
+    const tbody = document.getElementById('tbodyVouchersList');
+    if (!tbody) return;
+
+    if (voucherList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:16px;">No vouchers configured.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = voucherList.map(v => `
+      <tr>
+        <td>
+          <span style="font-weight: 800; font-family: monospace; font-size: 13px; color: var(--cd-primary);">${v.type}</span>
+        </td>
+        <td>
+          <div style="font-weight: 600;">${v.remarks || 'Standard Voucher'}</div>
+        </td>
+        <td style="text-align: center;">
+          <span style="font-size: 14px; font-weight: 800; color: ${v.vchno > 0 ? 'var(--cd-danger)' : 'var(--cd-text-muted)'};">${v.vchno}</span>
+        </td>
+        <td style="text-align: center;">
+          <button type="button" class="btn-select-ctrl" style="padding: 4px 10px; font-size: 11px;" onclick="quickResetVouchers(['${v.type}'])" ${v.vchno === 0 ? 'disabled' : ''}>
+            <i class="fa-solid fa-rotate-left"></i> Reset to 0
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Card Checkbox Logic ──
+  function toggleCard(chkId) {
+    const chk = document.getElementById(chkId);
+    if (chk) {
+      chk.checked = !chk.checked;
+      chk.dispatchEvent(new Event('change'));
+    }
+  }
+
+  function syncCardSelection(chkId, cardId) {
+    const chk = document.getElementById(chkId);
+    const card = document.getElementById(cardId);
+    if (chk && card) {
+      card.classList.toggle('selected', chk.checked);
+    }
+    updateSelectionState();
+  }
+
+  function setAllCheckboxes(checked) {
+    const ids = ['chkInventory', 'chkPurchase', 'chkStock', 'chkSale', 'chkQuotation', 'chkLedger', 'chkVouchers'];
+    ids.forEach(id => {
+      const chk = document.getElementById(id);
+      if (chk) {
+        chk.checked = checked;
+        const cardId = id.replace('chk', 'card');
+        const card = document.getElementById(cardId);
+        if (card) card.classList.toggle('selected', checked);
+      }
+    });
+    updateSelectionState();
+  }
+
+  function updateSelectionState() {
+    const ids = ['chkInventory', 'chkPurchase', 'chkStock', 'chkSale', 'chkQuotation', 'chkLedger', 'chkVouchers'];
+    let selectedCount = 0;
+    ids.forEach(id => {
+      if (document.getElementById(id)?.checked) selectedCount++;
+    });
+
+    document.getElementById('selectedCountText').textContent = `${selectedCount} selected`;
+    const btn = document.getElementById('btnExecuteTruncate');
+    if (btn) btn.disabled = selectedCount === 0;
+  }
+
+  // ── Confirmation Modal ──
+  function openConfirmationModal() {
+    const list = document.getElementById('confirmList');
+    list.innerHTML = '';
+
+    if (document.getElementById('chkInventory')?.checked) {
+      list.innerHTML += `<li>Inventory Items (${(currentCounts.inventory || 0).toLocaleString()} items) + Auto Stock Lots & Ledger</li>`;
+    }
+    if (document.getElementById('chkPurchase')?.checked) {
+      list.innerHTML += `<li>Purchases &amp; Orders (${(currentCounts.purchase || 0).toLocaleString()} bills) + Auto Stock Lots & Ledger</li>`;
+    }
+    if (document.getElementById('chkStock')?.checked && !document.getElementById('chkInventory')?.checked && !document.getElementById('chkPurchase')?.checked) {
+      list.innerHTML += `<li>Stock Lots &amp; Stock Ledger (${(currentCounts.stock_lot || 0).toLocaleString()} lots, ${(currentCounts.stock_ledger || 0).toLocaleString()} entries)</li>`;
+    }
+    if (document.getElementById('chkSale')?.checked) {
+      list.innerHTML += `<li>Sales &amp; Invoices (${(currentCounts.sale || 0).toLocaleString()} records)</li>`;
+    }
+    if (document.getElementById('chkQuotation')?.checked) {
+      list.innerHTML += `<li>Quotations (${(currentCounts.quotation || 0).toLocaleString()} records)</li>`;
+    }
+    if (document.getElementById('chkLedger')?.checked) {
+      list.innerHTML += `<li>Financial Ledger (Gledg) (${(currentCounts.gledg || 0).toLocaleString()} entries)</li>`;
+    }
+    if (document.getElementById('chkVouchers')?.checked) {
+      list.innerHTML += `<li>Reset Voucher Sequences to 0 (${Array.from(selectedVoucherTypes).join(', ')})</li>`;
+    }
+
+    document.getElementById('confirmModal').classList.add('active');
+  }
+
+  function closeConfirmationModal() {
+    document.getElementById('confirmModal').classList.remove('active');
+  }
+
+  // ── Execute Server Truncation ──
+  async function executeTruncate() {
+    const payload = {
+      clear_inventory: !!document.getElementById('chkInventory')?.checked,
+      clear_purchase: !!document.getElementById('chkPurchase')?.checked,
+      clear_stock: !!document.getElementById('chkStock')?.checked,
+      clear_sale: !!document.getElementById('chkSale')?.checked,
+      clear_quotation: !!document.getElementById('chkQuotation')?.checked,
+      clear_ledger: !!document.getElementById('chkLedger')?.checked,
+      reset_vouchers: !!document.getElementById('chkVouchers')?.checked,
+      voucher_types: Array.from(selectedVoucherTypes),
+    };
+
+    const confirmBtn = document.getElementById('btnConfirmTruncate');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Truncating...';
+
+    try {
+      const resp = await fetch('/myglobal/api/clear-data/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const res = await resp.json();
+      if (!res.success) {
+        throw new Error(res.message || 'Truncation failed.');
+      }
+
+      closeConfirmationModal();
+      setAllCheckboxes(false);
+      await fetchLiveCounts(false);
+
+      let summaryText = 'Truncate completed successfully:\n';
+      for (const [k, v] of Object.entries(res.summary || {})) {
+        summaryText += `• ${k}: ${v}\n`;
+      }
+      alert(summaryText);
+
+    } catch (err) {
+      console.error(err);
+      alert('Error during truncate: ' + err.message);
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Yes, Permanently Truncate';
+    }
+  }
+
+  // ── Quick Reset Vouchers ──
+  async function quickResetVouchers(types = ['ALL']) {
+    const confirmMsg = types.includes('ALL') 
+      ? 'Are you sure you want to reset ALL voucher sequences to 0?'
+      : `Reset voucher sequence for ${types.join(', ')} to 0?`;
+    
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const resp = await fetch('/myglobal/api/clear-data/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken(),
+        },
+        body: JSON.stringify({
+          reset_vouchers: true,
+          voucher_types: types,
+        }),
+      });
+
+      const res = await resp.json();
+      if (res.success) {
+        await fetchLiveCounts(true);
+      } else {
+        alert(res.message || 'Failed to reset vouchers.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error resetting vouchers: ' + err.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // OFFLINE STORAGE & INDEXEDDB MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════
+
+  async function loadAllOfflineData() {
+    try {
+      const db = await getDB();
+
+      // 1. Pending Sales Invoices
+      const sales = await getAllRecords('pendingBills');
+      renderOfflineSales(sales || []);
+
+      // 2. Pending Purchases
+      const purchases = await getAllRecords('pendingPurchaseBills');
+      renderOfflinePurchases(purchases || []);
+
+      // 3. Pending Quotations
+      const quotations = await getAllRecords('pendingQuotationBills');
+      renderOfflineQuotations(quotations || []);
+
+      // 4. Carts
+      const saleCart = await getAllRecords('salecart');
+      document.getElementById('saleCartCount').textContent = `${(saleCart || []).length} rows`;
+
+      const purCart = await getAllRecords('purchasecart');
+      document.getElementById('purchaseCartCount').textContent = `${(purCart || []).length} rows`;
+
+      const qotCart = await getAllRecords('quotationcart');
+      document.getElementById('quotationCartCount').textContent = `${(qotCart || []).length} rows`;
+
+      // 5. Product Cache
+      let cachedCount = 0;
+      if (window.IndexDBConfig) {
+        try {
+          const cached = await window.IndexDBConfig.get_all('inventory');
+          cachedCount = (cached || []).length;
+        } catch (_) {}
+      }
+      document.getElementById('cacheProductsCount').textContent = `${cachedCount} items`;
+
+      // Badge total
+      const totalOffline = (sales?.length || 0) + (purchases?.length || 0) + (quotations?.length || 0);
+      document.getElementById('badgeOfflineTotal').textContent = totalOffline;
+
+    } catch (err) {
+      console.warn('Could not read IndexedDB records:', err);
+    }
+  }
+
+  function renderOfflineSales(records) {
+    document.getElementById('offlineSalesCount').textContent = records.length;
+    const tbody = document.getElementById('tbodyOfflineSales');
+    if (records.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--cd-text-muted); padding: 18px;">No offline sales pending in local storage.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = records.map(r => {
+      const itemsCount = (r.items || []).length;
+      const netTotal = Number(r.net_total || r.header_total || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+      const dateStr = r.date || r.created_at || 'N/A';
+      const cust = r.customer_name || r.header_client_name || r.customer || 'Walk-in Customer';
+      const billNo = r.bill_no || `TMP-${r.local_id}`;
+
+      return `
+        <tr>
+          <td><strong style="color: var(--cd-primary);">#${r.local_id}</strong></td>
+          <td>
+            <div style="font-weight: 700;">${billNo}</div>
+            <small style="color: var(--cd-text-muted);">${dateStr}</small>
+          </td>
+          <td>${cust}</td>
+          <td style="text-align: center;"><span class="live-count-badge">${itemsCount}</span></td>
+          <td style="text-align: right; font-weight: 700;">Rs. ${netTotal}</td>
+          <td style="text-align: center;">
+            <div style="display: flex; gap: 4px; justify-content: center;">
+              <button type="button" class="btn-row-action" title="View Payload" onclick='viewOfflinePayload("Sales Invoice #${r.local_id}", ${JSON.stringify(r).replace(/'/g, "&apos;")})'>
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button type="button" class="btn-row-action delete" title="Delete Row" onclick="deleteOfflineRow('pendingBills', ${r.local_id})">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderOfflinePurchases(records) {
+    document.getElementById('offlinePurchaseCount').textContent = records.length;
+    const tbody = document.getElementById('tbodyOfflinePurchases');
+    if (records.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--cd-text-muted); padding: 18px;">No offline purchases pending in local storage.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = records.map(r => {
+      const itemsCount = (r.items || []).length;
+      const netTotal = Number(r.net_total || r.header_total || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+      const dateStr = r.date || r.created_at || 'N/A';
+      const supp = r.supplier_name || r.header_supplier_name || 'General Supplier';
+      const billNo = r.bill_no || `PUR-${r.local_id}`;
+
+      return `
+        <tr>
+          <td><strong style="color: #0284c7;">#${r.local_id}</strong></td>
+          <td>
+            <div style="font-weight: 700;">${billNo}</div>
+            <small style="color: var(--cd-text-muted);">${dateStr}</small>
+          </td>
+          <td>${supp}</td>
+          <td style="text-align: center;"><span class="live-count-badge">${itemsCount}</span></td>
+          <td style="text-align: right; font-weight: 700;">Rs. ${netTotal}</td>
+          <td style="text-align: center;">
+            <div style="display: flex; gap: 4px; justify-content: center;">
+              <button type="button" class="btn-row-action" title="View Payload" onclick='viewOfflinePayload("Purchase #${r.local_id}", ${JSON.stringify(r).replace(/'/g, "&apos;")})'>
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button type="button" class="btn-row-action delete" title="Delete Row" onclick="deleteOfflineRow('pendingPurchaseBills', ${r.local_id})">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderOfflineQuotations(records) {
+    document.getElementById('offlineQuotationCount').textContent = records.length;
+    const tbody = document.getElementById('tbodyOfflineQuotations');
+    if (records.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--cd-text-muted); padding: 18px;">No offline quotations pending in local storage.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = records.map(r => {
+      const itemsCount = (r.items || []).length;
+      const netTotal = Number(r.net_total || r.header_total || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+      const dateStr = r.date || r.created_at || 'N/A';
+      const cust = r.customer_name || 'General Customer';
+      const billNo = r.bill_no || `QOT-${r.local_id}`;
+
+      return `
+        <tr>
+          <td><strong style="color: #9333ea;">#${r.local_id}</strong></td>
+          <td>
+            <div style="font-weight: 700;">${billNo}</div>
+            <small style="color: var(--cd-text-muted);">${dateStr}</small>
+          </td>
+          <td>${cust}</td>
+          <td style="text-align: center;"><span class="live-count-badge">${itemsCount}</span></td>
+          <td style="text-align: right; font-weight: 700;">Rs. ${netTotal}</td>
+          <td style="text-align: center;">
+            <div style="display: flex; gap: 4px; justify-content: center;">
+              <button type="button" class="btn-row-action" title="View Payload" onclick='viewOfflinePayload("Quotation #${r.local_id}", ${JSON.stringify(r).replace(/'/g, "&apos;")})'>
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button type="button" class="btn-row-action delete" title="Delete Row" onclick="deleteOfflineRow('pendingQuotationBills', ${r.local_id})">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ── Delete Single Offline Row ──
+  async function deleteOfflineRow(storeName, key) {
+    if (!confirm(`Delete local record #${key} from ${storeName}?`)) return;
+
+    try {
+      await deleteRecord(storeName, key);
+      await loadAllOfflineData();
+      if (window.showToast) window.showToast(`Record #${key} removed from local storage.`, 'success');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete offline record: ' + err.message);
+    }
+  }
+
+  // ── Clear Store ──
+  async function clearOfflineStore(storeName, title) {
+    if (!confirm(`Are you sure you want to clear ALL records from ${title}?`)) return;
+
+    try {
+      await clearStore(storeName);
+      await loadAllOfflineData();
+      if (window.showToast) window.showToast(`Cleared ${title}.`, 'success');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to clear store: ' + err.message);
+    }
+  }
+
+  // ── Purge Product Cache in globalsoft_db ──
+  async function purgeProductCache() {
+    if (!confirm('Purge locally cached product catalog from IndexedDB?')) return;
+    try {
+      if (window.IndexDBConfig) {
+        const db = await window.IndexDBConfig.open_db('inventory');
+        const tx = db.transaction('inventory', 'readwrite');
+        tx.objectStore('inventory').clear();
+        tx.oncomplete = () => {
+          loadAllOfflineData();
+          if (window.showToast) window.showToast('Product cache purged. Refreshing catalog…', 'info');
+          window.IndexDBConfig.sync_indexdb('inventory', 'Inventory');
+        };
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to purge cache: ' + err.message);
+    }
+  }
+
+  // ── Wipe All Client Offline Storage ──
+  async function wipeAllClientOfflineData() {
+    if (!confirm('DANGER: This will delete ALL pending offline invoices, purchases, quotations, and active cart drafts on this browser. Continue?')) {
+      return;
+    }
+
+    try {
+      const stores = ['pendingBills', 'pendingPurchaseBills', 'pendingQuotationBills', 'salecart', 'purchasecart', 'quotationcart'];
+      for (const s of stores) {
+        await clearStore(s);
+      }
+      await loadAllOfflineData();
+      alert('All offline client storage cleared successfully.');
+    } catch (err) {
+      console.error(err);
+      alert('Error wiping offline storage: ' + err.message);
+    }
+  }
+
+  // ── View Payload Modal ──
+  function viewOfflinePayload(title, payload) {
+    document.getElementById('payloadModalTitle').textContent = title;
+    document.getElementById('payloadJsonPre').textContent = JSON.stringify(payload, null, 2);
+    document.getElementById('payloadModal').classList.add('active');
+  }
+
+  function closePayloadModal() {
+    document.getElementById('payloadModal').classList.remove('active');
+  }
+
+  function getCsrfToken() {
+    return document.cookie.split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1] || '';
+  }
+</script>
+{% endblock extra_js %}
+

@@ -14,7 +14,13 @@ class InventoryHelpers {
             alert(data.message || 'Some error occured while fetching the record')
         }
     }
+
+    
     fillInventoryData = function (data) {
+        if (!data) return;
+        if (data.parent_item_id && !data.parent_item) {
+            data.parent_item = data.parent_item_id;
+        }
         for (let field in data) {
             const element = document.getElementById(`id_${field}`)
             if (element) {
@@ -23,6 +29,17 @@ class InventoryHelpers {
                 } else {
                     element.value = data[field] !== null ? data[field] : '';
                 }
+            }
+        }
+
+        // Toggle Variant & Serial Tracking Cards Visibility
+        const variantCards = document.getElementById('variantFieldsCard');
+        if (variantCards) {
+            const isVariant = data.is_variant === true || data.is_variant === 'true' || data.is_variant === 1 || data.is_variant === '1';
+            if (isVariant) {
+                variantCards.classList.remove('hidden');
+            } else {
+                variantCards.classList.add('hidden');
             }
         }
         
@@ -128,6 +145,9 @@ class InventoryHelpers {
             form.reset();
             const invIdEl = document.getElementById('id_inv_id');
             if (invIdEl) invIdEl.value = '';
+            
+            const variantCards = document.getElementById('variantFieldsCard');
+            if (variantCards) variantCards.classList.add('hidden');
             
             // Reset image
             const previewImg = document.getElementById('image-preview');

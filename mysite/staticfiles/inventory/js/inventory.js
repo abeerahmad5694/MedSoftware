@@ -97,4 +97,93 @@ document.addEventListener('DOMContentLoaded', async function() {
         const identityCard = document.querySelector('.identity-card');
         identityCard.style.gridTemplateColumns = '1fr';
     }
+
+
+    if(window.companyConfigurations?.inventory?.dzn_pack_name && window.companyConfigurations?.inventory?.dzn_pack_name != ''){
+        // console.log('This si running')
+        document.getElementById('dzn_pack_box').classList.remove('hidden');
+        document.getElementById('dzn_pack_label').innerText = `${window.companyConfigurations?.inventory?.dzn_pack_name || 'Dozen'}`;
+    }
+    if(window.companyConfigurations?.inventory?.carton_pack_name && window.companyConfigurations?.inventory?.carton_pack_name != ''){
+        // console.log('This si running')
+        document.getElementById('carton_pack_box').classList.remove('hidden');
+        document.getElementById('carton_pack_label').innerText = window.companyConfigurations?.inventory?.carton_pack_name || 'Carton';
+    }
+    // console.log(window.companyConfigurations?.inventory?.allow_stock_variation)
+    // console.log(typeof(window.companyConfigurations?.inventory?.allow_stock_variation))
+
+    const allowVariation =
+    window.companyConfigurations?.inventory?.allow_stock_variation;
+
+    const variationGroup = document.getElementById('variation-type-group');
+
+    console.log('This is variation logic..',{
+        allowVariation,
+        type: typeof allowVariation,
+        variationGroup
+    });
+
+
+
+    if (window.companyConfigurations?.inventory?.allow_stock_variation) {
+        if (variationGroup) {
+            variationGroup.classList.remove('hidden');
+        }
+    }
+
+
+
+
+    //const form = document.getElementById('inventoryForm');
+
+    if (!form) return;
+
+    form.addEventListener('keydown', function (e) {
+
+        if (e.key !== 'Enter') return;
+
+        // Allow Enter inside textareas
+        if (e.target.tagName === 'TEXTAREA') return;
+
+        // Prevent form submission
+        e.preventDefault();
+
+        // Get all visible, enabled form fields
+        const fields = Array.from(form.querySelectorAll(
+            'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="file"]), select, textarea, button'
+        )).filter(field =>
+            !field.disabled &&
+            field.offsetParent !== null &&
+            field.type !== 'button'
+        );
+
+        const currentIndex = fields.indexOf(e.target);
+
+        if (currentIndex !== -1) {
+
+            // Move to next field
+            const nextField = fields[currentIndex + 1];
+
+            if (nextField) {
+                nextField.focus();
+
+                // Select text in input fields
+                if (nextField.tagName === 'INPUT' &&
+                    ['text', 'number', 'search'].includes(nextField.type)) {
+                    nextField.select();
+                }
+            }
+        }
+    });
+
+
+
+
+
+    
+
+
+
+
+
 });

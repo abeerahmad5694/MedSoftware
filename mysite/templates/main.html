@@ -357,19 +357,22 @@
 
                         {% if is_super_user %}
                         <a href="{% url 'company_config' %}">Company Policies</a>
+                        
                         {% endif %}
                         <a href="{% url 'default_accounts' %}">Default Accounts</a>
                         <a href="{%url 'invoice_designer:designer_default'%}">Invoice Designer</a>
                         <a href="{% url 'company' %}">Company</a>
                         <a href="{% url 'branch' %}">Branch</a>
                         <a href="{% url 'posterminal' %}">Posterminal / Cash Counter</a>
+                        <a href="{% url 'users' %}">Users</a>
 
                         {% if is_super_user %}
 
                         <a href="{% url 'permissions' %}">Permissions</a>
+                        <a href="{% url 'clear_data_page' %}" ><i class="fa-solid fa-trash-can text-[10px] mr-1"></i> Data Purge &amp; Reset</a>
+
 
                         {% endif %}
-                        <a href="{% url 'users' %}">Users</a>
                     </div>
                 </div>
                 {% endif %}
