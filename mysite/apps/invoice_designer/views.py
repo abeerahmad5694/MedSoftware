@@ -102,7 +102,11 @@ class ConfigurationView(View):
         )
         TemplateConfigurationCache.invalidate(document_type, page_type, name)
 
-        return JsonResponse({"status": "saved", "id": template.id})
+        return JsonResponse({
+            "status": "saved",
+            "id": template.id,
+            "updated_at": template.updated_at.isoformat() if template.updated_at else None,
+        })
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -154,7 +158,7 @@ class RenderDocumentView(View):
         # but the template configuration wants to display it.
         totals_fields = configuration.get("sections", {}).get("totals", {}).get("fields", [])
         wants_prev_bal = any(f.get("field") == "previous_balance" and f.get("visible", True) for f in totals_fields)
-        if wants_prev_bal:
+        if wants_prev_bal and configuration.get("document_type") != "voucher":
             acc_code = document_data.get("customer", {}).get("account_code")
             if acc_code:
                 from .services.ledger import get_previous_balance
@@ -194,26 +198,31 @@ class DocumentDataView(View):
 
     def get(self, request):
         document_type = request.GET.get("document_type")
-        bill_number = int(request.GET.get("bill_number"))
+        bill_number = (request.GET.get("bill_number") or "").strip()
         model_name = request.GET.get("model_name")
         include_previous_balance = request.GET.get("show_previous_balance") == "true"
 
-        print('document type:',document_type)
-        print('bill number:',bill_number)
-        if (bill_number < 0):
-            if(document_type == 'pos_invoice'):
-                v_type = 'INV'
-            elif(document_type == 'purchase_invoice'):
-                v_type = 'PUR'
-            elif(document_type == 'quotation'):
-                v_type = 'QOT'
-            bill_number = Vchno.objects.filter(TYPE = v_type).first().VCHNO
-                
-                
-                
-                
         if not (document_type and bill_number):
             return HttpResponseBadRequest("document_type and bill_number are required")
+
+        # Voucher numbers are natural keys such as CR-123 and JV-45. Keep
+        # them as strings; only invoice-style document numbers are integers.
+        if document_type != "voucher":
+            try:
+                bill_number = int(bill_number)
+            except (TypeError, ValueError):
+                return HttpResponseBadRequest("bill_number must be an integer for this document type")
+            if bill_number < 0:
+                v_type = {
+                    "pos_invoice": "INV",
+                    "credit_sale_invoice": "INV",
+                    "purchase_invoice": "PUR",
+                    "quotation": "QOT",
+                }.get(document_type)
+                next_number = Vchno.objects.filter(TYPE=v_type).first() if v_type else None
+                if next_number is None:
+                    return JsonResponse({"error": "Next voucher number is not configured"}, status=404)
+                bill_number = next_number.VCHNO
 
         builder = DOCUMENT_DATA_BUILDERS.get(document_type)
         if builder is None:
@@ -300,7 +309,10 @@ class DocumentDataView(View):
             if "-" in str(bill_number):
                 v_type, vno = str(bill_number).rsplit("-", 1)
             else:
-                v_type = model_name or "CR"
+                # model_name is normally "Gledg", not a voucher type. Accept
+                # an explicit short type, otherwise preserve the CR default.
+                candidate = str(model_name or "").strip().upper()
+                v_type = candidate if candidate in {"CR", "CP", "BR", "BP", "JV", "ADJ"} else "CR"
                 vno = bill_number
             try:
                 rows = list(Gledg.objects.filter(

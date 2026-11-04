@@ -3,19 +3,24 @@
    ══════════════════════════════════════════════════════ */
 
 const db_name = 'globalsoft_db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 // ── Store Registry ──
 // Add new stores here and bump DB_VERSION to auto-create them.
 const STORE_REGISTRY = {
     'inventory': { keyPath: 'inv_id' },
-    'template_configs': { keyPath: 'key' }
+    'template_configs': { keyPath: 'key' },
+    // Small shared assets used by the offline document renderer. Template
+    // records also contain their own assets so a local print normally needs
+    // only one IndexedDB read.
+    'app_cache': { keyPath: 'key' }
 };
 
 const inventory_store = 'inventory';
 
 const IndexDBConfig = {
     db: null,
+    db_promise: null,
 
     resolve_store_name: function (store_name) {
         if (!store_name) return inventory_store;
@@ -27,29 +32,44 @@ const IndexDBConfig = {
 
     open_db: function (store_name = inventory_store) {
         store_name = IndexDBConfig.resolve_store_name(store_name);
-        return new Promise((resolve, reject) => {
+        if (IndexDBConfig.db) return Promise.resolve(IndexDBConfig.db);
+        if (IndexDBConfig.db_promise) return IndexDBConfig.db_promise;
+
+        IndexDBConfig.db_promise = new Promise((resolve, reject) => {
             const request = indexedDB.open(db_name, DB_VERSION);
 
             request.onupgradeneeded = function (event) {
                 const db = event.target.result;
-                // Recreate registered stores (handles keyPath changes on version bump)
+                // Never delete an existing store during an upgrade. Apart from
+                // being safer for inventory, this preserves saved print templates.
                 for (const [name, config] of Object.entries(STORE_REGISTRY)) {
-                    if (db.objectStoreNames.contains(name)) {
-                        db.deleteObjectStore(name);
+                    if (!db.objectStoreNames.contains(name)) {
+                        db.createObjectStore(name, { keyPath: config.keyPath });
                     }
-                    db.createObjectStore(name, { keyPath: config.keyPath });
                 }
             };
 
             request.onsuccess = function (event) {
                 IndexDBConfig.db = event.target.result;
+                IndexDBConfig.db.onversionchange = () => {
+                    IndexDBConfig.db.close();
+                    IndexDBConfig.db = null;
+                    IndexDBConfig.db_promise = null;
+                };
                 resolve(IndexDBConfig.db);
             };
 
+            request.onblocked = function () {
+                IndexDBConfig.db_promise = null;
+                reject(new Error("IndexedDB upgrade is blocked by another ERP tab. Close other tabs and reload."));
+            };
+
             request.onerror = function (event) {
+                IndexDBConfig.db_promise = null;
                 reject(event.target.error);
             };
         });
+        return IndexDBConfig.db_promise;
     },
 
     save_full_model: function (store_name = inventory_store, app_label, model_name) {
@@ -122,6 +142,10 @@ const IndexDBConfig = {
 
     close_db: function (db) {
         db.close();
+        if (IndexDBConfig.db === db) {
+            IndexDBConfig.db = null;
+            IndexDBConfig.db_promise = null;
+        }
     },
 
     check_and_load_inventory: async function () {

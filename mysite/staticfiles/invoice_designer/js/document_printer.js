@@ -1,35 +1,33 @@
 /**
- * DocumentPrinter
- * -----------------
- * The one public API every other app in the ERP calls to print or
- * preview anything. It never contains rendering logic — it only
- * decides *where document_data comes from*, then hands both the
- * configuration and the data to the exact same /api/render/ endpoint
- * the designer's live preview uses.
+ * DocumentPrinter — one print API for every document.
  *
- * Preview = Print output (requirement #6): both printDocument() and
- * openPreviewModal() render into the SAME modal, with the SAME CSS,
- * at real page size. Printing (requirement #7) only ever prints that
- * modal's page — the host page's own UI is never part of the output,
- * because print.css hides everything outside #print-modal-page.
+ * data_source chooses the DOCUMENT DATA:
+ *   "local"  -> use payload; no document-data request. This is the default
+ *               when payload is supplied and data_source is omitted.
+ *   "server" -> fetch an existing database document by bill_no.
  *
- * Usage (exact shape requested):
+ * rendering_source (renderSource is kept as a backwards-compatible alias)
+ * chooses the RENDERER:
+ *   "local"  -> saved IndexedDB template + OfflineTemplateEngine. It never
+ *               calls configuration, registry, CSS, company, or render APIs.
+ *   "server" -> POST configuration + document data to /api/render/.
  *
- *   DocumentPrinter.printDocument({
- *       bill_no: 10245,
- *       model_name: "Invoice",
- *       page_type: "thermal_80",
- *       document_type: "pos_invoice",
- *       data_source: "local",           // "local" | "server"
- *       renderSource: "local",          // "local" | "server"
- *       payload: {...},                 // required when data_source === "local"
- *       allow_multiple_print: false,
- *       copies: 1,
- *   });
+ * For a 100% offline print use data_source:"local", rendering_source:"local",
+ * and save the template once from the online designer.
+ *
+ * DocumentPrinter.printDocument({
+ *   bill_no: 10245,
+ *   model_name: "Invoice",
+ *   page_type: "thermal_80",
+ *   document_type: "pos_invoice",
+ *   data_source: "local",
+ *   rendering_source: "local",
+ *   payload: {...},
+ *   allow_multiple_print: false,
+ *   copies: 1,
+ *   directprint: false,
+ * });
  */
-
-
-let offline_bill_no = 10000
 window.DocumentPrinter = (function () {
     "use strict";
 
@@ -37,282 +35,352 @@ window.DocumentPrinter = (function () {
         configuration: "/invoice-designer/api/configuration/",
         render: "/invoice-designer/api/render/",
         documentData: "/invoice-designer/api/document-data/",
-        fieldRegistry: "/invoice-designer/api/field-registry/",
+    };
+    const PAGE_TYPES = [
+        ["thermal_58", "Thermal 58mm"],
+        ["thermal_80", "Thermal 80mm"],
+        ["a5", "A5"],
+        ["a4", "A4"],
+        ["urdu_58mm", "Thermal 58mm — Urdu"],
+        ["urdu_80mm", "Thermal 80mm — Urdu"],
+        ["urdu_a5", "A5 — Urdu"],
+        ["urdu_a4", "A4 — Urdu"],
+        ["bilingual_80mm", "Thermal 80mm — Bilingual"],
+        ["bilingual_a4", "A4 — Bilingual"],
+    ];
+    const VOUCHER_TITLES = {
+        CR: "CASH RECEIPT VOUCHER",
+        CP: "CASH PAYMENT VOUCHER",
+        BR: "BANK RECEIPT VOUCHER",
+        BP: "BANK PAYMENT VOUCHER",
+        JV: "JOURNAL VOUCHER",
     };
 
-    let modalState = null;   // { documentType, dataSource, renderSource, payload, billNumber, modelName }
+    let offlineBillNumber = 10000;
+    let modalState = null;
 
-    function mapLocalPayloadToDocumentData(payload) {
-        if (!payload) return {};
+    function firstValue(object, keys, fallback = "") {
+        for (const key of keys) {
+            if (object && object[key] !== undefined && object[key] !== null) return object[key];
+        }
+        return fallback;
+    }
 
-        // Map item fields from POS payload shape -> document_data shape
-        const items = (payload.items || []).map(i => {
-            const rowNotes = i.row_notes || i.item_notes || i.notes || "";
-            const focQty = i.foc_qty !== undefined ? i.foc_qty : (i.foc !== undefined ? i.foc : 0);
-            const warranty = i.warranty || i.warranty_notes || rowNotes;
+    function numberValue(value) {
+        const number = parseFloat(String(value ?? 0).replace(/,/g, ""));
+        return Number.isFinite(number) ? number : 0;
+    }
+
+    function normalizeOptions(options = {}) {
+        // Supplying a payload is enough for local data; an explicit
+        // data_source always wins for backwards compatibility.
+        const dataSource = options.dataSource ?? options.data_source ?? (options.payload ? "local" : "server");
+        return {
+            documentType: options.documentType ?? options.document_type,
+            pageType: options.pageType ?? options.page_type,
+            dataSource,
+            // Local payload printing is offline by default. Existing
+            // bill_no/server-data callers keep working online by default;
+            // rendering_source:"local" explicitly opts into cached rendering.
+            renderSource: options.rendering_source ?? options.renderSource ?? options.renderingSource ?? dataSource,
+            payload: options.payload ?? null,
+            billNumber: options.billNumber ?? options.bill_no,
+            modelName: options.modelName ?? options.model_name ?? "",
+            directprint: options.directprint ?? false,
+            allowMultiplePrint: options.allowMultiplePrint ?? options.allow_multiple_print ?? false,
+            copies: options.copies ?? 1,
+            // Optional in-memory assets are used by the designer's full
+            // preview so it can show unsaved changes. Normal printing only
+            // needs document_type + page_type and the saved local bundle.
+            configuration: options.configuration || null,
+            registry: options.registry || null,
+            companyData: options.companyData || null,
+            cssText: options.cssText || "",
+        };
+    }
+
+    function validateOptions(options) {
+        if (!options.documentType || !options.pageType) {
+            throw new Error("DocumentPrinter: document_type and page_type are required");
+        }
+        if (!["local", "server"].includes(options.dataSource)) {
+            throw new Error('DocumentPrinter: data_source must be "local" or "server"');
+        }
+        if (!["local", "server"].includes(options.renderSource)) {
+            throw new Error('DocumentPrinter: rendering_source must be "local" or "server"');
+        }
+        if (options.dataSource === "local" && !options.payload) {
+            throw new Error('DocumentPrinter: payload is required when data_source is "local"');
+        }
+    }
+
+    function commonDocumentData(payload, documentType, billNumber) {
+        let resolvedBillNumber = firstValue(payload, ["bill_number", "bill_no", "voucher_number", "vno", "VNO"], billNumber);
+        if (resolvedBillNumber === "" || resolvedBillNumber === null || resolvedBillNumber === undefined) {
+            resolvedBillNumber = ++offlineBillNumber;
+        }
+        const now = new Date();
+        const defaultTitle = documentType === "purchase_invoice" ? "PURCHASE INVOICE"
+            : documentType === "quotation" ? "QUOTATION" : "INVOICE";
+        const customer = payload.customer && typeof payload.customer === "object" ? payload.customer : {};
+        return {
+            ...payload,
+            bill_number: resolvedBillNumber,
+            invoice_title: firstValue(payload, ["invoice_title"], defaultTitle),
+            invoice_date: firstValue(payload, ["invoice_date", "date", "DATE"], now.toISOString().split("T")[0]),
+            salesman: firstValue(payload, ["salesman"], ""),
+            cashier: firstValue(payload, ["cashier", "USER"], ""),
+            terminal: firstValue(payload, ["terminal"], ""),
+            remarks: firstValue(payload, ["remarks", "header_remarks", "REMARKS"], ""),
+            printed_by: firstValue(payload, ["printed_by", "cashier", "USER"], ""),
+            print_date: now.toISOString().split("T")[0],
+            print_time: now.toTimeString().split(" ")[0],
+            company: payload.company || { name: "", address: "", phone: "", email: "", license_number: "", logo_url: "" },
+            branch: payload.branch || { name: "", address: "", phone: "", email: "", license_number: "", logo_url: "" },
+            customer: {
+                ...customer,
+                name: firstValue(customer, ["name"], firstValue(payload, ["customer_name"], "")),
+                address: firstValue(customer, ["address"], firstValue(payload, ["customer_address"], "")),
+                phone: firstValue(customer, ["phone"], firstValue(payload, ["customer_phone"], "")),
+                account_code: firstValue(customer, ["account_code"], firstValue(payload, ["header_acc_code", "customer_account"], "")),
+            },
+        };
+    }
+
+    function mapVoucherPayload(payload, billNumber) {
+        const data = commonDocumentData(payload, "voucher", billNumber);
+        const sourceRows = payload.items || payload.rows || payload.gledg_rows || payload.listOfVoucherLines || [];
+        const billText = String(data.bill_number || "");
+        const inferredType = billText.includes("-") ? billText.split("-")[0] : "";
+        const voucherType = String(firstValue(payload, ["voucher_type", "voucherType", "V_TYPE"], inferredType)).trim().toUpperCase();
+        if (voucherType && !String(data.bill_number).includes("-")) {
+            data.bill_number = `${voucherType}-${data.bill_number}`;
+        }
+        data.invoice_title = firstValue(payload, ["invoice_title"], VOUCHER_TITLES[voucherType] || `VOUCHER ${voucherType}`.trim());
+
+        const items = sourceRows.map(row => {
+            const amount = firstValue(row, ["amount", "AMOUNT"], 0);
+            const amountType = String(firstValue(row, ["amt_type", "amtType", "AMT_TYPE"], "")).trim().toUpperCase();
+            const defaultAmountType = ["CP", "BP"].includes(voucherType) ? "DR" : "CR";
+            const effectiveType = amountType || defaultAmountType;
+            const debit = firstValue(row, ["debit_amount", "debit", "DEBIT_AMOUNT"], null);
+            const credit = firstValue(row, ["credit_amount", "credit", "CREDIT_AMOUNT"], null);
             return {
-                ...i,
-                product_name:     i.prod_name || i.product_name || "",
-                product_name_ur:  i.prod_name_ur || i.product_name_ur || "",
-                category:         i.category || "",
-                quantity:         i.qty !== undefined ? i.qty : (i.quantity !== undefined ? i.quantity : ""),
-                foc_qty:          focQty,
-                foc:              focQty,
-                unit:             i.uom || i.unit || "",
-                packing_mode:     i.packing_mode || "",
-                pack_quantity:    i.pack_qty !== undefined ? i.pack_qty : (i.pack_quantity !== undefined ? i.pack_quantity : ""),
-                rate:             i.rate !== undefined ? i.rate : "",
-                discount_percent: i.row_discount_percent !== undefined ? i.row_discount_percent : (i.discount_percent !== undefined ? i.discount_percent : 0),
-                discount_amount:  i.row_discount_amount !== undefined ? i.row_discount_amount : (i.discount_amount !== undefined ? i.discount_amount : 0),
-                amount:           i.row_net_total !== undefined ? i.row_net_total : (i.amount !== undefined ? i.amount : ""),
-                item_notes:       rowNotes,
-                row_notes:        rowNotes,
-                warranty:         warranty,
-                warranty_notes:   warranty,
-                barcode:          i.barcode || i.manualbc || "",
-                brand:            i.brand || i.brand_name || "",
-                cost_price:       i.row_rate_cost || i.cost_price || 0,
-                net_cost:         i.row_net_cost || i.net_cost || 0,
+                ...row,
+                account_code: firstValue(row, ["account_code", "ACC_CODE", "accCode", "acc_code"], ""),
+                account_name: firstValue(row, ["account_name", "ACC_HEAD", "acc_head", "accHead", "head"], ""),
+                counter_account_code: firstValue(row, ["counter_account_code", "REF_ACC_CODE", "refAccCode"], ""),
+                counter_account_name: firstValue(row, ["counter_account_name", "ref_acc_head", "refAccHead"], ""),
+                description: firstValue(row, ["description", "DESCRIPTION", "notes"], ""),
+                debit_amount: debit !== null ? debit : (["D", "DR"].includes(effectiveType) ? amount : 0),
+                credit_amount: credit !== null ? credit : (["C", "CR"].includes(effectiveType) ? amount : 0),
+                amount,
+                show_in_sale_rpt: String(firstValue(row, ["show_in_sale_rpt", "SHOW_IN_SALE_RPT"], "Y")).trim().toUpperCase(),
             };
         });
 
-        offline_bill_no += 1;
-        return {
-            bill_number:  payload.bill_no || offline_bill_no,
-            invoice_title: payload.invoice_title || "INVOICE",
-            invoice_date: payload.invoice_date || new Date().toISOString().split('T')[0],
-            salesman:     payload.salesman || "",
-            cashier:      payload.cashier || "",
-            terminal:     payload.terminal || "",
-            remarks:      payload.header_remarks || payload.remarks || "",
-            printed_by:   payload.cashier || payload.printed_by || "",
-            print_date:   new Date().toISOString().split('T')[0],
-            print_time:   new Date().toTimeString().split(' ')[0],
-
-            company: payload.company || {
-                name: "", address: "", phone: "", email: "", license_number: "", logo_url: ""
-            },
-            branch: payload.branch || {
-                name: "", address: "", phone: "", email: "", license_number: "", logo_url: ""
-            },
-            customer: {
-                name:         payload.customer_name || "",
-                address:      payload.customer_address || "",
-                phone:        payload.customer_phone || "",
-                account_code: payload.header_acc_code || "",
-            },
-            totals: {
-                total_items:      payload.header_total_items !== undefined ? payload.header_total_items : "",
-                subtotal:         payload.header_item_total !== undefined ? payload.header_item_total : 0,
-                discount_percent: payload.header_discount_percent || 0,
-                discount_amount:  payload.header_discount_amount || 0,
-                delivery_charges: payload.header_delivery_charges || 0,
-                gst_percent:      payload.header_gst_percent || 0,
-                gst_amount:       payload.header_gst_amount || 0,
-                misc_charges:     payload.header_misc_charges || payload.header_msc_charges || 0,
-                net_total:        payload.header_net_total !== undefined ? payload.header_net_total : 0,
-                cash_received:    payload.header_cash_paid || 0,
-                bank_received:    payload.header_bank_paid || 0,
-                change_amount:    payload.header_change_amount || 0,
-            },
-            items,
+        const mainRows = items.filter(row => row.show_in_sale_rpt !== "N");
+        const systemRows = items.filter(row => row.show_in_sale_rpt === "N");
+        const uniqueNames = rows => [...new Set(rows.map(row => String(row.account_name || "").trim()).filter(Boolean))].join(", ");
+        const partyName = uniqueNames(mainRows);
+        const voucher = payload.voucher || {};
+        data.voucher = {
+            ...voucher,
+            voucher_type: voucherType,
+            paid_to: voucher.paid_to || (["CP", "BP"].includes(voucherType) ? partyName : ""),
+            paid_from: voucher.paid_from || (["CR", "BR"].includes(voucherType) ? partyName : ""),
+            payment_account: voucher.payment_account || uniqueNames(systemRows),
         };
+        if (!data.customer.name && voucherType !== "JV" && mainRows.length) {
+            data.customer = {
+                account_code: mainRows[0].account_code,
+                name: mainRows[0].account_name,
+                address: "",
+                phone: "",
+            };
+        }
+
+        const totalDebit = items.reduce((sum, row) => sum + numberValue(row.debit_amount), 0);
+        const totalCredit = items.reduce((sum, row) => sum + numberValue(row.credit_amount), 0);
+        const totals = payload.totals || {};
+        data.totals = {
+            discount_percent: 0,
+            discount_amount: 0,
+            delivery_charges: 0,
+            gst_percent: 0,
+            gst_amount: 0,
+            misc_charges: 0,
+            cash_received: 0,
+            bank_received: 0,
+            change_amount: 0,
+            ...totals,
+            total_items: totals.total_items ?? (mainRows.length || items.length),
+            subtotal: totals.subtotal ?? totalDebit,
+            net_total: totals.net_total ?? (totalDebit || totalCredit),
+            total_debit: totals.total_debit ?? totalDebit,
+            total_credit: totals.total_credit ?? totalCredit,
+        };
+        data.items = items;
+        return data;
+    }
+
+    function mapLocalPayloadToDocumentData(payload, documentType, billNumber) {
+        if (documentType === "voucher") return mapVoucherPayload(payload, billNumber);
+        const data = commonDocumentData(payload, documentType, billNumber);
+        data.items = (payload.items || []).map(item => {
+            const rowNotes = firstValue(item, ["row_notes", "item_notes", "notes"], "");
+            const focQty = firstValue(item, ["foc_qty", "foc"], 0);
+            const warranty = firstValue(item, ["warranty", "warranty_notes"], rowNotes);
+            return {
+                ...item,
+                product_name: firstValue(item, ["product_name", "prod_name"], ""),
+                product_name_ur: firstValue(item, ["product_name_ur", "prod_name_ur"], ""),
+                category: firstValue(item, ["category"], ""),
+                quantity: firstValue(item, ["quantity", "qty"], ""),
+                foc_qty: focQty,
+                foc: focQty,
+                unit: firstValue(item, ["unit", "uom"], ""),
+                packing_mode: firstValue(item, ["packing_mode"], ""),
+                pack_quantity: firstValue(item, ["pack_quantity", "pack_qty"], ""),
+                rate: firstValue(item, ["rate"], ""),
+                discount_percent: firstValue(item, ["discount_percent", "row_discount_percent"], 0),
+                discount_amount: firstValue(item, ["discount_amount", "row_discount_amount"], 0),
+                amount: firstValue(item, ["amount", "row_net_total"], ""),
+                item_notes: rowNotes,
+                row_notes: rowNotes,
+                warranty,
+                warranty_notes: warranty,
+                barcode: firstValue(item, ["barcode", "manualbc"], ""),
+                brand: firstValue(item, ["brand", "brand_name"], ""),
+                cost_price: firstValue(item, ["cost_price", "row_rate_cost"], 0),
+                net_cost: firstValue(item, ["net_cost", "row_net_cost"], 0),
+            };
+        });
+        const totals = payload.totals || {};
+        data.totals = {
+            ...totals,
+            total_items: totals.total_items ?? firstValue(payload, ["header_total_items"], ""),
+            subtotal: totals.subtotal ?? firstValue(payload, ["header_item_total"], 0),
+            discount_percent: totals.discount_percent ?? firstValue(payload, ["header_discount_percent"], 0),
+            discount_amount: totals.discount_amount ?? firstValue(payload, ["header_discount_amount"], 0),
+            delivery_charges: totals.delivery_charges ?? firstValue(payload, ["header_delivery_charges"], 0),
+            gst_percent: totals.gst_percent ?? firstValue(payload, ["header_gst_percent"], 0),
+            gst_amount: totals.gst_amount ?? firstValue(payload, ["header_gst_amount"], 0),
+            misc_charges: totals.misc_charges ?? firstValue(payload, ["header_misc_charges", "header_msc_charges"], 0),
+            net_total: totals.net_total ?? firstValue(payload, ["header_net_total"], 0),
+            cash_received: totals.cash_received ?? firstValue(payload, ["header_cash_paid"], 0),
+            bank_received: totals.bank_received ?? firstValue(payload, ["header_bank_paid"], 0),
+            change_amount: totals.change_amount ?? firstValue(payload, ["header_change_amount"], 0),
+        };
+        return data;
+    }
+
+    function mergeCachedCompanyData(documentData, cached) {
+        if (!cached) return documentData;
+        for (const section of ["company", "branch"]) {
+            const merged = { ...(cached[section] || {}) };
+            for (const [key, value] of Object.entries(documentData[section] || {})) {
+                if (value !== undefined && value !== null && value !== "") merged[key] = value;
+            }
+            documentData[section] = merged;
+        }
+        return documentData;
     }
 
     async function fetchJson(url, options) {
         const response = await fetch(url, options);
         if (!response.ok) {
             const body = await response.text();
-            throw new Error(`DocumentPrinter: request to ${url} failed (${response.status}): ${body}`);
+            throw new Error(`DocumentPrinter request failed (${response.status}): ${body}`);
         }
         return response.json();
     }
 
     async function getLocalTemplateConfig(documentType, pageType) {
-        const cacheKey = `${documentType}_${pageType}`;
-        if (window.IndexDBConfig && typeof window.IndexDBConfig.get_record === "function") {
-            try {
-                const rec = await window.IndexDBConfig.get_record("template_configs", cacheKey);
-                if (rec && rec.configuration) {
-                    return rec;
-                }
-            } catch (e) {
-                console.warn("Error reading template config from IndexedDB:", e);
-            }
-        }
-        return null;
+        if (!window.IndexDBConfig?.get_record) return null;
+        return window.IndexDBConfig.get_record("template_configs", `${documentType}_${pageType}`);
     }
 
-    async function saveLocalTemplateConfig(documentType, pageType, configuration, updatedAt) {
-        const cacheKey = `${documentType}_${pageType}`;
-        const record = {
-            key: cacheKey,
+    async function saveBasicTemplateConfig(documentType, pageType, configuration, updatedAt) {
+        if (!window.IndexDBConfig?.save_update_record) return;
+        await window.IndexDBConfig.save_update_record("template_configs", {
+            key: `${documentType}_${pageType}`,
             document_type: documentType,
             page_type: pageType,
-            configuration: configuration,
+            configuration,
             updated_at: updatedAt || new Date().toISOString(),
-        };
-        if (window.IndexDBConfig && typeof window.IndexDBConfig.save_update_record === "function") {
-            try {
-                await window.IndexDBConfig.save_update_record("template_configs", record);
-            } catch (e) {
-                console.warn("Error saving template config to IndexedDB:", e);
-            }
-        }
-    }
-
-    async function loadConfiguration(documentType, pageType) {
-        // Try IndexedDB first
-        const cached = await getLocalTemplateConfig(documentType, pageType);
-        if (cached && cached.configuration) {
-            return cached.configuration;
-        }
-
-        try {
-            // Otherwise fetch from server and cache locally
-            const query = new URLSearchParams({ document_type: documentType, page_type: pageType });
-            const data = await fetchJson(`${ENDPOINTS.configuration}?${query.toString()}`);
-            if (data.configuration) {
-                await saveLocalTemplateConfig(documentType, pageType, data.configuration, data.updated_at);
-            }
-            return data.configuration;
-        } catch(e) {
-            console.warn("Failed to fetch configuration", e);
-            return null; // Handle fallback gracefully
-        }
-    }
-
-    async function loadServerDocumentData(documentType, modelName, billNumber, pageType) {
-        const query = new URLSearchParams({
-            document_type: documentType,
-            model_name: modelName || "",
-            bill_number: billNumber,
-            page_type: pageType || "",
         });
-        const data = await fetchJson(`${ENDPOINTS.documentData}?${query.toString()}`);
-
-        // Sync template config cache if server provided updated info
-        if (data.template_config && pageType) {
-            const cached = await getLocalTemplateConfig(documentType, pageType);
-            const serverUpdated = data.template_updated_at;
-            if (!cached || !cached.updated_at || (serverUpdated && serverUpdated > cached.updated_at)) {
-                await saveLocalTemplateConfig(documentType, pageType, data.template_config, serverUpdated);
-            }
-        }
-
-        return {
-            document_data: data.document_data,
-            template_config: data.template_config,
-            template_updated_at: data.template_updated_at,
-        };
     }
 
-    async function renderHtml(configuration, documentData, renderSource) {
-        // ── Server render path ─────────────────────────────────────────────
-        if (renderSource === 'server') {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 800);
-                const data = await fetchJson(ENDPOINTS.render, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ configuration, document_data: documentData }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                return data.html;
-            } catch (err) {
-                console.warn("Server render failed or timed out, falling back to local render", err);
-                // Fall through to local render below
-            }
+    async function getOfflineTemplateBundle(documentType, pageType, overrides = {}) {
+        if (!window.OfflineTemplateEngine?.renderFromCache) {
+            throw new Error("OfflineTemplateEngine is not loaded; local rendering cannot fall back to the server");
         }
-
-        // ── Local render path ──────────────────────────────────────────────
-        if (!window.OfflineTemplateEngine || typeof window.OfflineTemplateEngine.renderFromCache !== 'function') {
-            // Engine not loaded — last resort: try server render regardless of renderSource
-            console.warn("OfflineTemplateEngine not available, falling back to server render");
-            try {
-                const data = await fetchJson(ENDPOINTS.render, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ configuration, document_data: documentData }),
-                });
-                return data.html;
-            } catch (serverErr) {
-                console.error("Server render also failed", serverErr);
-                return `<div style="padding:12px;color:#c00;font-family:monospace">
-                    <b>Print Error</b><br>offline_template_engine.js is not loaded on this page.<br>
-                    Add it to your template before document_printer.js.
-                </div>`;
-            }
+        const record = overrides.configuration ? {
+            configuration: overrides.configuration,
+            registry: overrides.registry,
+            company_data: overrides.companyData,
+            css: overrides.cssText,
+        } : await getLocalTemplateConfig(documentType, pageType);
+        if (!record?.configuration) {
+            throw new Error(`No offline template is saved for ${documentType}/${pageType}. Open the designer online and click Save Template once.`);
         }
-
-        try {
-            let registry = await window.OfflineTemplateEngine.getCachedRegistry();
-
-            // The offline engine resolves EVERY header / customer / footer /
-            // logo field through the field registry. With no registry it
-            // silently auto-hides all of them (only the items table and
-            // totals survive — they don't need the registry). So when the
-            // IndexedDB cache has no registry yet (preload not finished,
-            // failed, offline first visit, blocked storage…), fetch it on
-            // demand instead of rendering an empty-headed document.
-            if (!registry || !registry.fields) {
-                try {
-                    const res = await fetch(ENDPOINTS.fieldRegistry);
-                    if (res.ok) {
-                        registry = await res.json();
-                        if (window.IndexDBConfig && typeof window.IndexDBConfig.save_update_record === "function") {
-                            await window.IndexDBConfig.save_update_record("app_cache", {
-                                key: "field_registry",
-                                data: registry,
-                                updated_at: new Date().toISOString(),
-                            });
-                        }
-                    }
-                } catch (fetchErr) {
-                    console.warn("On-demand field registry fetch failed", fetchErr);
-                }
-            }
-
-            if (registry && registry.fields) {
-                return window.OfflineTemplateEngine.renderFromCache(configuration, documentData, registry);
-            }
-
-            // Still no registry: render on the server (which has the field
-            // registry in-process) rather than dropping every header field.
-            console.warn("Field registry unavailable, falling back to server render");
-            const data = await fetchJson(ENDPOINTS.render, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ configuration, document_data: documentData }),
-            });
-            return data.html;
-
-        } catch (err) {
-            console.error("Local render failed", err);
-            return `<div style="color:red">Render Error: ${err.message}</div>`;
+        const [registry, companyData, css] = await Promise.all([
+            record.registry || window.OfflineTemplateEngine.getCachedRegistry(),
+            record.company_data || window.OfflineTemplateEngine.getCachedCompanyData(),
+            record.css || window.OfflineTemplateEngine.getCachedStylesheet(),
+        ]);
+        if (!registry?.fields) {
+            throw new Error("The offline field registry is missing. Save this template again while online.");
         }
+        return { configuration: record.configuration, registry, companyData, css };
     }
 
-    // ------------------------------------------------------ modal plumbing
+    // Online configuration lookup, used only when rendering_source=server.
+    async function loadConfiguration(documentType, pageType) {
+        const cached = await getLocalTemplateConfig(documentType, pageType);
+        if (cached?.configuration) return cached.configuration;
+        const query = new URLSearchParams({ document_type: documentType, page_type: pageType });
+        const data = await fetchJson(`${ENDPOINTS.configuration}?${query}`);
+        if (!data.configuration) throw new Error("The server returned no template configuration");
+        await saveBasicTemplateConfig(documentType, pageType, data.configuration, data.updated_at);
+        return data.configuration;
+    }
 
-    async function ensureStylesheet() {
-        if (document.querySelector("link[data-document-printer-css]") || document.querySelector("style[data-document-printer-css]")) return;
-        
-        try {
-            if (window.IndexDBConfig) {
-                const rec = await window.IndexDBConfig.get_record("app_cache", "designer_css");
-                if (rec && rec.data) {
-                    const style = document.createElement("style");
-                    style.dataset.documentPrinterCss = "true";
-                    style.textContent = rec.data;
-                    document.head.appendChild(style);
-                    return;
-                }
-            }
-        } catch(e) {}
+    async function loadServerDocumentData(options) {
+        const query = new URLSearchParams({
+            document_type: options.documentType,
+            model_name: options.modelName || "",
+            bill_number: options.billNumber ?? "",
+            page_type: options.pageType || "",
+        });
+        return fetchJson(`${ENDPOINTS.documentData}?${query}`);
+    }
 
+    async function renderOnServer(configuration, documentData) {
+        const data = await fetchJson(ENDPOINTS.render, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ configuration, document_data: documentData }),
+        });
+        return data.html;
+    }
+
+    async function ensureStylesheet(cssText, renderSource) {
+        const existing = document.querySelector(
+            "link[data-document-printer-css], style[data-document-printer-css], link[href*='invoice_designer/css/designer']"
+        );
+        if (existing) return;
+        if (cssText) {
+            const style = document.createElement("style");
+            style.dataset.documentPrinterCss = "true";
+            style.textContent = cssText;
+            document.head.appendChild(style);
+            return;
+        }
+        if (renderSource === "local") {
+            throw new Error("Offline print CSS is missing. Save this template again while online.");
+        }
         const link = document.createElement("link");
         link.rel = "stylesheet";
         link.href = "/static/invoice_designer/css/designer.css";
@@ -320,167 +388,128 @@ window.DocumentPrinter = (function () {
         document.head.appendChild(link);
     }
 
-    async function ensureModal() {
-        await ensureStylesheet();
+    async function ensureModal(cssText, renderSource) {
+        await ensureStylesheet(cssText, renderSource);
         let overlay = document.getElementById("print-modal-overlay");
-        if (overlay) return overlay;
-
-        const holder = document.createElement("div");
-        holder.innerHTML = `
-            <div class="print-modal-overlay" id="print-modal-overlay">
-                <div class="print-modal">
-                    <div class="print-modal-toolbar no-print">
-                        <select id="print-modal-page-type">
-                            <option value="thermal_58">Thermal 58mm</option>
-                            <option value="thermal_80">Thermal 80mm</option>
-                            <option value="a5">A5</option>
-                            <option value="a4">A4</option>
-                            <option value="urdu_58mm">Thermal 58mm — Urdu</option>
-                            <option value="urdu_80mm">Thermal 80mm — Urdu</option>
-                            <option value="urdu_a5">A5 — Urdu</option>
-                            <option value="urdu_a4">A4 — Urdu</option>
-                            <option value="bilingual_80mm">Thermal 80mm — Bilingual</option>
-                            <option value="bilingual_a4">A4 — Bilingual</option>
-                        </select>
-                        <div class="spacer"></div>
-                        <button id="print-modal-print-button">Print</button>
-                        <button class="ghost" id="print-modal-close-button">Close</button>
+        if (!overlay) {
+            const holder = document.createElement("div");
+            holder.innerHTML = `
+                <div class="print-modal-overlay" id="print-modal-overlay">
+                    <div class="print-modal">
+                        <div class="print-modal-toolbar no-print">
+                            <select id="print-modal-page-type"></select>
+                            <div class="spacer"></div>
+                            <button id="print-modal-print-button">Print</button>
+                            <button class="ghost" id="print-modal-close-button">Close</button>
+                        </div>
+                        <div class="print-modal-page-wrap">
+                            <div class="print-modal-page" id="print-modal-page"></div>
+                        </div>
                     </div>
-                    <div class="print-modal-page-wrap">
-                        <div class="print-modal-page" id="print-modal-page"></div>
-                    </div>
-                </div>
-            </div>`;
-        document.body.appendChild(holder.firstElementChild);
+                </div>`;
+            document.body.appendChild(holder.firstElementChild);
+            overlay = document.getElementById("print-modal-overlay");
+        }
 
-        overlay = document.getElementById("print-modal-overlay");
-        document.getElementById("print-modal-close-button").addEventListener("click", closePreviewModal);
-        document.getElementById("print-modal-print-button").addEventListener("click", () => window.print());
+        const select = document.getElementById("print-modal-page-type");
+        select.innerHTML = PAGE_TYPES.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+        if (!overlay.dataset.documentPrinterBound) {
+            document.getElementById("print-modal-close-button").addEventListener("click", closePreviewModal);
+            document.getElementById("print-modal-print-button").addEventListener("click", () => window.print());
+            select.addEventListener("change", () => renderIntoModal(select.value).catch(() => {}));
+            overlay.dataset.documentPrinterBound = "true";
+        }
         return overlay;
     }
 
-    async function renderIntoModal(pageType) {
-        const overlay = await ensureModal();
-        const pageContainer = document.getElementById("print-modal-page");
-
-        let configuration = null;
-        let documentData = null;
-
-        if (modalState.dataSource === "local") {
-            configuration = await loadConfiguration(modalState.documentType, pageType);
-            documentData = (modalState.payload && modalState.payload.totals)
-                ? modalState.payload
-                : mapLocalPayloadToDocumentData(modalState.payload);
-                
-            if (window.OfflineTemplateEngine && (!documentData.company || !documentData.company.logo_url)) {
-                const compData = await window.OfflineTemplateEngine.getCachedCompanyData();
-                if (compData) {
-                    documentData.company = compData.company || {};
-                    documentData.branch = compData.branch || {};
-                }
-            }
-        } else {
-            // Check if local template config already exists
-            const cachedConfig = await getLocalTemplateConfig(modalState.documentType, pageType);
-            try {
-                const serverResult = await loadServerDocumentData(modalState.documentType, modalState.modelName, modalState.billNumber, pageType);
-                documentData = serverResult.document_data;
-                configuration = (cachedConfig && cachedConfig.configuration) || serverResult.template_config || await loadConfiguration(modalState.documentType, pageType);
-            } catch (err) {
-                console.warn("Server document fetch failed, using fallback empty data", err);
-                configuration = (cachedConfig && cachedConfig.configuration) || await loadConfiguration(modalState.documentType, pageType);
-                documentData = {}; // Minimal fallback
-            }
-        }
-
-        const html = await renderHtml(configuration, documentData, modalState.renderSource);
-        pageContainer.innerHTML = html;
-        pageContainer.dataset.pageType = pageType;
-        if (!modalState.directprint) {
-            overlay.classList.add("open");
-        } else {
-            overlay.classList.remove("open");
-        }
-        return html;
+    function showModalError(error, directprint) {
+        const overlay = document.getElementById("print-modal-overlay");
+        const page = document.getElementById("print-modal-page");
+        if (!overlay || !page) return;
+        const message = String(error?.message || error).replace(/[&<>"']/g, character => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        })[character]);
+        page.innerHTML = `<div style="padding:20px;max-width:560px;color:#b42318;font:13px/1.5 Arial"><b>Print could not be rendered</b><br>${message}</div>`;
+        overlay.classList.toggle("open", !directprint);
     }
 
-    /**
-     * Opens the professional, centered, real-size preview modal.
-     * Same renderer + same CSS as printing — this IS the print output,
-     * just on screen instead of on paper.
-     */
+    async function renderIntoModal(pageType) {
+        const options = { ...modalState, pageType };
+        let configuration;
+        let documentData;
+        let html;
+        let css = "";
 
-    window.addEventListener('keydown',(e)=>{
-        if(e.key == 'Escape'){
-            e.preventDefault();
-            closePreviewModal();
+        try {
+            if (options.renderSource === "local") {
+                if (options.dataSource === "server") {
+                    const [bundle, result] = await Promise.all([
+                        getOfflineTemplateBundle(options.documentType, pageType, options),
+                        loadServerDocumentData(options),
+                    ]);
+                    configuration = bundle.configuration;
+                    documentData = result.document_data;
+                    css = bundle.css;
+                    mergeCachedCompanyData(documentData, bundle.companyData);
+                    html = window.OfflineTemplateEngine.renderFromCache(configuration, documentData, bundle.registry);
+                } else {
+                    const bundle = await getOfflineTemplateBundle(options.documentType, pageType, options);
+                    configuration = bundle.configuration;
+                    documentData = mapLocalPayloadToDocumentData(options.payload, options.documentType, options.billNumber);
+                    css = bundle.css;
+                    mergeCachedCompanyData(documentData, bundle.companyData);
+                    html = window.OfflineTemplateEngine.renderFromCache(configuration, documentData, bundle.registry);
+                }
+            } else if (options.dataSource === "server") {
+                const result = await loadServerDocumentData(options);
+                documentData = result.document_data;
+                configuration = options.configuration || result.template_config || await loadConfiguration(options.documentType, pageType);
+                html = await renderOnServer(configuration, documentData);
+            } else {
+                configuration = options.configuration || await loadConfiguration(options.documentType, pageType);
+                documentData = mapLocalPayloadToDocumentData(options.payload, options.documentType, options.billNumber);
+                html = await renderOnServer(configuration, documentData);
+            }
+
+            const overlay = await ensureModal(css, options.renderSource);
+            const page = document.getElementById("print-modal-page");
+            page.innerHTML = html;
+            page.dataset.pageType = pageType;
+            document.getElementById("print-modal-page-type").value = pageType;
+            overlay.classList.toggle("open", !options.directprint);
+            return html;
+        } catch (error) {
+            showModalError(error, options.directprint);
+            throw error;
         }
-    })
-    
-    async function openPreviewModal(options) {
-        const { documentType, pageType, dataSource = "server", renderSource = "local", payload = null, billNumber, modelName, directprint = false } = options;
-        if (!documentType || !pageType) {
-            throw new Error("DocumentPrinter.openPreviewModal: documentType and pageType are required");
-        }
-        modalState = { documentType, dataSource, renderSource, payload, billNumber, modelName, directprint };
+    }
 
-        await ensureModal();
-        const pageTypeSelect = document.getElementById("print-modal-page-type");
-        pageTypeSelect.value = pageType;
-        pageTypeSelect.onchange = () => renderIntoModal(pageTypeSelect.value);
-
-        return renderIntoModal(pageType);
+    async function openPreviewModal(rawOptions) {
+        const options = normalizeOptions(rawOptions);
+        validateOptions(options);
+        modalState = options;
+        return renderIntoModal(options.pageType);
     }
 
     function closePreviewModal() {
-        const overlay = document.getElementById("print-modal-overlay");
-        if (overlay) overlay.classList.remove("open");
+        document.getElementById("print-modal-overlay")?.classList.remove("open");
     }
 
-    /**
-     * THE print function. Resolves document_data according to
-     * data_source, opens the preview modal (never skipping it — the
-     * preview IS what gets printed), then calls window.print(), which
-     * (via the @media print rules in designer.css) only prints
-     * #print-modal-page — never the designer/background/controls.
-     */
-    async function printDocument(options) {
-        const {
-            bill_no: billNo,
-            model_name: modelName,
-            page_type: pageType,
-            document_type: documentType,
-            data_source: dataSource = "server",
-            renderSource = "local",
-            payload = null,
-            allow_multiple_print: allowMultiplePrint = false,
-            copies = 1,
-            directprint = false,
-        } = options;
+    window.addEventListener("keydown", event => {
+        if (event.key === "Escape") closePreviewModal();
+    });
 
-        if (!documentType || !pageType) {
-            throw new Error("DocumentPrinter.printDocument: document_type and page_type are required");
-        }
-        if (dataSource === "local" && !payload) {
-            throw new Error('DocumentPrinter.printDocument: payload is required when data_source is "local"');
-        }
-
-        const html = await openPreviewModal({
-            documentType, pageType, dataSource, renderSource, payload, billNumber: billNo, modelName, directprint,
-        });
-
-        const resolvedCopies = allowMultiplePrint ? Math.max(1, parseInt(copies, 10) || 1) : 1;
-        const pageContainer = document.getElementById("print-modal-page");
-        if (resolvedCopies > 1) {
-            pageContainer.innerHTML = Array.from(
-                { length: resolvedCopies },
-                () => `<div class="print-copy">${html}</div>`
+    async function printDocument(rawOptions) {
+        const options = normalizeOptions(rawOptions);
+        validateOptions(options);
+        const html = await openPreviewModal(rawOptions);
+        const copies = options.allowMultiplePrint ? Math.max(1, parseInt(options.copies, 10) || 1) : 1;
+        if (copies > 1) {
+            document.getElementById("print-modal-page").innerHTML = Array.from(
+                { length: copies }, () => `<div class="print-copy">${html}</div>`
             ).join("");
         }
-
-        if (directprint) {
-            window.print();
-        }
+        if (options.directprint) window.print();
         return html;
     }
 

@@ -23,6 +23,7 @@ never real columns on these models).
 """
 
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 
 from apps.invoice_designer.services.ledger import get_previous_balance as _ledger_previous_balance
 
@@ -54,6 +55,29 @@ def _fetch_account_info(acc_code) -> dict:
     except Exception:
         pass
     return {"account_code": acc_code, "name": "", "address": "", "phone": ""}
+
+
+def _fetch_account_info_map(acc_codes) -> dict:
+    """Fetch every account needed by a voucher in one indexed query."""
+    codes = {code for code in acc_codes if code not in (None, "")}
+    if not codes:
+        return {}
+    try:
+        from apps.myaccounts.models import Accounts
+        rows = Accounts.objects.only(
+            "ACC_CODE", "ACC_NAME", "ADDRESS", "MOBILE_NO", "PHONE_OFF"
+        ).filter(ACC_CODE__in=codes)
+        return {
+            acc.ACC_CODE: {
+                "account_code": acc.ACC_CODE,
+                "name": getattr(acc, "ACC_NAME", "") or "",
+                "address": getattr(acc, "ADDRESS", "") or "",
+                "phone": getattr(acc, "MOBILE_NO", "") or getattr(acc, "PHONE_OFF", "") or "",
+            }
+            for acc in rows
+        }
+    except Exception:
+        return {}
 
 
 def _get(row, field_name, default=None):
@@ -508,16 +532,15 @@ def build_quotation_data(header_row, include_previous_balance: bool = False) -> 
 
 
 def build_voucher_data(header_row, include_previous_balance: bool = False) -> dict:
+    """Build professional voucher data directly from its Gledg rows.
+
+    ``D``/``DR`` and ``C``/``CR`` are both accepted because the voucher
+    service writes the long form. Account details are fetched in one query,
+    not two queries per row.
     """
-    Builds data for a generic Voucher (from Gledg rows).
-    Since vouchers don't have a distinct 'header' table, header_row is just
-    one of the Gledg rows (or a list of rows). We fetch all rows for the same
-    V_TYPE and VNO to build the full voucher.
-    """
-    # Handle if a list of rows was passed instead of a single instance
-    if isinstance(header_row, list) and header_row:
-        rows = header_row
-        header_row = rows[0]
+    if isinstance(header_row, (list, tuple)):
+        rows = list(header_row)
+        header_row = rows[0] if rows else None
     else:
         v_type = _get(header_row, "V_TYPE")
         vno = _get(header_row, "VNO")
@@ -526,26 +549,78 @@ def build_voucher_data(header_row, include_previous_balance: bool = False) -> di
         else:
             rows = [header_row] if header_row else []
 
-    company_data, branch_data = _company_and_branch_data(_get(header_row, "COMPANY"), _get(header_row, "BRANCH"))
-    
-    # We map V_TYPE to a readable title if possible
-    v_type_mapping = {
+    company_data, branch_data = _company_and_branch_data(
+        _get(header_row, "COMPANY"), _get(header_row, "BRANCH")
+    )
+    v_type = str(_get(header_row, "V_TYPE", "") or "").strip().upper()
+    title = {
         "CR": "CASH RECEIPT VOUCHER",
         "CP": "CASH PAYMENT VOUCHER",
         "BR": "BANK RECEIPT VOUCHER",
         "BP": "BANK PAYMENT VOUCHER",
         "JV": "JOURNAL VOUCHER",
+    }.get(v_type, f"VOUCHER {v_type}".strip())
+
+    account_map = _fetch_account_info_map(
+        [code for row in rows for code in (
+            _get(row, "ACC_CODE"), _get(row, "REF_ACC_CODE")
+        )]
+    )
+
+    def account_info(code):
+        return account_map.get(code) or {
+            "account_code": code or "", "name": "", "address": "", "phone": ""
+        }
+
+    def row_account_name(row):
+        # ACC_HEAD is the operator-entered voucher head and takes priority.
+        head = str(_get(row, "ACC_HEAD", "") or "").strip()
+        return head or account_info(_get(row, "ACC_CODE"))["name"]
+
+    def is_main_row(row):
+        return str(_get(row, "SHOW_IN_SALE_RPT", "N") or "N").strip().upper() == "Y"
+
+    def joined_names(selected_rows):
+        names = []
+        seen = set()
+        for row in selected_rows:
+            name = row_account_name(row)
+            if name and name not in seen:
+                seen.add(name)
+                names.append(name)
+        return ", ".join(names)
+
+    main_rows = [row for row in rows if is_main_row(row)]
+    system_rows = [row for row in rows if not is_main_row(row)]
+    party_name = joined_names(main_rows)
+    payment_account = joined_names(system_rows)
+
+    def amount_value(row):
+        try:
+            return Decimal(str(_get(row, "AMOUNT", 0) or 0).replace(",", ""))
+        except (InvalidOperation, ValueError):
+            return Decimal("0")
+
+    total_debit = sum(
+        (amount_value(row) for row in rows
+         if str(_get(row, "AMT_TYPE", "") or "").strip().upper() in {"D", "DR"}),
+        Decimal("0"),
+    )
+    total_credit = sum(
+        (amount_value(row) for row in rows
+         if str(_get(row, "AMT_TYPE", "") or "").strip().upper() in {"C", "CR"}),
+        Decimal("0"),
+    )
+
+    # Existing customer_name fields also become useful on vouchers. Journal
+    # vouchers intentionally have no single counterparty; both rows are shown.
+    party_row = main_rows[0] if main_rows and v_type != "JV" else None
+    customer_info = account_info(_get(party_row, "ACC_CODE")) if party_row else {
+        "account_code": "", "name": "", "address": "", "phone": ""
     }
-    v_type = _get(header_row, "V_TYPE", "")
-    title = v_type_mapping.get(v_type, f"VOUCHER {v_type}")
-
-    total_debit = sum(_number(_get(r, "AMOUNT")) for r in rows if _get(r, "AMT_TYPE") == "D")
-    total_credit = sum(_number(_get(r, "AMOUNT")) for r in rows if _get(r, "AMT_TYPE") == "C")
-
-    # In vouchers, we often don't have a single "customer". 
-    # But we can try to find the main account being affected (e.g., if there's only one debit or credit).
-    # For now, we leave it empty or map it to the header_row's account.
-    customer_info = _fetch_account_info(_get(header_row, "ACC_CODE"))
+    if party_row:
+        customer_info = dict(customer_info)
+        customer_info["name"] = row_account_name(party_row)
 
     data = {
         "bill_number": f"{v_type}-{_get(header_row, 'VNO')}",
@@ -558,21 +633,27 @@ def build_voucher_data(header_row, include_previous_balance: bool = False) -> di
         "printed_by": _get(header_row, "USER", ""),
         "print_date": datetime.now().strftime("%Y-%m-%d"),
         "print_time": datetime.now().strftime("%H:%M:%S"),
-
         "company": company_data,
         "branch": branch_data,
         "customer": customer_info,
-
+        "voucher": {
+            "voucher_type": v_type,
+            "paid_to": party_name if v_type in {"CP", "BP"} else "",
+            "paid_from": party_name if v_type in {"CR", "BR"} else "",
+            "payment_account": payment_account,
+        },
         "totals": {
-            "total_items": len(rows),
-            "subtotal": 0,
+            "total_items": len(main_rows) if main_rows else len(rows),
+            "subtotal": total_debit,
             "discount_percent": 0,
             "discount_amount": 0,
             "delivery_charges": 0,
             "gst_percent": 0,
             "gst_amount": 0,
             "misc_charges": 0,
-            "net_total": total_debit, # Often debit == credit
+            "net_total": total_debit or total_credit,
+            "total_debit": total_debit,
+            "total_credit": total_credit,
             "cash_received": 0,
             "bank_received": 0,
             "change_amount": 0,
@@ -581,21 +662,20 @@ def build_voucher_data(header_row, include_previous_balance: bool = False) -> di
     }
 
     for row in rows:
-        acc_info = _fetch_account_info(_get(row, "ACC_CODE"))
-        ref_acc_info = _fetch_account_info(_get(row, "REF_ACC_CODE"))
-        
-        is_debit = _get(row, "AMT_TYPE") == "D"
-        amt = _number(_get(row, "AMOUNT"))
-        
+        acc_info = account_info(_get(row, "ACC_CODE"))
+        ref_acc_info = account_info(_get(row, "REF_ACC_CODE"))
+        amount_type = str(_get(row, "AMT_TYPE", "") or "").strip().upper()
+        amount = amount_value(row)
         data["items"].append({
             "account_code": acc_info.get("account_code", ""),
-            "account_name": acc_info.get("name", ""),
+            "account_name": row_account_name(row),
             "counter_account_code": ref_acc_info.get("account_code", ""),
             "counter_account_name": ref_acc_info.get("name", ""),
             "description": _get(row, "DESCRIPTION", ""),
-            "debit_amount": amt if is_debit else 0,
-            "credit_amount": amt if not is_debit else 0,
-            "amount": amt,
+            "debit_amount": amount if amount_type in {"D", "DR"} else 0,
+            "credit_amount": amount if amount_type in {"C", "CR"} else 0,
+            "amount": amount,
+            "show_in_sale_rpt": "Y" if is_main_row(row) else "N",
         })
 
     return data

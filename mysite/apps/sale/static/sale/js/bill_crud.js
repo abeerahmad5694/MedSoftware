@@ -178,14 +178,13 @@ async function save_bill(e) {
               page_type: window.companyConfigurations?.pos?.default_page_size || "thermal_80",
               document_type: "pos_invoice",
               data_source: "local",
-              renderSource: "local",
-              payload: null,
+              rendering_source: "local",
+              payload: payload,
               allow_multiple_print: true,
               copies: copies,
               directprint: directPrinting.checked,
       });
 
-      
       // await window.DocumentPrinter.printDocument({
       //   bill_no: offline_bill_no,
       //   model_name: "Invoice",

@@ -732,17 +732,15 @@
             })();
         </script>
         
-        <script src="{% static 'invoice_designer/js/offline_template_engine.js' %}?v=2"></script>
+        <script src="{% static 'invoice_designer/js/offline_template_engine.js' %}?v=3"></script>
         
         <script>
             (
                 function(){
-                // 1. Check if already ran in this session
-                    if (sessionStorage.getItem('inventory_reloaded')) {
-                        return; // already done for this session
-                    }
-
                     function runInBackground() {
+                        // Inventory and print assets have independent cache
+                        // lifecycles; an inventory hit must not skip templates.
+                        if (sessionStorage.getItem('inventory_reloaded')) return;
                         if (window.IndexDBConfig && typeof window.IndexDBConfig.reload_inventory === 'function') {
                             try {
                                 console.log("[IndexDB] Background reload started...");

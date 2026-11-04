@@ -267,6 +267,26 @@ FIELD_REGISTRY = {
         "default_visible": False, "default_style": "small",
     },
 
+    # --- Voucher party fields (real: Gledg.ACC_HEAD / Accounts.ACC_NAME) ---
+    # They live in the customer section so they print directly above the rows.
+    # Only the field appropriate for the voucher type contains a value; the
+    # other is automatically hidden by the renderer.
+    "paid_to": {
+        "label": "Paid To", "category": "Voucher Fields",
+        "data_source": "voucher.paid_to", "field_type": "text",
+        "default_visible": False, "default_style": "normal",
+    },
+    "paid_from": {
+        "label": "Received From", "category": "Voucher Fields",
+        "data_source": "voucher.paid_from", "field_type": "text",
+        "default_visible": False, "default_style": "normal",
+    },
+    "payment_account": {
+        "label": "Cash / Bank Account", "category": "Voucher Fields",
+        "data_source": "voucher.payment_account", "field_type": "text",
+        "default_visible": False, "default_style": "small",
+    },
+
     # --- Footer Fields (real: Invoice.header_remarks / .user, system clock) ---
     "remarks": {
         "label": "Remarks", "category": "Footer Fields",
@@ -333,8 +353,8 @@ FIELD_REGISTRY = {
 # Which registry categories may be searched/added into each editable
 # section. A field is never forced into a section — opt-in via (+).
 SECTION_ALLOWED_CATEGORIES = {
-    "header": ["Header Fields", "Company Fields", "Branch Fields", "Invoice Fields", "Custom Fields"],
-    "customer": ["Customer Fields", "Custom Fields"],
+    "header": ["Header Fields", "Company Fields", "Branch Fields", "Invoice Fields", "Voucher Fields", "Custom Fields"],
+    "customer": ["Customer Fields", "Voucher Fields", "Custom Fields"],
     "footer": ["Footer Fields", "Custom Fields"],
 }
 
@@ -520,6 +540,8 @@ def lookup_item_column(field_key: str, document_type: str = "pos_invoice") -> di
 
 TOTALS_REGISTRY = {
     "total_items": {"label": "Total Items", "data_source": "totals.total_items", "default_visible": False},
+    "total_debit": {"label": "Total Debit", "data_source": "totals.total_debit", "default_visible": False},
+    "total_credit": {"label": "Total Credit", "data_source": "totals.total_credit", "default_visible": False},
     "subtotal": {"label": "Sub Total", "data_source": "totals.subtotal", "default_visible": True},
     "discount": {"label": "Discount", "data_source": "totals.discount_amount", "default_visible": True},
     "gst": {"label": "GST", "data_source": "totals.gst_amount", "default_visible": False},
@@ -535,7 +557,8 @@ TOTALS_REGISTRY = {
 
 DEFAULT_TOTALS_ORDER = [
     "subtotal", "discount", "gst", "delivery_charges", "misc_charges", "net_total",
-    "previous_balance", "cash_received", "bank_received", "change_amount", "current_balance",
+    "total_debit", "total_credit", "previous_balance", "cash_received", "bank_received",
+    "change_amount", "current_balance",
 ]
 
 
@@ -567,7 +590,14 @@ def _default_header_fields():
     return _default_field_list(["Header Fields", "Company Fields", "Invoice Fields"])
 
 
-def _default_customer_fields():
+def _default_customer_fields(document_type: str):
+    if document_type == "voucher":
+        fields = []
+        for key in ("paid_to", "paid_from", "payment_account"):
+            entry = _field_entry(key)
+            entry["visible"] = key in ("paid_to", "paid_from")
+            fields.append(entry)
+        return fields
     return _default_field_list(["Customer Fields"])
 
 
@@ -637,8 +667,16 @@ URDU_COLUMN_LABELS = {
     "barcode": "بارکوڈ",
     "brand": "برانڈ",
     "amount": "رقم",
+    "account_code": "اکاؤنٹ کوڈ",
+    "account_name": "اکاؤنٹ کا نام",
+    "counter_account_code": "مقابل اکاؤنٹ کوڈ",
+    "counter_account_name": "مقابل اکاؤنٹ کا نام",
+    "debit_amount": "ڈیبٹ",
+    "credit_amount": "کریڈٹ",
     # Totals
     "total_items": "کل آئٹم",
+    "total_debit": "کل ڈیبٹ",
+    "total_credit": "کل کریڈٹ",
     "subtotal": "ذیلی مجموع",
     "discount": "رعایت",
     "gst": "ٹیکس",
@@ -654,6 +692,9 @@ URDU_COLUMN_LABELS = {
     "invoice_number": "بل نمبر",
     "invoice_date": "تاریخ",
     "customer_name": "گاہک کا نام",
+    "paid_to": "ادا کیا گیا کو",
+    "paid_from": "وصول شدہ از",
+    "payment_account": "کیش / بینک اکاؤنٹ",
     "salesman": "سیلز مین",
     "cashier": "کیشیر",
     "thank_you_message": "شکریہ ، دوبارہ تشریف لائیں!",
@@ -721,12 +762,28 @@ def default_configuration_for(document_type: str, page_type: str) -> dict:
         "styles": {"default_font_family": default_font, "default_font_size": default_size},
         "sections": {
             "header": {"visible": True, "fields": _default_header_fields()},
-            "customer": {"visible": True, "fields": _default_customer_fields(), "exclude_accounts": ""},
-            "items": {"visible": True, "columns": _default_item_columns(document_type)},
+            "customer": {"visible": True, "fields": _default_customer_fields(document_type), "exclude_accounts": ""},
+            "items": {
+                "visible": True,
+                "columns": _default_item_columns(document_type),
+                "row_filter": "main" if document_type == "voucher" else "all",
+                "table_borders": document_type == "voucher",
+            },
             "totals": {"visible": True, "fields": _default_totals_fields()},
             "footer": {"visible": True, "fields": _default_footer_fields()},
         },
     }
+
+    if document_type == "voucher":
+        # A voucher has one meaningful grand total, not invoice discounts and
+        # payment fields. All remain available in the designer when needed.
+        for field in config["sections"]["totals"]["fields"]:
+            key = field["field"]
+            field["visible"] = key == "net_total"
+            if key == "net_total":
+                field["label"] = "Voucher Total"
+        for field in config["sections"]["footer"]["fields"]:
+            field["visible"] = field["field"] in {"remarks", "authorized_signature"}
 
     # Attach Urdu column labels for Urdu/Bilingual templates
     if is_urdu or is_bilingual:

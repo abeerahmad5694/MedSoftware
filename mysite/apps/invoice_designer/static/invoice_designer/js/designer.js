@@ -66,8 +66,8 @@
             ];
         } else if (documentType === "voucher") {
             items = [
-                { account_code: "A-100", account_name: "Cash Account", counter_account_code: "C-0012", counter_account_name: "Walk-in Customer", description: "Payment received", debit_amount: "3,050.00", credit_amount: "0.00", amount: "3,050.00" },
-                { account_code: "C-0012", account_name: "Walk-in Customer", counter_account_code: "A-100", counter_account_name: "Cash Account", description: "Payment received", debit_amount: "0.00", credit_amount: "3,050.00", amount: "3,050.00" },
+                { account_code: "A-100", account_name: "Cash Account", counter_account_code: "C-0012", counter_account_name: "Walk-in Customer", description: "Payment received", debit_amount: "3,050.00", credit_amount: "0.00", amount: "3,050.00", show_in_sale_rpt: "N" },
+                { account_code: "C-0012", account_name: "Walk-in Customer", counter_account_code: "A-100", counter_account_name: "Cash Account", description: "Payment received", debit_amount: "0.00", credit_amount: "3,050.00", amount: "3,050.00", show_in_sale_rpt: "Y" },
             ];
         } else {
             items = [
@@ -91,9 +91,17 @@
             company,
             branch,
             customer: { account_code: "C-0012", name: "Walk-in Customer", address: "Shop 5, Main Bazaar", phone: "+92 300 1234567" },
+            voucher: documentType === "voucher" ? {
+                voucher_type: "CR",
+                paid_to: "",
+                paid_from: "Walk-in Customer",
+                payment_account: "Cash Account",
+            } : {},
             totals: {
                 total_items: 2,
-                subtotal: "3,200.00",
+                subtotal: documentType === "voucher" ? "3,050.00" : "3,200.00",
+                total_debit: documentType === "voucher" ? "3,050.00" : 0,
+                total_credit: documentType === "voucher" ? "3,050.00" : 0,
                 discount_percent: 0,
                 discount_amount: "150.00",
                 gst_percent: 0,
@@ -122,7 +130,7 @@
 
     function debounceRender() {
         clearTimeout(state.renderTimer);
-        state.renderTimer = setTimeout(renderPreview, 150);
+        state.renderTimer = setTimeout(renderPreview, 60);
     }
 
     function resolveStyle(styleName, overrides) {
@@ -183,7 +191,7 @@
                 state.searchTerm = "";
                 document.getElementById("field-search").value = "";
                 renderLeftPanel();
-                renderPropertyEmptyState();
+                openSectionEditor(sectionKey);
             });
 
             tabsContainer.appendChild(tab);
@@ -198,12 +206,15 @@
             return Object.entries(itemColumnRegistry()).map(([key, entry]) => ({ key, ...entry }));
         }
         if (section === "totals") {
-            return Object.entries(state.registry.totals_fields).map(([key, entry]) => ({ key, ...entry }));
+            return Object.entries(state.registry.totals_fields)
+                .filter(([key]) => state.documentType === "voucher" || !["total_debit", "total_credit"].includes(key))
+                .map(([key, entry]) => ({ key, ...entry }));
         }
         if (EDITABLE_SECTIONS.includes(section)) {
             const allowedCategories = state.registry.section_categories[section] || [];
             return Object.entries(state.registry.fields)
                 .filter(([, entry]) => allowedCategories.includes(entry.category))
+                .filter(([, entry]) => state.documentType === "voucher" || entry.category !== "Voucher Fields")
                 .map(([key, entry]) => ({ key, ...entry }));
         }
         return [];
@@ -393,17 +404,22 @@
 
     // ── preview ──────────────────────────────────────────────────────────
 
-    async function renderPreview() {
-        const response = await fetch(window.RENDER_API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ configuration: state.configuration, document_data: buildSampleDocumentData(state.documentType) }),
-        });
-        const data = await response.json();
+    function renderPreview() {
+        // The designer and local printing share the same synchronous renderer.
+        // Editing a field no longer waits for a network request or an older
+        // preview response to return.
         const frame = document.getElementById("page-frame");
-        frame.innerHTML = data.html;
-        applyPreviewScale();
-        reselectIfStillPresent();
+        try {
+            frame.innerHTML = window.OfflineTemplateEngine.renderFromCache(
+                state.configuration,
+                buildSampleDocumentData(state.documentType),
+                state.registry,
+            );
+            applyPreviewScale();
+            reselectIfStillPresent();
+        } catch (error) {
+            frame.innerHTML = `<div class="empty-state">Preview error: ${error.message}</div>`;
+        }
     }
 
     function applyPreviewScale() {
@@ -479,6 +495,34 @@
     function renderPropertyEmptyState() {
         document.getElementById("property-panel").innerHTML =
             '<div class="empty-state">Click any field — in the preview, or in the list on the left — to edit it here.</div>';
+    }
+
+    function openSectionEditor(section) {
+        if (section !== "items") {
+            renderPropertyEmptyState();
+            return;
+        }
+        const items = state.configuration.sections.items;
+        const voucherControl = state.documentType === "voucher" ? `
+            <div class="prop-group">
+                <label>Voucher rows</label>
+                <select id="prop-voucher-row-filter">
+                    <option value="main" ${(items.row_filter || "main") === "main" ? "selected" : ""}>Main accounts only (show_in_sale_rpt = Y)</option>
+                    <option value="all" ${items.row_filter === "all" ? "selected" : ""}>All debit and credit rows</option>
+                    <option value="system" ${items.row_filter === "system" ? "selected" : ""}>System / balancing rows only (N)</option>
+                </select>
+                <div class="hint">Paid To / Received From and Cash / Bank Account are available as fields above this table.</div>
+            </div>` : "";
+        document.getElementById("property-panel").innerHTML = `
+            <div class="field-key">Items · Table settings</div>
+            ${voucherControl}
+            <div class="prop-toggle-row">
+                <span>Show table borders</span>
+                <span class="toggle ${items.table_borders ? "on" : ""}" id="prop-table-borders"></span>
+            </div>
+            <div class="empty-state small">Select any column below or in the preview to edit its heading, width, format and style.</div>`;
+        bindInput("prop-voucher-row-filter", value => { items.row_filter = value; });
+        bindToggle("prop-table-borders", value => { items.table_borders = value; });
     }
 
     function findFieldConfig(section, key) {
@@ -685,28 +729,59 @@
     // ── save ─────────────────────────────────────────────────────────────
 
     async function saveConfiguration() {
-        const response = await fetch(window.CONFIGURATION_API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ document_type: state.documentType, page_type: state.pageType, configuration: state.configuration }),
-        });
-        if (response.ok) {
-            const cacheKey = `${state.documentType}_${state.pageType}`;
-            if (window.IndexDBConfig && typeof window.IndexDBConfig.save_update_record === "function") {
-                window.IndexDBConfig.save_update_record("template_configs", {
-                    key: cacheKey,
-                    document_type: state.documentType,
-                    page_type: state.pageType,
-                    configuration: state.configuration,
-                    updated_at: new Date().toISOString(),
-                }).catch(e => console.warn("Could not save to local IndexedDB:", e));
-            }
-        }
         const button = document.getElementById("save-button");
         const original = button.textContent;
-        button.textContent = response.ok ? "✓ Saved" : "Save failed";
-        button.classList.toggle("save-error", !response.ok);
-        setTimeout(() => { button.textContent = original; button.classList.remove("save-error"); }, 1400);
+        button.disabled = true;
+        button.textContent = "Saving…";
+
+        const configuration = JSON.parse(JSON.stringify(state.configuration));
+        const serverSave = async () => {
+            const response = await fetch(window.CONFIGURATION_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    document_type: state.documentType,
+                    page_type: state.pageType,
+                    configuration,
+                }),
+            });
+            if (!response.ok) throw new Error(`Server save failed (${response.status})`);
+            return response.json();
+        };
+        const localSave = async () => {
+            if (!window.OfflineTemplateEngine?.saveTemplateForOffline) {
+                throw new Error("Offline template engine is not loaded");
+            }
+            return window.OfflineTemplateEngine.saveTemplateForOffline({
+                documentType: state.documentType,
+                pageType: state.pageType,
+                configuration,
+                registry: state.registry,
+                companyData: state.companyData,
+            });
+        };
+
+        // Server persistence and offline asset embedding are independent, so a
+        // template can still be saved locally when the network is unavailable.
+        const [serverResult, localResult] = await Promise.allSettled([serverSave(), localSave()]);
+        const serverSaved = serverResult.status === "fulfilled";
+        const localSaved = localResult.status === "fulfilled";
+        button.textContent = serverSaved && localSaved ? "✓ Saved + offline"
+            : localSaved ? "✓ Saved offline"
+            : serverSaved ? "Saved online only" : "Save failed";
+        button.classList.toggle("save-error", !serverSaved && !localSaved);
+        button.title = [
+            serverSaved ? "" : serverResult.reason?.message,
+            localSaved ? "" : localResult.reason?.message,
+        ].filter(Boolean).join("\n");
+        if (!serverSaved) console.warn("Template server save failed:", serverResult.reason);
+        if (!localSaved) console.warn("Template offline save failed:", localResult.reason);
+
+        button.disabled = false;
+        setTimeout(() => {
+            button.textContent = original;
+            button.classList.remove("save-error");
+        }, 1800);
     }
 
     function openPrintPreview() {
@@ -715,7 +790,11 @@
                 documentType: state.documentType,
                 pageType: state.pageType,
                 dataSource: "local",
+                rendering_source: "local",
                 payload: buildSampleDocumentData(state.documentType),
+                configuration: state.configuration,
+                registry: state.registry,
+                companyData: state.companyData,
             });
         }
     }

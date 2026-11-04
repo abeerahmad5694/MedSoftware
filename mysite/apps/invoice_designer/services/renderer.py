@@ -436,10 +436,27 @@ class DocumentRenderer:
             "fields": self._resolve_field_section("footer", sections["footer"], document_data),
         }
 
-        # Pass raw items to column resolver so it can detect all-zero columns
+        # Voucher row visibility is a template choice. Main rows are the
+        # operator-entered accounts (show_in_sale_rpt=Y); system rows are the
+        # automatically-created cash/bank balancing entries.
         raw_items = document_data.get("items", []) or []
+        if complete_configuration.get("document_type") == "voucher":
+            row_filter = sections["items"].get("row_filter", "main")
+            if row_filter in {"main", "system"}:
+                def is_main(row):
+                    flag = row.get("show_in_sale_rpt", "Y") if isinstance(row, dict) else "Y"
+                    return str(flag or "Y").strip().upper() != "N"
+
+                raw_items = [
+                    row for row in raw_items
+                    if is_main(row) == (row_filter == "main")
+                ]
+
+        # Resolve rows from the same filtered list used for zero-column checks.
+        row_document_data = dict(document_data)
+        row_document_data["items"] = raw_items
         visible_columns = self._resolve_item_columns(sections["items"], raw_items)
-        plain_rows = self._resolve_item_rows(visible_columns, document_data)
+        plain_rows = self._resolve_item_rows(visible_columns, row_document_data)
 
         # Build rows_with_urdu for Urdu/Bilingual templates.
         # Each entry: {cells: [{"value": cell_val, "field": col_field}, ...], product_name_ur: str}

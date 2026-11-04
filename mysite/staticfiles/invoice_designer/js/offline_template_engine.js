@@ -71,6 +71,8 @@ window.OfflineTemplateEngine = (function () {
     delivery_charges:"delivery_charges",
     misc_charges:    "misc_charges",
     net_total:       "net_total",
+    total_debit:     "total_debit",
+    total_credit:    "total_credit",
     cash_received:   "cash_received",
     bank_received:   "bank_received",
     change_amount:   "change_amount",
@@ -88,6 +90,11 @@ window.OfflineTemplateEngine = (function () {
     delivery_charges: "ڈیلیوری", misc_charges: "دیگر",
     net_total: "کل قابل ادا", cash_received: "نقد وصول",
     bank_received: "بینک وصول", change_amount: "واپسی",
+    total_debit: "کل ڈیبٹ", total_credit: "کل کریڈٹ",
+    account_code: "اکاؤنٹ کوڈ", account_name: "اکاؤنٹ کا نام",
+    counter_account_code: "مقابل اکاؤنٹ کوڈ", counter_account_name: "مقابل اکاؤنٹ کا نام",
+    debit_amount: "ڈیبٹ", credit_amount: "کریڈٹ",
+    paid_to: "ادا کیا گیا کو", paid_from: "وصول شدہ از", payment_account: "کیش / بینک اکاؤنٹ",
     previous_balance: "پچھلا بقایا", current_balance: "موجودہ بقایا",
     customer_name: "نام", customer_address: "پتہ",
     customer_phone: "فون", customer_account: "کوڈ",
@@ -381,7 +388,11 @@ window.OfflineTemplateEngine = (function () {
    * @returns {string}  HTML string
    */
   function renderFromCache(configuration, documentData, registry) {
+    if (!configuration || !configuration.sections) {
+      throw new Error("OfflineTemplateEngine: a saved template configuration is required");
+    }
     documentData = documentData || {};
+    populateFormatAliases(registry);
     const sections = configuration.sections || {};
     const pageType = configuration.page_type || "thermal_80";
     const docType  = configuration.document_type || "pos_invoice";
@@ -401,13 +412,24 @@ window.OfflineTemplateEngine = (function () {
 
     const colLabelsUr = configuration.column_labels_ur || URDU_COLUMN_LABELS;
 
-    // Resolve sections
-    const rawItems = documentData.items || [];
+    // Resolve sections. Voucher row filtering is deliberately done here (and
+    // in renderer.py) so server and local output make the same template choice.
+    let rawItems = documentData.items || [];
+    if (docType === "voucher") {
+      const rowFilter = (sections.items || {}).row_filter || "main";
+      if (rowFilter === "main" || rowFilter === "system") {
+        rawItems = rawItems.filter(row => {
+          const isMain = String(row.show_in_sale_rpt || "Y").trim().toUpperCase() !== "N";
+          return isMain === (rowFilter === "main");
+        });
+      }
+    }
+    const rowDocumentData = Object.assign({}, documentData, { items: rawItems });
     const headerFields   = resolveFieldSection("header",   sections.header   || { fields: [] }, documentData, registry);
     const customerFields = resolveFieldSection("customer", sections.customer || { fields: [] }, documentData, registry);
     const footerFields   = resolveFieldSection("footer",   sections.footer   || { fields: [] }, documentData, registry);
     const visibleColumns = resolveItemColumns(sections.items || { columns: [] }, rawItems, docType, registry);
-    const plainRows      = resolveItemRows(visibleColumns, documentData);
+    const plainRows      = resolveItemRows(visibleColumns, rowDocumentData);
     const totalFields    = resolveTotals(sections.totals || { fields: [] }, documentData);
     const tableBorders   = (sections.items || {}).table_borders ? " has-borders" : "";
     const itemsVisible   = (sections.items || {}).visible !== false;
@@ -647,105 +669,158 @@ window.OfflineTemplateEngine = (function () {
     } catch { /* not fatal */ }
   }
 
+  function cloneJson(value) {
+    return value == null ? value : JSON.parse(JSON.stringify(value));
+  }
+
+  function populateFormatAliases(registry) {
+    const registries = registry?.item_columns_by_document_type || {};
+    for (const columns of Object.values(registries)) {
+      for (const [fieldKey, entry] of Object.entries(columns || {})) {
+        if (entry.format_key) FORMAT_KEY_TO_FIELD[entry.format_key] = fieldKey;
+      }
+    }
+  }
+
   async function urlToBase64(url) {
-    try {
-      if (!url || url.startsWith("data:")) return url;
-      const res = await fetch(url);
-      const blob = await res.blob();
-      return await new Promise(resolve => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.readAsDataURL(blob);
-      });
-    } catch { return url; }
+    if (!url || String(url).startsWith("data:")) return url || "";
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Could not cache image (${response.status}): ${url}`);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error(`Could not read image: ${url}`));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function normalizeStylesheet(cssText) {
+    // A cached <style> resolves relative URLs against the page, not the original
+    // stylesheet. Make font URLs absolute before storing the CSS.
+    return String(cssText || "").replaceAll("../fonts/", "/static/invoice_designer/fonts/");
+  }
+
+  async function embedTemplateAssets(configuration, companyData, registry) {
+    const config = cloneJson(configuration);
+    const company = cloneJson(companyData) || { company: {}, branch: {} };
+    company.company = company.company || {};
+    company.branch = company.branch || {};
+
+    const urls = new Set();
+    if (company.company.logo_url) urls.add(company.company.logo_url);
+    if (company.branch.logo_url) urls.add(company.branch.logo_url);
+    for (const section of Object.values(config.sections || {})) {
+      for (const field of section.fields || []) {
+        const registryEntry = registry?.fields?.[field.field];
+        if (field.custom_value && (registryEntry?.field_type === "image" || /_logo$/.test(field.field))) {
+          urls.add(field.custom_value);
+        }
+      }
+    }
+
+    // Fetch each distinct image once. A custom logo is embedded in the cached
+    // configuration; otherwise the embedded company/branch logo is used by the
+    // normal field data_source rule. The live/server configuration is untouched.
+    const embedded = new Map(await Promise.all(
+      [...urls].map(async url => [url, await urlToBase64(url)])
+    ));
+    if (company.company.logo_url) company.company.logo_url = embedded.get(company.company.logo_url);
+    if (company.branch.logo_url) company.branch.logo_url = embedded.get(company.branch.logo_url);
+    for (const section of Object.values(config.sections || {})) {
+      for (const field of section.fields || []) {
+        if (field.custom_value && embedded.has(field.custom_value)) {
+          field.custom_value = embedded.get(field.custom_value);
+        }
+      }
+    }
+    return { configuration: config, companyData: company };
+  }
+
+  async function fetchStylesheet() {
+    const response = await fetch("/static/invoice_designer/css/designer.css");
+    if (!response.ok) throw new Error(`Could not cache print CSS (${response.status})`);
+    return normalizeStylesheet(await response.text());
+  }
+
+  /**
+   * Save one completely self-contained offline template. After this one write,
+   * local printing needs a single template_configs read and no HTTP request.
+   */
+  async function saveTemplateForOffline({
+    documentType, pageType, configuration, registry, companyData, cssText = "", updatedAt = null,
+  }) {
+    if (!window.IndexDBConfig?.save_update_record) {
+      throw new Error("IndexedDB is not ready; the template cannot be saved for offline printing");
+    }
+    if (!registry?.fields) throw new Error("The field registry is not ready");
+    if (!companyData) throw new Error("Company data is not ready; reload the designer before saving offline");
+
+    const cssPromise = cssText
+      ? Promise.resolve(normalizeStylesheet(cssText))
+      : getCachedStylesheet().then(css => css || fetchStylesheet());
+    const [assets, css] = await Promise.all([
+      embedTemplateAssets(configuration, companyData, registry),
+      cssPromise,
+    ]);
+    const record = {
+      key: `${documentType}_${pageType}`,
+      document_type: documentType,
+      page_type: pageType,
+      configuration: assets.configuration,
+      registry: cloneJson(registry),
+      company_data: assets.companyData,
+      css,
+      cache_version: 2,
+      updated_at: updatedAt || new Date().toISOString(),
+    };
+    await window.IndexDBConfig.save_update_record("template_configs", record);
+    return record;
   }
 
   // ── Public: preloadOfflineRenderData ─────────────────────────────────────
 
   async function preloadOfflineRenderData() {
-    if (!window.IndexDBConfig) return console.warn("[OTE] IndexDBConfig not ready");
-    console.log("[OTE] Starting offline preload…");
-
-    // 1. Field registry
-    try {
-      const regRes = await fetch(window.FIELD_REGISTRY_API_URL || "/invoice-designer/api/field-registry/");
-      if (regRes.ok) {
-        const registry = await regRes.json();
-        // Populate format_key → field_key aliases for format_string support
-        if (registry.item_columns_by_document_type) {
-          for (const cols of Object.values(registry.item_columns_by_document_type)) {
-            for (const [fieldKey, entry] of Object.entries(cols)) {
-              if (entry.format_key) FORMAT_KEY_TO_FIELD[entry.format_key] = fieldKey;
-            }
-          }
-        }
-        await idbSet("app_cache", { key: "field_registry", data: registry, updated_at: new Date().toISOString() });
-      }
-    } catch (err) { console.warn("[OTE] Registry preload failed", err); }
-
-    // 2. Company data + logo → base64
-    try {
-      const compRes = await fetch("/invoice-designer/api/company-preview/");
-      if (compRes.ok) {
-        const compData = await compRes.json();
-        if (compData.company?.logo_url) compData.company.logo_url = await urlToBase64(compData.company.logo_url);
-        if (compData.branch?.logo_url)  compData.branch.logo_url  = await urlToBase64(compData.branch.logo_url);
-        await idbSet("app_cache", { key: "company_data", data: compData, updated_at: new Date().toISOString() });
-      }
-    } catch (err) { console.warn("[OTE] Company preload failed", err); }
-
-    // 3. Designer CSS
-    try {
-      const cssRes = await fetch("/static/invoice_designer/css/designer.css");
-      if (cssRes.ok) {
-        const cssText = await cssRes.text();
-        await idbSet("app_cache", { key: "designer_css", data: cssText, updated_at: new Date().toISOString() });
-      }
-    } catch (err) { console.warn("[OTE] CSS preload failed", err); }
-
-    // 4. Template configs: all doc × page combinations
-    const docTypes  = ["pos_invoice", "purchase_invoice", "voucher"];
-    const pageTypes = ["thermal_58", "thermal_80", "a5", "a4", "urdu_58mm", "urdu_80mm", "bilingual_80mm", "bilingual_a4"];
-
-    for (const dt of docTypes) {
-      for (const pt of pageTypes) {
-        try {
-          const cacheKey = `${dt}_${pt}`;
-          const existing = await idbGet("template_configs", cacheKey);
-          const res = await fetch(`/invoice-designer/api/configuration/?document_type=${dt}&page_type=${pt}`);
-          if (!res.ok) continue;
-          const data = await res.json();
-          if (!data.configuration) continue;
-          const serverAt = data.updated_at || "";
-          if (!existing || !existing.updated_at || serverAt > existing.updated_at) {
-            await idbSet("template_configs", {
-              key: cacheKey, document_type: dt, page_type: pt,
-              configuration: data.configuration,
-              updated_at: serverAt || new Date().toISOString(),
-            });
-          }
-        } catch (err) { console.warn(`[OTE] Config preload failed: ${dt}/${pt}`, err); }
-      }
+    if (!window.IndexDBConfig) {
+      console.warn("[OTE] IndexDBConfig not ready");
+      return;
     }
-    console.log("[OTE] Offline preload complete.");
+
+    // Only shared assets are preloaded. Templates are cached when saved, which
+    // avoids the old 24 sequential configuration requests on every new session.
+    const jobs = [
+      (async () => {
+        const response = await fetch(window.FIELD_REGISTRY_API_URL || "/invoice-designer/api/field-registry/");
+        if (!response.ok) throw new Error(`Registry preload failed (${response.status})`);
+        const registry = await response.json();
+        populateFormatAliases(registry);
+        await idbSet("app_cache", { key: "field_registry", data: registry, updated_at: new Date().toISOString() });
+      })(),
+      (async () => {
+        const response = await fetch("/invoice-designer/api/company-preview/");
+        if (!response.ok) throw new Error(`Company preload failed (${response.status})`);
+        const companyData = await response.json();
+        const assets = await embedTemplateAssets({ sections: {} }, companyData, { fields: {} });
+        await idbSet("app_cache", { key: "company_data", data: assets.companyData, updated_at: new Date().toISOString() });
+      })(),
+      (async () => {
+        const css = await fetchStylesheet();
+        await idbSet("app_cache", { key: "designer_css", data: css, updated_at: new Date().toISOString() });
+      })(),
+    ];
+    const results = await Promise.allSettled(jobs);
+    results.filter(result => result.status === "rejected").forEach(result => {
+      console.warn("[OTE] Offline asset preload failed", result.reason);
+    });
   }
 
-  // ── Public: getCachedRegistry / getCachedCompanyData ─────────────────────
+  // ── Public cache readers ──────────────────────────────────────────────────
 
   async function getCachedRegistry() {
     const rec = await idbGet("app_cache", "field_registry");
-    const reg = rec?.data || null;
-    // Populate aliases if loaded fresh
-    if (reg?.item_columns_by_document_type) {
-      for (const cols of Object.values(reg.item_columns_by_document_type)) {
-        for (const [fieldKey, entry] of Object.entries(cols || {})) {
-          if (entry.format_key && !FORMAT_KEY_TO_FIELD[entry.format_key]) {
-            FORMAT_KEY_TO_FIELD[entry.format_key] = fieldKey;
-          }
-        }
-      }
-    }
-    return reg;
+    const registry = rec?.data || null;
+    if (registry) populateFormatAliases(registry);
+    return registry;
   }
 
   async function getCachedCompanyData() {
@@ -753,5 +828,17 @@ window.OfflineTemplateEngine = (function () {
     return rec?.data || null;
   }
 
-  return { renderFromCache, preloadOfflineRenderData, getCachedRegistry, getCachedCompanyData };
+  async function getCachedStylesheet() {
+    const rec = await idbGet("app_cache", "designer_css");
+    return rec?.data ? normalizeStylesheet(rec.data) : "";
+  }
+
+  return {
+    renderFromCache,
+    preloadOfflineRenderData,
+    saveTemplateForOffline,
+    getCachedRegistry,
+    getCachedCompanyData,
+    getCachedStylesheet,
+  };
 })();
