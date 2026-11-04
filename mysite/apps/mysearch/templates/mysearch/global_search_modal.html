@@ -14,6 +14,10 @@
     aria-modal="true"
     aria-labelledby="gsm-title"
   >
+
+
+  
+                    
     <!-- Header -->
     <div class="modal-header">
       <h3 id="gsm-title">Search</h3>
@@ -29,6 +33,17 @@
                 onclick="document.getElementById('gsm-search-input').value=''; document.getElementById('gsm-search-input').dispatchEvent(new Event('input')); document.getElementById('gsm-search-input').focus();">
           Clear
         </button>
+
+
+        
+                    <button onclick="window.IndexDBConfig.reload_inventory(this).then(() => GlobalSearchModal.refresh('inventorySearch'))"
+                    title="Refresh Inventory Cache" id="sync_local_inventory">
+                        <i class="fa-solid fa-sync text-xs"></i>Refresh Data
+                    </button>
+
+
+
+
         <button id="gsm-close-btn" type="button" title="Close (Esc)"
                 onclick="GlobalSearchModal.close()">✕</button>
       </div>

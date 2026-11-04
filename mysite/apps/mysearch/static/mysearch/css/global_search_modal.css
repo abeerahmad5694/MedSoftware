@@ -699,3 +699,17 @@ gsm-table-head-row {
     border-radius: 10px;
     
 } */
+
+
+
+
+/* 1. Prevent rows from showing through the sticky header */
+#gsm-results table thead th {
+    background-color: #ffffff; /* Or the background color of your modal */
+    z-index: 10;
+}
+
+/* 2. Ensure keyboard navigation doesn't hide the row under the header */
+.modal-body {
+    scroll-padding-top: 40px; /* Adjust this value to match the height of your table header */
+}

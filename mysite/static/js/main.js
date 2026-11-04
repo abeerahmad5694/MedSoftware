@@ -324,6 +324,20 @@ window.getDefaultAccount = function (key, fallback = 112000001) {
   return accounts[key] || fallback;
 };
 
+
+
+window.escapeHTML= function (value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+
+
 document.getElementById("logo-div-main").addEventListener("click", () => {
     console.log('click')
   window.location.href = window.location.href.split("#")[0];

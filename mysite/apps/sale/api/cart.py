@@ -39,7 +39,7 @@ def _build_product_payload(product, weight_total=None):
         'weight_total': float(weight_total) if weight_total else 1,
 
         # ── Base / Retail  (modeId: 1) ───────────────────────────────────
-        'base_price':    float(product.base_price    or product.rate or 0),
+        'base_price':    float(product.base_price or 0),
         'base_disc_per': float(product.base_disc_per or 0),
         'base_uom_name': product.base_uom.name    if product.base_uom_id    else '',  # ← .base_uom.name
 

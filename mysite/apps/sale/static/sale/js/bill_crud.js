@@ -184,6 +184,8 @@ async function save_bill(e) {
               copies: copies,
               directprint: directPrinting.checked,
       });
+
+      
       // await window.DocumentPrinter.printDocument({
       //   bill_no: offline_bill_no,
       //   model_name: "Invoice",

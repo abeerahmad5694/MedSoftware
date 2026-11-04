@@ -148,6 +148,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   selectLastRow();
   load_prv_bill();
   searchInput.focus();
+  GlobalSearchModal.refresh('inventorySearch')
 });
 
 

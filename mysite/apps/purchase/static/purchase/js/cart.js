@@ -1127,7 +1127,7 @@ function renderCart(cartItems) {
       const row = `
       <tr class="cart-item-row serial-parent-row ${groupClass}" data-group="${groupIdx}" data-row-id="${item.cart_row_id}" style="background: #EFF6FF; border-bottom: none;">
         <td class="desc-cell" style="width: 200px;">
-          <input type="text" value="${item.product_description} (${item.id})" readonly class="input-flat" style="width: 100%; font-weight: 600; color: #1E3A8A; background: transparent;" />
+          <input type="text" value="${window.escapeHTML(`${item.product_description} (${item.id})`)}" readonly class="input-flat" style="width: 100%; font-weight: 600; color: #1E3A8A; background: transparent;" />
           <input type="hidden" value="${item.id}" name="item_id" />
         </td>
         <td style="width: 80px;">

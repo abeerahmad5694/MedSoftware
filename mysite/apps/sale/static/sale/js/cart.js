@@ -482,7 +482,7 @@ function renderCart(cartItems) {
     const row = `
       <tr class="cart-item-row" data-row-id="${item.cart_row_id}">
         <td class="desc-cell">
-          <input type="text" value="${item.product_description} (${item.id})" readonly class="input-flat" />
+          <input type="text" value="${window.escapeHTML(`${item.product_description} (${item.id})`)}" readonly class="input-flat" />
           <input type="hidden" value="${item.id}" name="item_id" />
         </td>
         <td>
@@ -531,6 +531,8 @@ function selectedRow(row) {
     row.classList.add("selected-row");
   });
 }
+
+
 
 // ______________________ Event Binding (Optimized using Delegation) ____________________________
 let listenersInitialized = false;

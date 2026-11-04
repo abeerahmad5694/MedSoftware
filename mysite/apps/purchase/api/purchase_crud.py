@@ -199,7 +199,7 @@ def save_bill(request):
                             status='IN_STOCK',
                             prod_name=f"{parent.prod_name} - {str(s.get('processor') or '').strip()}" if sn else f"{parent.prod_name} - {sn}",
                             prod_name_ur=parent.prod_name_ur,
-                            alias_name=parent.alias_name,
+                            # alias_name=parent.alias_name,
                             category=parent.category,
                             subcategory=parent.subcategory,
                             brand=parent.brand,

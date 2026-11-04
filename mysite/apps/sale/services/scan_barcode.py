@@ -51,7 +51,7 @@ def scan_barcode(request, code: str, barcode_scan=False):
     if barcode_scan:
         direct_q = Q(manualbc__in=code_variants) | Q(barcode__in=code_variants)
     else:
-        direct_q = Q(manualbc__in=code_variants)
+        direct_q = Q(serial_no__in=code_variants) | Q(manualbc__in=code_variants)
 
     if code.isdigit():
         direct_q |= Q(inv_id=int(code))

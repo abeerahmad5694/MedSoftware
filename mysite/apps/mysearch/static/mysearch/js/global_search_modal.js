@@ -32,7 +32,7 @@ const app_constants = new ContantApi();
    DEFAULT_SEARCH_REGISTRY
    Mirrors the Django backend registry exactly.
    Key format: "appLabel.ModelName"  →  e.g. "inventory.Inventory"
-   ══════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════aa════════════════ */
 const DEFAULT_SEARCH_REGISTRY = {
     'inventory.Inventory': {
         primary_key: 'inv_id',
@@ -485,6 +485,29 @@ export const GlobalSearchModal = {
          GlobalSearchModal.search('inventorySearch', '123')
          GlobalSearchModal.search('inventorySearch', 'wy panel')
     ───────────────────────────────────────────────────── */
+
+
+    async refresh(modalId = this._activeId) {
+        if (!modalId) return;
+        const cfg = this._configs[modalId];
+        const engine = this._engines[modalId];
+        if (!cfg?.indexdbStore || !engine) return;
+
+        // 1. Get fresh data from IndexedDB (already refreshed by your button)
+        const freshData = await IndexDBConfig.get_all(cfg.indexdbStore);
+
+        // 2. Rebuild engine indexes - this is the missing step
+        await engine.load(freshData);
+
+        // 3. If this modal is open, re-run current search without losing query/page
+        if (this._activeId === modalId && this._state) {
+            const query = this._state.query || document.getElementById('gsm-search-input')?.value?.trim() || '';
+            this._state.totalCount = engine.totalItems;
+            this._localSearch(query);
+        }
+    },
+
+
     search(modalId, query) {
         const engine = this._engines[modalId];
         if (!engine || !engine.ready) {
